@@ -1,0 +1,136 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+{
+    DragDrop _ddScript;
+    public RectTransform _panel;
+    public GameObject[] BinaryTruthtables;
+    public GameObject[] TernaryTruthtables;
+    public TextMeshProUGUI DropdownLabel;
+    int _btnInputMinPos = 85;
+    int _btnInputMaxPosBinary = 115;
+    int _btnInputMaxPosTernary = 130;
+    float _startMouseHeight;
+    int _computedHeight;
+    bool _isBinary = false;
+    
+    void Start()
+    {
+        _ddScript = GetComponentInParent<DragDrop>();
+    }
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        _ddScript.enabled = false;
+        _startMouseHeight = _panel.rect.height + Input.mousePosition.y;
+        _isBinary = DropdownLabel.text.Contains("Binary");
+    }
+
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        //height of panel in uunits
+        //          | binary        | ternary
+        // 1-ary       85               85
+        // 2-ary       100              115
+        // 3-ary       115              130
+
+        _computedHeight = Mathf.FloorToInt(_startMouseHeight - Input.mousePosition.y);
+
+        if (_isBinary)
+        {
+            if (_computedHeight < _btnInputMinPos)
+            {
+                _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _btnInputMinPos);
+
+                foreach (var tt in TernaryTruthtables)
+                    tt.SetActive(false);
+
+                foreach (var tt in BinaryTruthtables)
+                    tt.SetActive(false);
+
+                BinaryTruthtables[0].SetActive(true);
+            }
+            else
+            {
+                if (_computedHeight > _btnInputMaxPosBinary)
+                {
+                    _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _btnInputMaxPosBinary);
+
+                    foreach (var tt in TernaryTruthtables)
+                        tt.SetActive(false);
+
+                    foreach (var tt in BinaryTruthtables)
+                        tt.SetActive(false);
+
+                    BinaryTruthtables[2].SetActive(true);
+                }
+                else
+                {
+                    _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 100);
+
+                    foreach (var tt in TernaryTruthtables)
+                        tt.SetActive(false);
+
+                    foreach (var tt in BinaryTruthtables)
+                        tt.SetActive(false);
+
+                    BinaryTruthtables[1].SetActive(true);
+                }
+            }
+        }
+        else 
+        {
+            if (_computedHeight < _btnInputMinPos)
+            {
+                _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _btnInputMinPos);
+
+                foreach (var tt in TernaryTruthtables)
+                    tt.SetActive(false);
+
+                foreach (var tt in BinaryTruthtables)
+                    tt.SetActive(false);
+
+                TernaryTruthtables[0].SetActive(true);
+            }
+            else
+            {
+                if (_computedHeight > _btnInputMaxPosTernary)
+                {
+                    _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _btnInputMaxPosTernary);
+
+                    foreach (var tt in TernaryTruthtables)
+                        tt.SetActive(false);
+
+                    foreach (var tt in BinaryTruthtables)
+                        tt.SetActive(false);
+
+                    TernaryTruthtables[2].SetActive(true);
+                }
+                else
+                {
+                    _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 115);
+
+                    foreach (var tt in TernaryTruthtables)
+                        tt.SetActive(false);
+
+                    foreach (var tt in BinaryTruthtables)
+                        tt.SetActive(false);
+
+                    TernaryTruthtables[1].SetActive(true);
+                }
+            }
+        }
+
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        _ddScript.enabled = true;
+    }
+}
