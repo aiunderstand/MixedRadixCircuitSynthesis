@@ -91,4 +91,11 @@ public struct EventParam
     //public int param2;
     //public float param3;
     public bool IsDeleteDropZone;
+    public ConnectionData ConnectionData;
+}
+
+public struct ConnectionData
+{
+    public bool IsInput;
+    public GameObject ConnectionTerminal;
 }
