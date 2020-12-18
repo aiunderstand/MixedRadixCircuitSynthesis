@@ -11,8 +11,6 @@ public class LineController : MonoBehaviour, IPointerUpHandler
     
     public void OnPointerUp(PointerEventData eventData)
     {
-        if (isInput) //only inputs are able to create connections, 1 input can link to multiple, but different outputs. 1 output has exactly 1 input.
-        {
             ConnectionData data = new ConnectionData();
             data.IsInput = isInput;
             data.ConnectionTerminal = this.gameObject;
@@ -20,6 +18,5 @@ public class LineController : MonoBehaviour, IPointerUpHandler
             EventParam eventParam = new EventParam();
             eventParam.ConnectionData = data;
             EventManager.TriggerEvent("ConnectionData", eventParam);
-        }
     }
 }

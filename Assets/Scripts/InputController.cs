@@ -18,7 +18,15 @@ public class InputController : MonoBehaviour
     public TextMeshProUGUI DropdownLabel;
 
     int _radix = 0;
-    
+    public Connection[] Connections = new Connection[6]; //needed for data binding 
+    private void Awake()
+    {
+        for (int i = 0; i < Connections.Length; i++)
+        {
+            Connections[i] = new Connection();
+        }
+    }
+
     public void ComputeCounter()
     {
         //get radix from dropdown
@@ -48,4 +56,9 @@ public class InputController : MonoBehaviour
 
         CounterLabel.text = sum.ToString();
     }
+}
+
+public class Connection {
+    public List<GameObject> endTerminal = new List<GameObject>();
+    public GameObject startTerminal;
 }

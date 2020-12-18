@@ -18,6 +18,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
     float _startMouseHeight;
     int _computedHeight;
     bool _isBinary = false;
+    public int Arity = 0;
     
     void Start()
     {
@@ -55,6 +56,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
                     tt.SetActive(false);
 
                 BinaryTruthtables[0].SetActive(true);
+                Arity = 1;
             }
             else
             {
@@ -69,6 +71,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
                         tt.SetActive(false);
 
                     BinaryTruthtables[2].SetActive(true);
+                    Arity = 3;
                 }
                 else
                 {
@@ -81,6 +84,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
                         tt.SetActive(false);
 
                     BinaryTruthtables[1].SetActive(true);
+                    Arity = 2;
                 }
             }
         }
@@ -97,6 +101,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
                     tt.SetActive(false);
 
                 TernaryTruthtables[0].SetActive(true);
+                Arity = 1;
             }
             else
             {
@@ -111,6 +116,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
                         tt.SetActive(false);
 
                     TernaryTruthtables[2].SetActive(true);
+                    Arity = 3;
                 }
                 else
                 {
@@ -123,6 +129,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
                         tt.SetActive(false);
 
                     TernaryTruthtables[1].SetActive(true);
+                    Arity = 2;
                 }
             }
         }
