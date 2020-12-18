@@ -19,7 +19,7 @@ public class LineController : MonoBehaviour, IPointerUpHandler
 
             EventParam eventParam = new EventParam();
             eventParam.ConnectionData = data;
-            EventManager.TriggerEvent("ConnectionClick", eventParam);
+            EventManager.TriggerEvent("ConnectionData", eventParam);
         }
     }
 }

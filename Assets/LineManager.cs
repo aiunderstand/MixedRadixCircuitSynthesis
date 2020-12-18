@@ -9,6 +9,7 @@ public class LineManager : MonoBehaviour
     bool _isDrawing = false;
     GameObject _tempLine;
     public GameObject LinePrefab;
+    float _offsetX = 25;
 
     void Awake()
     {
@@ -36,10 +37,14 @@ public class LineManager : MonoBehaviour
             _tempLine = Instantiate(LinePrefab);
             _tempLine.name = "Link:" + eventParam.ConnectionData.ConnectionTerminal.name;
             _tempLine.transform.parent = this.transform;
+            _tempLine.transform.localScale = new Vector3(1, 1, 1);
+            _tempLine.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
+
             var lr = _tempLine.GetComponent<LineRenderer>();
-           // lr.SetPosition(0, button1);
-           // lr.SetPosition(1, button1 +5);
-           // lr.SetPosition(2, mouse);
+            var positionObject = eventParam.ConnectionData.ConnectionTerminal.transform.position;
+            lr.SetPosition(0, positionObject);
+            lr.SetPosition(1, new Vector3(positionObject.x + _offsetX, positionObject.y,0));
+            lr.SetPosition(2, new Vector3(positionObject.x + _offsetX, positionObject.y, 0));
         }
         //initial condition is notDrawing mode. With first drawing event, enable drawing mode, add line renderer
         //and enable the mouse to update the 3th point.
@@ -57,8 +62,17 @@ public class LineManager : MonoBehaviour
     private void Update()
     {
         if (_isDrawing)
-        { 
-        
+        {
+            if (Input.GetMouseButton(1))
+            {
+                _isDrawing = false;
+                Destroy(_tempLine);
+            }
+            else
+            {
+                var mPos = Input.mousePosition;
+                _tempLine.GetComponent<LineRenderer>().SetPosition(2, new Vector3(mPos.x, mPos.y, 0));
+            }
         }
     }
 }
