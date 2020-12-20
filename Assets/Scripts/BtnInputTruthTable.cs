@@ -16,13 +16,13 @@ public class BtnInputTruthTable : MonoBehaviour
     {
         switch (DropdownLabel.text)
         {
-            case "Balanced Ternary":
+            case "BalancedTernary":
                 {
                     _minValue = -1;
                     _maxValue = 2;
                 }
                 break;
-            case "Unbalanced Ternary":
+            case "UnbalancedTernary":
                 {
                     _minValue = 0;
                     _maxValue = 3;

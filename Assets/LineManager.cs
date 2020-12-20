@@ -10,7 +10,7 @@ public class LineManager : MonoBehaviour, IPointerUpHandler
     Action<EventParam> _ConnectionDataListener;
     bool _isDrawing = false;
     GameObject _tempLine;
-    GameObject _tempStartTerminal;
+    BtnInput _tempStartTerminal;
     public GameObject LinePrefab;
     float _offsetX = 25;
 
@@ -38,7 +38,7 @@ public class LineManager : MonoBehaviour, IPointerUpHandler
             _tempStartTerminal = eventParam.ConnectionData.ConnectionTerminal;
             //add line renderer
             _tempLine = Instantiate(LinePrefab);
-            _tempLine.name = "Link:" + _tempStartTerminal.name;
+            _tempLine.name = _tempStartTerminal.name + "-";
             _tempLine.transform.SetParent(this.transform, false);
             _tempLine.transform.localScale = new Vector3(1, 1, 1);
             _tempLine.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
@@ -68,31 +68,61 @@ public class LineManager : MonoBehaviour, IPointerUpHandler
 
                         //update input controller of link
                         
-                        var conn = _tempStartTerminal.GetComponentInParent<InputController>().Connections[0]; //2do find index
+                        var conn = _tempStartTerminal.GetComponentInParent<InputController>().Connections[int.Parse(_tempStartTerminal.name)];
                         conn.startTerminal = _tempStartTerminal;
                         conn.endTerminal.Add(eventParam.ConnectionData.ConnectionTerminal);
+                        _tempLine.name = _tempLine.name + eventParam.ConnectionData.ConnectionTerminal.name;
+
+                        //if end terminal is an Output 
+                        if (eventParam.ConnectionData.ConnectionTerminal.tag.Equals("Output"))
+                        {
+                            //if start terminal is a input we do nothing 
+                            if (conn.startTerminal.tag.Equals("Input"))
+                            {
+                                
+                            }
+                            else //else we need to propoage the connection
+                            { 
+                                var icl = conn.startTerminal.transform.parent.transform.parent.GetComponent<InputControllerLogicGate>();
+                                icl.Connections[3] = conn; //index 3 is always the output port
+                            }
+                        }
+                        else //if end terminal is a logic gate we need to propagate the conneciton
+                        {
+                            if (conn.startTerminal.name.Equals("3") && !conn.startTerminal.tag.Contains("Input"))
+                            {
+                                var icl2 = conn.startTerminal.transform.parent.transform.parent.GetComponent<InputControllerLogicGate>();
+                                icl2.Connections[3] = conn; //index 3 is always the output port
+                            }
+
+                            int index = int.Parse(eventParam.ConnectionData.ConnectionTerminal.name);
+                            var icl = eventParam.ConnectionData.ConnectionTerminal.transform.parent.transform.parent.GetComponent<InputControllerLogicGate>();
+                            icl.Connections[index] = conn;
+                        }
 
 
-                        //attempt clickable lines
-                        //option 1
-                        //var mc = _tempLine.AddComponent<MeshCollider>();
 
-                        //Mesh mesh = new Mesh();
-                        //lr.BakeMesh(mesh, true);
-                        //mc.sharedMesh = mesh;
 
-                        //option 2
-                        //Vector3[] points = new Vector3[lr.positionCount];
-                        //lr.GetPositions(points);
+                    //attempt clickable lines
+                    //option 1
+                    //var mc = _tempLine.AddComponent<MeshCollider>();
 
-                        //var ec = _tempLine.GetComponent<EdgeCollider2D>();
+                    //Mesh mesh = new Mesh();
+                    //lr.BakeMesh(mesh, true);
+                    //mc.sharedMesh = mesh;
 
-                        //ec.points = points.Select(x =>
-                        //{
-                        //    var pos = ec.transform.InverseTransformPoint(x);
-                        //    return new Vector2(pos.x, pos.y);
-                        //    //return new Vector2(x.x, x.y);
-                        //}).ToArray();
+                    //option 2
+                    //Vector3[] points = new Vector3[lr.positionCount];
+                    //lr.GetPositions(points);
+
+                    //var ec = _tempLine.GetComponent<EdgeCollider2D>();
+
+                    //ec.points = points.Select(x =>
+                    //{
+                    //    var pos = ec.transform.InverseTransformPoint(x);
+                    //    return new Vector2(pos.x, pos.y);
+                    //    //return new Vector2(x.x, x.y);
+                    //}).ToArray();
 
                         _tempLine = null;
                         _tempStartTerminal = null;

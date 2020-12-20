@@ -9,18 +9,23 @@ public class Matrix : MonoBehaviour
     public BtnInputTruthTable[,,] Truthtable;
     public TextMeshProUGUI DropdownLabel;
     int _radix = 0;
-    int _nary = 0;
+   
     private void Awake()
+    {
+        ComputeEmptyTruthTable(2); //default arity is 2
+    }
+
+    public void ComputeEmptyTruthTable(int arity)
     {
         //fill truthtable
         switch (DropdownLabel.text)
         {
-            case "Balanced Ternary":
+            case "BalancedTernary":
                 {
                     _radix = 3;
                 }
                 break;
-            case "Unbalanced Ternary":
+            case "UnbalancedTernary":
                 {
                     _radix = 3;
                 }
@@ -34,10 +39,20 @@ public class Matrix : MonoBehaviour
                 break;
         }
 
-        var cells = GetComponentsInChildren<BtnInputTruthTable>();
-        _nary = (int) Math.Log(cells.Length, _radix); 
+        //Unity requires cells to be setActive to be found. So lets request current index, activate other indices, and after init, return to index;
+        BtnInputTruthTableDropdown bittd;
+        int currentIndex = 0;
+        if (arity.Equals(3))
+        {
+            bittd = GetComponentInChildren<BtnInputTruthTableDropdown>();
+            currentIndex = bittd.GetComponent<TMP_Dropdown>().value;
 
-        switch (_nary)
+            bittd.ActivateAll();
+        }
+
+        var cells = GetComponentsInChildren<BtnInputTruthTable>();
+       
+        switch (arity)
         {
             case 1: //radix,1-ary (r^1)
                 {
@@ -56,6 +71,13 @@ public class Matrix : MonoBehaviour
                 break;
             default:
                 break;
+        }
+
+        if (arity.Equals(3))
+        {
+            bittd = GetComponentInChildren<BtnInputTruthTableDropdown>();
+            bittd.DeActivateAll();
+            bittd.Activate(currentIndex);
         }
     }
 

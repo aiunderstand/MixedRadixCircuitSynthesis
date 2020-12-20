@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System;
 
 public class BtnInputTruthTableDropdown : MonoBehaviour
 {
@@ -22,6 +23,29 @@ public class BtnInputTruthTableDropdown : MonoBehaviour
         foreach (var o in optionsC)
             o.SetActive(false);
 
-        optionsC[change.value].SetActive(true);
+        for (int i = (change.value*9); i < (change.value * 9)+9; i++)
+        {
+            optionsC[i].SetActive(true);
+        }
+    }
+
+    public void ActivateAll()
+    {
+        foreach (var o in optionsC)
+            o.SetActive(true);
+    }
+
+    public void DeActivateAll()
+    {
+        foreach (var o in optionsC)
+            o.SetActive(false);
+    }
+
+    public void Activate(int index)
+    {
+        for (int i = (index * 9); i < (index * 9) + 9; i++)
+        {
+            optionsC[i].SetActive(true);
+        }
     }
 }

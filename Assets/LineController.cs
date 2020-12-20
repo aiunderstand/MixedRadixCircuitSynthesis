@@ -13,7 +13,7 @@ public class LineController : MonoBehaviour, IPointerUpHandler
     {
             ConnectionData data = new ConnectionData();
             data.IsInput = isInput;
-            data.ConnectionTerminal = this.gameObject;
+            data.ConnectionTerminal = this.transform.parent.GetComponent<BtnInput>();
 
             EventParam eventParam = new EventParam();
             eventParam.ConnectionData = data;

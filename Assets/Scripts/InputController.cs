@@ -32,10 +32,10 @@ public class InputController : MonoBehaviour
         //get radix from dropdown
         switch (DropdownLabel.text)
         {
-            case "Balanced Ternary":
+            case "BalancedTernary":
                 _radix = 3;
                 break;
-            case "Unbalanced Ternary":
+            case "UnbalancedTernary":
                 _radix = 3;
                 break;
             case "Binary":
@@ -59,6 +59,6 @@ public class InputController : MonoBehaviour
 }
 
 public class Connection {
-    public List<GameObject> endTerminal = new List<GameObject>();
-    public GameObject startTerminal;
+    public List<BtnInput> endTerminal = new List<BtnInput>();
+    public BtnInput startTerminal;
 }

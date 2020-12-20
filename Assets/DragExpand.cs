@@ -8,7 +8,7 @@ public class DragExpand : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
 {
     DragDrop _ddScript;
     public RectTransform _panel;
-    public GameObject[] BtnInputPrefabs;
+    public GameObject BtnInputPrefab;
     public int MaxInputs = 6;
     int _btnInputSpacing = 23;
     int _btnInputMinPos = 70;
@@ -60,15 +60,19 @@ public class DragExpand : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
 
                 if (_computedAmountOfInputs > _AmountOfInputs) //add prefab
                 {
-                    var go = GameObject.Instantiate(BtnInputPrefabs[0]);
-                    go.transform.SetParent(BtnInputPrefabs[0].transform.parent, false);
-                    go.name = BtnInputPrefabs[0].name;
+                   var go = GameObject.Instantiate(BtnInputPrefab);
+                    go.transform.SetParent(BtnInputPrefab.transform.parent, false);
                     go.transform.localPosition = new Vector3(go.transform.localPosition.x, go.transform.localPosition.y - (_AmountOfInputs *_btnInputSpacing), go.transform.localPosition.z);
 
                     //add to input controller
+                   _AmountOfInputs++;
+                    go.name = (_AmountOfInputs -1).ToString(); //reuse name for index, refactor this is bad practise
                     InputController.Buttons.Add(go);
                     InputController.ComputeCounter();
-                    _AmountOfInputs++;
+
+
+
+
                 }
                 else
                 {

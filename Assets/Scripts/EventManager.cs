@@ -97,5 +97,5 @@ public struct EventParam
 public struct ConnectionData
 {
     public bool IsInput;
-    public GameObject ConnectionTerminal;
+    public BtnInput ConnectionTerminal;
 }

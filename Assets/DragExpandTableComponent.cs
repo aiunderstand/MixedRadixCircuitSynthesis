@@ -18,7 +18,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
     float _startMouseHeight;
     int _computedHeight;
     bool _isBinary = false;
-    public int Arity = 0;
+    public int Arity = 2; //default 2
     
     void Start()
     {
@@ -139,5 +139,6 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
     public void OnEndDrag(PointerEventData eventData)
     {
         _ddScript.enabled = true;
+        this.transform.parent.transform.parent.GetComponentInChildren<Matrix>().ComputeEmptyTruthTable(Arity);
     }
 }

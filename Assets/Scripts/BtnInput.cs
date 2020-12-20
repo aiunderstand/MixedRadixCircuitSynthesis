@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -11,24 +12,33 @@ public class BtnInput : MonoBehaviour
     int _minValue = 0;
     int _maxValue = 0;
     public TextMeshProUGUI label;
+    public int _portIndex = 0;
+    //refactors as Logic gate doesnt have any onclick events, only used for its references to value.
+
+    public enum RadixOptions { 
+        BalancedTernary,
+        UnbalancedTernary,
+        Binary
+    }
 
     public void OnClick()
     {
-        switch (DropdownLabel.text)
+        RadixOptions radixSource = (RadixOptions) Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
+        switch (radixSource)
         {
-            case "Balanced Ternary":
+            case  RadixOptions.BalancedTernary:
                 {
                     _minValue = -1;
                     _maxValue = 1;
                 }
                 break;
-            case "Unbalanced Ternary":
+            case RadixOptions.UnbalancedTernary:
                 {
                     _minValue = 0;
                     _maxValue = 2;
                 }
                 break;
-            case "Binary":
+            case RadixOptions.Binary:
                 {
                     _minValue = 0;
                     _maxValue = 1;
@@ -50,51 +60,36 @@ public class BtnInput : MonoBehaviour
         ic.ComputeCounter();
 
         //update connect
-        //go over connections and update next component,
-        if (ic.Connections[0].endTerminal.Count > 0)
+        //go over connections and update next component, this code is duplicated in inputcontrollerlogicgate
+        int index = int.Parse(this.transform.parent.name);
+        if (ic.Connections[index].endTerminal.Count > 0)
         {
-            foreach (var c in ic.Connections[0].endTerminal)
+            foreach (var c in ic.Connections[index].endTerminal)
             {
                 //determine if logic gate or output 
-                if (c.tag.Equals("IO"))
+                if (c.tag.Equals("Output"))
                 {
                     c.GetComponentInParent<BtnInput>().SetValue(_value);
                 }
                 else
                 {
-                    int index = 0;
-                    switch (c.name)
-                    {
-                        case "A":
-                            index = 0;
-                            break;
-                        case "B":
-                            index = 1;
-                            break;
-                        case "C":
-                            index = 2;
-                            break;
-                        default:
-                            break;
-                    }
-
-                    c.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput(index, _value);
+                    c.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput(radixSource);
                 }
             }
         }
-    }
+    } 
 
     public void SetValue(int value)
     {
         switch (DropdownLabel.text)
         {
-            case "Balanced Ternary":
+            case "BalancedTernary":
                 {
                     _minValue = -1;
                     _maxValue = 1;
                 }
                 break;
-            case "Unbalanced Ternary":
+            case "UnbalancedTernary":
                 {
                     _minValue = 0;
                     _maxValue = 2;

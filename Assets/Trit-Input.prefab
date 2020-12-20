@@ -129,9 +129,9 @@ MonoBehaviour:
   m_Value: 0
   m_Options:
     m_Options:
-    - m_Text: Balanced Ternary
+    - m_Text: BalancedTernary
       m_Image: {fileID: 0}
-    - m_Text: Unbalanced Ternary
+    - m_Text: UnbalancedTernary
       m_Image: {fileID: 0}
     - m_Text: Binary
       m_Image: {fileID: 0}
@@ -756,10 +756,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _panel: {fileID: 589087065006770304}
-  BtnInputPrefabs:
-  - {fileID: 3134612565084355782}
+  BtnInputPrefab: {fileID: 0}
   MaxInputs: 6
-  InputController: {fileID: 0}
+  InputController: {fileID: 6962074689103135270}
 --- !u!1 &6179011837969025161
 GameObject:
   m_ObjectHideFlags: 0
@@ -1085,7 +1084,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Balanced Ternary
+  m_text: BalancedTernary
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1166,7 +1165,7 @@ GameObject:
   - component: {fileID: 6962074689103135270}
   m_Layer: 5
   m_Name: Trit-Input
-  m_TagString: Untagged
+  m_TagString: IO
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1606,6 +1605,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: BtnInput
       objectReference: {fileID: 0}
+    - target: {fileID: 2653106666146985447, guid: e78a2faa84bfe1844895ecd1be3d1f45, type: 3}
+      propertyPath: m_TagString
+      value: Input
+      objectReference: {fileID: 0}
     - target: {fileID: 2844814155443548407, guid: e78a2faa84bfe1844895ecd1be3d1f45, type: 3}
       propertyPath: m_Text
       value: Data In
@@ -1696,7 +1699,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7427257599275672021, guid: e78a2faa84bfe1844895ecd1be3d1f45, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -103.60001
+      value: -100
       objectReference: {fileID: 0}
     - target: {fileID: 7427257599275672021, guid: e78a2faa84bfe1844895ecd1be3d1f45, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
