@@ -6329,8 +6329,9 @@ GameObject:
   - component: {fileID: 2238897107619459468}
   - component: {fileID: 8202966312597462236}
   - component: {fileID: 6956392712213433628}
+  - component: {fileID: 7118070606397763939}
   m_Layer: 5
-  m_Name: DropdownRadix (1)
+  m_Name: DropdownFunc
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6456,6 +6457,18 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_AlphaFadeSpeed: 0.15
+--- !u!114 &7118070606397763939
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5675787694496779404}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1092d30c27c9194aa9e6bef54cff946, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &5848367603154563543
 GameObject:
   m_ObjectHideFlags: 0

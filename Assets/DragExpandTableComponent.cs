@@ -47,44 +47,17 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
         {
             if (_computedHeight < _btnInputMinPos)
             {
-                _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _btnInputMinPos);
-
-                foreach (var tt in TernaryTruthtables)
-                    tt.SetActive(false);
-
-                foreach (var tt in BinaryTruthtables)
-                    tt.SetActive(false);
-
-                BinaryTruthtables[0].SetActive(true);
-                Arity = 1;
+                SetPanelSize(2, 1);
             }
             else
             {
                 if (_computedHeight > _btnInputMaxPosBinary)
                 {
-                    _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _btnInputMaxPosBinary);
-
-                    foreach (var tt in TernaryTruthtables)
-                        tt.SetActive(false);
-
-                    foreach (var tt in BinaryTruthtables)
-                        tt.SetActive(false);
-
-                    BinaryTruthtables[2].SetActive(true);
-                    Arity = 3;
+                    SetPanelSize(2, 3);
                 }
                 else
                 {
-                    _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 100);
-
-                    foreach (var tt in TernaryTruthtables)
-                        tt.SetActive(false);
-
-                    foreach (var tt in BinaryTruthtables)
-                        tt.SetActive(false);
-
-                    BinaryTruthtables[1].SetActive(true);
-                    Arity = 2;
+                    SetPanelSize(2, 2);
                 }
             }
         }
@@ -92,53 +65,134 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
         {
             if (_computedHeight < _btnInputMinPos)
             {
-                _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _btnInputMinPos);
-
-                foreach (var tt in TernaryTruthtables)
-                    tt.SetActive(false);
-
-                foreach (var tt in BinaryTruthtables)
-                    tt.SetActive(false);
-
-                TernaryTruthtables[0].SetActive(true);
-                Arity = 1;
+                SetPanelSize(3, 1);
             }
             else
             {
                 if (_computedHeight > _btnInputMaxPosTernary)
                 {
-                    _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _btnInputMaxPosTernary);
-
-                    foreach (var tt in TernaryTruthtables)
-                        tt.SetActive(false);
-
-                    foreach (var tt in BinaryTruthtables)
-                        tt.SetActive(false);
-
-                    TernaryTruthtables[2].SetActive(true);
-                    Arity = 3;
+                    SetPanelSize(3, 3);
                 }
                 else
                 {
-                    _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 115);
-
-                    foreach (var tt in TernaryTruthtables)
-                        tt.SetActive(false);
-
-                    foreach (var tt in BinaryTruthtables)
-                        tt.SetActive(false);
-
-                    TernaryTruthtables[1].SetActive(true);
-                    Arity = 2;
+                    SetPanelSize(3, 2);
                 }
             }
         }
 
     }
 
+    
+
     public void OnEndDrag(PointerEventData eventData)
     {
         _ddScript.enabled = true;
         this.transform.parent.transform.parent.GetComponentInChildren<Matrix>().ComputeEmptyTruthTable(Arity);
+    }
+
+    public void SetPanelSize(int radix, int arity)
+    {
+        //height of panel in uunits
+        //          | binary        | ternary
+        // 1-ary       85               85
+        // 2-ary       100              115
+        // 3-ary       115              130
+        if (radix.Equals(2))
+        {
+            switch (arity)
+            {
+                case 1:
+                    {
+                        _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _btnInputMinPos);
+
+                        foreach (var tt in TernaryTruthtables)
+                            tt.SetActive(false);
+
+                        foreach (var tt in BinaryTruthtables)
+                            tt.SetActive(false);
+
+                        BinaryTruthtables[0].SetActive(true);
+                        Arity = 1;
+                    }
+                    break;
+                case 2: 
+                    {
+                        _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 100);
+
+                        foreach (var tt in TernaryTruthtables)
+                            tt.SetActive(false);
+
+                        foreach (var tt in BinaryTruthtables)
+                            tt.SetActive(false);
+
+                        BinaryTruthtables[1].SetActive(true);
+                        Arity = 2;
+                    }
+                    break;
+                case 3:
+                    {
+                        _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _btnInputMaxPosBinary);
+
+                        foreach (var tt in TernaryTruthtables)
+                            tt.SetActive(false);
+
+                        foreach (var tt in BinaryTruthtables)
+                            tt.SetActive(false);
+
+                        BinaryTruthtables[2].SetActive(true);
+                        Arity = 3;
+                    }
+                    break;
+            }        
+        }
+
+        if (radix.Equals(3))
+        {
+            switch (arity)
+            {
+                case 1:
+                    {
+                        _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _btnInputMinPos);
+
+                        foreach (var tt in TernaryTruthtables)
+                            tt.SetActive(false);
+
+                        foreach (var tt in BinaryTruthtables)
+                            tt.SetActive(false);
+
+                        TernaryTruthtables[0].SetActive(true);
+                        Arity = 1;
+                    }
+                    break;
+                case 2:
+                    {
+                        _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 115);
+
+                        foreach (var tt in TernaryTruthtables)
+                            tt.SetActive(false);
+
+                        foreach (var tt in BinaryTruthtables)
+                            tt.SetActive(false);
+
+                        TernaryTruthtables[1].SetActive(true);
+                        Arity = 2;
+                    }
+                    break;
+                case 3:
+                    {
+                        _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _btnInputMaxPosTernary);
+
+                        foreach (var tt in TernaryTruthtables)
+                            tt.SetActive(false);
+
+                        foreach (var tt in BinaryTruthtables)
+                            tt.SetActive(false);
+
+                        TernaryTruthtables[2].SetActive(true);
+                        Arity = 3;
+                    }
+                    break;
+            }
+        }
     }
 }

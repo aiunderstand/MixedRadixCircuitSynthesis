@@ -31776,6 +31776,7 @@ GameObject:
   - component: {fileID: 2113854707}
   - component: {fileID: 2113854706}
   - component: {fileID: 2113854705}
+  - component: {fileID: 2113854708}
   m_Layer: 5
   m_Name: DropdownFunction
   m_TagString: Untagged
@@ -31855,11 +31856,27 @@ MonoBehaviour:
   m_Value: 0
   m_Options:
     m_Options:
-    - m_Text: 88R (Sem. name)
+    - m_Text: Manual function
       m_Image: {fileID: 0}
-    - m_Text: AND
+    - m_Text: sum00a
       m_Image: {fileID: 0}
-    - m_Text: NOT
+    - m_Text: sum00b
+      m_Image: {fileID: 0}
+    - m_Text: carry00
+      m_Image: {fileID: 0}
+    - m_Text: sum10
+      m_Image: {fileID: 0}
+    - m_Text: sum11a
+      m_Image: {fileID: 0}
+    - m_Text: sum01
+      m_Image: {fileID: 0}
+    - m_Text: carry01
+      m_Image: {fileID: 0}
+    - m_Text: sum11b
+      m_Image: {fileID: 0}
+    - m_Text: carry11
+      m_Image: {fileID: 0}
+    - m_Text: sum21a
       m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
@@ -31903,6 +31920,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2113854703}
   m_CullTransparentMesh: 0
+--- !u!114 &2113854708
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2113854703}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1092d30c27c9194aa9e6bef54cff946, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2116785273
 GameObject:
   m_ObjectHideFlags: 0
