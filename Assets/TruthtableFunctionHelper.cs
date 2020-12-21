@@ -18,7 +18,13 @@ public class TruthtableFunctionHelper : MonoBehaviour
         carry01,
         sum11b,
         carry11,
-        sum21a
+        sum21a,
+        sum1a,
+        sum1b,
+        sum2a,
+        sum2b,
+        carry1,
+        carry2
     }
 
     public void Start()
@@ -189,6 +195,78 @@ public class TruthtableFunctionHelper : MonoBehaviour
                     cells[7].label.text = "-1";
                     cells[8].label.text = "-1";
                     break;
+                case TempFunctions.sum1a:
+                    //switch to correct size
+                    _DETC.SetPanelSize(3, 2);
+
+                    //get all the cells
+                    cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
+
+                    //fill in the cells
+                    cells[0].label.text = "0";
+                    cells[1].label.text = "0";
+                    cells[2].label.text = "-1";
+                    cells[3].label.text = "0";
+                    cells[4].label.text = "0";
+                    cells[5].label.text = "0";
+                    cells[6].label.text = "1";
+                    cells[7].label.text = "0";
+                    cells[8].label.text = "0";
+                    break;
+                case TempFunctions.sum1b:
+                    //switch to correct size
+                    _DETC.SetPanelSize(3, 2);
+
+                    //get all the cells
+                    cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
+
+                    //fill in the cells
+                    cells[0].label.text = "-1";
+                    cells[1].label.text = "0";
+                    cells[2].label.text = "0";
+                    cells[3].label.text = "0";
+                    cells[4].label.text = "0";
+                    cells[5].label.text = "1";
+                    cells[6].label.text = "1";
+                    cells[7].label.text = "1";
+                    cells[8].label.text = "-1";
+                    break;
+                case TempFunctions.sum2a:
+                    //switch to correct size
+                    _DETC.SetPanelSize(3, 2);
+
+                    //get all the cells
+                    cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
+
+                    //fill in the cells
+                    cells[0].label.text = "0";
+                    cells[1].label.text = "0";
+                    cells[2].label.text = "1";
+                    cells[3].label.text = "0";
+                    cells[4].label.text = "0";
+                    cells[5].label.text = "1";
+                    cells[6].label.text = "1";
+                    cells[7].label.text = "1";
+                    cells[8].label.text = "-1";
+                    break;
+                case TempFunctions.sum2b:
+                    //switch to correct size
+                    _DETC.SetPanelSize(3, 2);
+
+                    //get all the cells
+                    cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
+
+                    //fill in the cells
+                    cells[0].label.text = "-1";
+                    cells[1].label.text = "-1";
+                    cells[2].label.text = "-1";
+                    cells[3].label.text = "0";
+                    cells[4].label.text = "0";
+                    cells[5].label.text = "-1";
+                    cells[6].label.text = "1";
+                    cells[7].label.text = "1";
+                    cells[8].label.text = "-1";
+                    break;
                 case TempFunctions.carry00:
                     //switch to correct size
                     _DETC.SetPanelSize(3, 3);
@@ -274,6 +352,96 @@ public class TruthtableFunctionHelper : MonoBehaviour
                     cells[23].label.text = "1";
                     cells[24].label.text = "0";
                     cells[25].label.text = "0";
+                    cells[26].label.text = "1";
+
+                    bittd = transform.parent.GetComponentInChildren<BtnInputTruthTableDropdown>();
+                    bittd.DeActivateAll();
+                    bittd.Activate(currentIndex);
+                    break;
+                case TempFunctions.carry1:
+                    //switch to correct size
+                    _DETC.SetPanelSize(3, 3);
+
+                    //get all the cells
+                    bittd = transform.parent.GetComponentInChildren<BtnInputTruthTableDropdown>();
+                    currentIndex = bittd.GetComponent<TMP_Dropdown>().value;
+
+                    bittd.ActivateAll();
+
+                    cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
+
+                    //fill in the cells
+                    cells[0].label.text = "0";
+                    cells[1].label.text = "0";
+                    cells[2].label.text = "0";
+                    cells[3].label.text = "0";
+                    cells[4].label.text = "0";
+                    cells[5].label.text = "0";
+                    cells[6].label.text = "0";
+                    cells[7].label.text = "0";
+                    cells[8].label.text = "0";
+                    cells[9].label.text = "0";
+                    cells[10].label.text = "0";
+                    cells[11].label.text = "0";
+                    cells[12].label.text = "0";
+                    cells[13].label.text = "0";
+                    cells[14].label.text = "0";
+                    cells[15].label.text = "0";
+                    cells[16].label.text = "0";
+                    cells[17].label.text = "0";
+                    cells[18].label.text = "0";
+                    cells[19].label.text = "0";
+                    cells[20].label.text = "1";
+                    cells[21].label.text = "0";
+                    cells[22].label.text = "0";
+                    cells[23].label.text = "0";
+                    cells[24].label.text = "0";
+                    cells[25].label.text = "0";
+                    cells[26].label.text = "0";
+
+                    bittd = transform.parent.GetComponentInChildren<BtnInputTruthTableDropdown>();
+                    bittd.DeActivateAll();
+                    bittd.Activate(currentIndex);
+                    break;
+                case TempFunctions.carry2:
+                    //switch to correct size
+                    _DETC.SetPanelSize(3, 3);
+
+                    //get all the cells
+                    bittd = transform.parent.GetComponentInChildren<BtnInputTruthTableDropdown>();
+                    currentIndex = bittd.GetComponent<TMP_Dropdown>().value;
+
+                    bittd.ActivateAll();
+
+                    cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
+
+                    //fill in the cells
+                    cells[0].label.text = "0";
+                    cells[1].label.text = "0";
+                    cells[2].label.text = "0";
+                    cells[3].label.text = "0";
+                    cells[4].label.text = "0";
+                    cells[5].label.text = "0";
+                    cells[6].label.text = "0";
+                    cells[7].label.text = "0";
+                    cells[8].label.text = "1";
+                    cells[9].label.text = "0";
+                    cells[10].label.text = "0";
+                    cells[11].label.text = "0";
+                    cells[12].label.text = "0";
+                    cells[13].label.text = "0";
+                    cells[14].label.text = "0";
+                    cells[15].label.text = "0";
+                    cells[16].label.text = "0";
+                    cells[17].label.text = "1";
+                    cells[18].label.text = "0";
+                    cells[19].label.text = "0";
+                    cells[20].label.text = "0";
+                    cells[21].label.text = "0";
+                    cells[22].label.text = "0";
+                    cells[23].label.text = "0";
+                    cells[24].label.text = "1";
+                    cells[25].label.text = "1";
                     cells[26].label.text = "1";
 
                     bittd = transform.parent.GetComponentInChildren<BtnInputTruthTableDropdown>();

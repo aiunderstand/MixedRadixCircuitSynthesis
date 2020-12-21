@@ -31878,6 +31878,18 @@ MonoBehaviour:
       m_Image: {fileID: 0}
     - m_Text: sum21a
       m_Image: {fileID: 0}
+    - m_Text: sum1a
+      m_Image: {fileID: 0}
+    - m_Text: sum1b
+      m_Image: {fileID: 0}
+    - m_Text: sum2a
+      m_Image: {fileID: 0}
+    - m_Text: sum2b
+      m_Image: {fileID: 0}
+    - m_Text: carry1
+      m_Image: {fileID: 0}
+    - m_Text: carry2
+      m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
