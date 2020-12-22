@@ -8,6 +8,9 @@ TagManager:
   - LogicGate
   - Input
   - Output
+  - PortA
+  - PortB
+  - PortC
   layers:
   - Default
   - TransparentFX

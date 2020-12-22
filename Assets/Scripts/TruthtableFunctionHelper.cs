@@ -207,13 +207,13 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
                     //fill in the cells
                     cells[0].label.text = "0";
-                    cells[3].label.text = "0";
-                    cells[6].label.text = "-1";
                     cells[1].label.text = "0";
+                    cells[2].label.text = "-1";
+                    cells[3].label.text = "0";
                     cells[4].label.text = "0";
-                    cells[7].label.text = "0";
-                    cells[2].label.text = "1";
                     cells[5].label.text = "0";
+                    cells[6].label.text = "1";
+                    cells[7].label.text = "0";
                     cells[8].label.text = "0";
                     break;
                 case TempFunctions.sum1b: //checked
@@ -225,13 +225,13 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
                     //fill in the cells
                     cells[0].label.text = "-1";
-                    cells[3].label.text = "0";
-                    cells[6].label.text = "0";
                     cells[1].label.text = "0";
+                    cells[2].label.text = "0";
+                    cells[3].label.text = "0";
                     cells[4].label.text = "0";
-                    cells[7].label.text = "1";
-                    cells[2].label.text = "1";
                     cells[5].label.text = "1";
+                    cells[6].label.text = "1";
+                    cells[7].label.text = "1";
                     cells[8].label.text = "-1";
                     break;
                 case TempFunctions.sum2a: //checked
@@ -243,13 +243,13 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
                     //fill in the cells
                     cells[0].label.text = "0";
-                    cells[3].label.text = "0";
-                    cells[6].label.text = "1";
                     cells[1].label.text = "0";
-                    cells[4].label.text = "0";
-                    cells[7].label.text = "1";
                     cells[2].label.text = "1";
+                    cells[3].label.text = "0";
+                    cells[4].label.text = "0";
                     cells[5].label.text = "1";
+                    cells[6].label.text = "1";
+                    cells[7].label.text = "1";
                     cells[8].label.text = "-1";
                     break;
                 case TempFunctions.sum2b: //checked
@@ -261,13 +261,13 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
                     //fill in the cells
                     cells[0].label.text = "-1";
-                    cells[3].label.text = "-1";
-                    cells[6].label.text = "-1";
-                    cells[1].label.text = "0";
+                    cells[1].label.text = "-1";
+                    cells[2].label.text = "-1";
+                    cells[3].label.text = "0";
                     cells[4].label.text = "0";
-                    cells[7].label.text = "-1";
-                    cells[2].label.text = "1";
-                    cells[5].label.text = "1";
+                    cells[5].label.text = "-1";
+                    cells[6].label.text = "1";
+                    cells[7].label.text = "1";
                     cells[8].label.text = "-1";
                     break;
                 case TempFunctions.carry00:
@@ -379,33 +379,33 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
                     //fill in the cells
                     cells[0].label.text = "0";
-                    cells[3].label.text = "0";
-                    cells[6].label.text = "0";
                     cells[1].label.text = "0";
-                    cells[4].label.text = "0";
-                    cells[7].label.text = "0";
                     cells[2].label.text = "0";
+                    cells[3].label.text = "0";
+                    cells[4].label.text = "0";
                     cells[5].label.text = "0";
+                    cells[6].label.text = "0";
+                    cells[7].label.text = "0";
                     cells[8].label.text = "0";
 
                     cells[9].label.text = "0";
-                    cells[12].label.text = "0";
-                    cells[15].label.text = "0";
                     cells[10].label.text = "0";
-                    cells[13].label.text = "0";
-                    cells[16].label.text = "0";
                     cells[11].label.text = "0";
+                    cells[12].label.text = "0";
+                    cells[13].label.text = "0";
                     cells[14].label.text = "0";
+                    cells[15].label.text = "0";
+                    cells[16].label.text = "0";
                     cells[17].label.text = "0";
 
                     cells[18].label.text = "0";
-                    cells[21].label.text = "0";
-                    cells[24].label.text = "1";
                     cells[19].label.text = "0";
+                    cells[20].label.text = "1";
+                    cells[21].label.text = "0";
                     cells[22].label.text = "0";
-                    cells[25].label.text = "0";
-                    cells[20].label.text = "0";
                     cells[23].label.text = "0";
+                    cells[24].label.text = "0";
+                    cells[25].label.text = "0";
                     cells[26].label.text = "0";
 
                     bittd = transform.parent.GetComponentInChildren<BtnInputTruthTableDropdown>();
@@ -426,33 +426,33 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
                     //fill in the cells
                     cells[0].label.text = "0";
-                    cells[3].label.text = "0";
-                    cells[6].label.text = "0";
                     cells[1].label.text = "0";
-                    cells[4].label.text = "0";
-                    cells[7].label.text = "0";
                     cells[2].label.text = "0";
+                    cells[3].label.text = "0";
+                    cells[4].label.text = "0";
                     cells[5].label.text = "0";
+                    cells[6].label.text = "0";
+                    cells[7].label.text = "0";
                     cells[8].label.text = "1";
 
                     cells[9].label.text = "0";
-                    cells[12].label.text = "0";
-                    cells[15].label.text = "0";
                     cells[10].label.text = "0";
-                    cells[13].label.text = "0";
-                    cells[16].label.text = "0";
                     cells[11].label.text = "0";
+                    cells[12].label.text = "0";
+                    cells[13].label.text = "0";
                     cells[14].label.text = "0";
+                    cells[15].label.text = "0";
+                    cells[16].label.text = "0";
                     cells[17].label.text = "1";
 
                     cells[18].label.text = "0";
-                    cells[21].label.text = "0";
-                    cells[24].label.text = "0";
                     cells[19].label.text = "0";
+                    cells[20].label.text = "0";
+                    cells[21].label.text = "0";
                     cells[22].label.text = "0";
-                    cells[25].label.text = "0";
-                    cells[20].label.text = "1";
-                    cells[23].label.text = "1";
+                    cells[23].label.text = "0";
+                    cells[24].label.text = "1";
+                    cells[25].label.text = "1";
                     cells[26].label.text = "1";
 
                     bittd = transform.parent.GetComponentInChildren<BtnInputTruthTableDropdown>();

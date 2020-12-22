@@ -74,7 +74,7 @@ public class LineManager : MonoBehaviour, IPointerUpHandler
                         var conn = _tempStartTerminal.GetComponentInParent<InputController>().Connections[int.Parse(_tempStartTerminal.name)];
                         conn.startTerminal = _tempStartTerminal;
                         conn.endTerminal.Add(eventParam.ConnectionData.ConnectionTerminal);
-                        _tempLine.name = _tempLine.name + eventParam.ConnectionData.ConnectionTerminal.name;
+                        _tempLine.name = _tempLine.name + eventParam.ConnectionData.ConnectionTerminal.tag;
 
                         //if end terminal is an Output 
                         if (eventParam.ConnectionData.ConnectionTerminal.tag.Equals("Output"))
@@ -98,8 +98,48 @@ public class LineManager : MonoBehaviour, IPointerUpHandler
                                 icl2.Connections[3] = conn; //index 3 is always the output port
                             }
 
-                            int index = int.Parse(eventParam.ConnectionData.ConnectionTerminal.name);
                             var icl = eventParam.ConnectionData.ConnectionTerminal.transform.parent.transform.parent.GetComponent<InputControllerLogicGate>();
+
+                            //this part is messy due to bottom up approach, we need to find the correct index which changes based on arity (number of inputs)
+                            //string tag = eventParam.ConnectionData.ConnectionTerminal.tag;
+                            //var arity = icl.GetComponentInChildren<DragExpandTableComponent>().Arity;
+                            int index = int.Parse(eventParam.ConnectionData.ConnectionTerminal.name);
+
+                            //switch (arity)
+                            //{
+                            //    case 1:
+                            //        if (tag.Equals("PortA"))
+                            //            index = 0;
+                            //        else
+                            //            new NotImplementedException(); //error
+                            //        break;
+                            //    case 2:
+                            //        switch (tag)
+                            //        {
+                            //            case "PortA":
+                            //                index = 1;
+                            //                break;
+                            //            case "PortB":
+                            //                index = 0;
+                            //                break;
+                            //        }
+                            //        break;
+                            //    case 3:
+                            //        switch (tag)
+                            //        {
+                            //            case "PortA":
+                            //                index = 2;
+                            //                break;
+                            //            case "PortB":
+                            //                index = 1;
+                            //                break;
+                            //            case "PortC":
+                            //                index = 0;
+                            //                break;
+                            //        }
+                            //        break;
+                            //}
+
                             icl.Connections[index] = conn;
                         }
 

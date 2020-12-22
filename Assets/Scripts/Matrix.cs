@@ -85,9 +85,10 @@ public class Matrix : MonoBehaviour
     {
         Truthtable = new BtnInputTruthTable[radix, 1, 1];
 
-        for (int i = 0; i < radix; i++)
+        //A (row)is index 0
+        for (int A = 0; A < radix; A++)
         {
-            Truthtable[i, 0, 0] = cells[i];
+            Truthtable[A, 0, 0] = cells[A];
         }
     }
 
@@ -96,11 +97,12 @@ public class Matrix : MonoBehaviour
         Truthtable = new BtnInputTruthTable[radix, radix, 1];
         int counter = 0;
 
-        for (int i = 0; i < radix; i++)
+        //A (row) is index 0, B (column) is index 1
+        for (int A = 0; A < radix; A++)
         {
-            for (int j = 0; j < radix; j++)
+            for (int B = 0; B < radix; B++)
             {
-                Truthtable[i, j, 0] = cells[counter];
+                Truthtable[A, B, 0] = cells[counter];
                 counter++;
             }
         }
@@ -111,13 +113,14 @@ public class Matrix : MonoBehaviour
         Truthtable = new BtnInputTruthTable[radix, radix, radix];
         int counter = 0;
 
-        for (int i = 0; i < radix; i++)
+        //A (row) is index 0, B (column) is index 1, C (depth) is index 2
+        for (int A = 0; A < radix; A++)
         {
-            for (int j = 0; j < radix; j++)
+            for (int B = 0; B < radix; B++)
             {
-                for (int k = 0; k < radix; k++)
+                for (int C = 0; C < radix; C++)
                 {
-                    Truthtable[i, j, k] = cells[counter];
+                    Truthtable[A, B, C] = cells[counter];
                     counter++;
                 }
             }

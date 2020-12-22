@@ -53,19 +53,71 @@ public class InputControllerLogicGate : MonoBehaviour
 
         if (allConnected)
         {
-            //inputs converted to start at 0 since we use them as indices of matrices. 
-            //For binary we use -1 and 1 IF and only if target radix is -1 and 1 then these are converted to 0 and 2. We should visuale this better
             int[] matrixIndices = new int[3];
-          
-            for (int i = 0; i < 3; i++)
+
+            //this is a mess. For every matrix we need to check all connections from source and filter out the useful one and map it to the correct port in the second pass. This is a paper hack
+            //filter useful connection
+            List<Connection> UniqueConnectionsOfThisLogicGate = new List<Connection>();
+            foreach (var c in Connections)
             {
-                if (i < _arity)
-                    matrixIndices[i] = ConvertInputToTruthtableIndex(Connections[i].startTerminal);
-                else
-                    matrixIndices[i] = 0;
+                foreach (var e in c.endTerminal)
+                {
+                    var source = this.GetInstanceID();
+
+                    var test = e.transform.parent.transform.parent.GetComponent<InputControllerLogicGate>();
+                    if (test == null)
+                    {
+                        int a = 1;
+                    }
+                    
+                    var target = e.transform.parent.transform.parent.GetComponent<InputControllerLogicGate>().GetInstanceID();
+
+                    if (source.Equals(target))
+                    {
+                        Connection conn = new Connection();
+                        conn.startTerminal = c.startTerminal;
+                        conn.endTerminal.Add(e);
+                        UniqueConnectionsOfThisLogicGate.Add(conn);
+                    }
+                        
+                }
+
             }
-                
-          
+
+            //map to correct port
+            foreach (var c in UniqueConnectionsOfThisLogicGate)
+            {
+                switch (_arity)
+                {
+                    case 1:
+                        if (c.endTerminal[0].tag.Equals("PortA"))
+                            matrixIndices[0] = ConvertInputToTruthtableIndex(c.startTerminal);
+                        break;
+                    case 2:
+                        //check port numbers
+                        if (c.endTerminal[0].tag.Equals("PortA"))
+                            matrixIndices[0] = ConvertInputToTruthtableIndex(c.startTerminal);
+                        if (c.endTerminal[0].tag.Equals("PortB"))
+                            matrixIndices[1] = ConvertInputToTruthtableIndex(c.startTerminal);
+                        break;
+                    case 3:
+                        //check port numbers
+                        if (c.endTerminal[0].tag.Equals("PortA"))
+                            matrixIndices[0] = ConvertInputToTruthtableIndex(c.startTerminal);
+                        if (c.endTerminal[0].tag.Equals("PortB"))
+                            matrixIndices[1] = ConvertInputToTruthtableIndex(c.startTerminal);
+                        if (c.endTerminal[0].tag.Equals("PortC"))
+                            matrixIndices[2] = ConvertInputToTruthtableIndex(c.startTerminal);
+                        break;
+                }
+
+
+                Debug.Log(string.Format("{0},{1},{2}",matrixIndices[0], matrixIndices[1], matrixIndices[2]));
+
+            }
+
+            
+
             int _output = 0;
             //get the correct matrix
             //if we have arity 3, we first need to set the correct matrix based on the value
@@ -73,7 +125,7 @@ public class InputControllerLogicGate : MonoBehaviour
             {
                 var dropdown = GetComponentInChildren<BtnInputTruthTableDropdown>().gameObject.GetComponent<TMP_Dropdown>();
                 //set dropdown index based on found value;
-                dropdown.value = matrixIndices[0];
+                dropdown.value = matrixIndices[2];
             }
 
             var matrices = GetComponentsInChildren<Matrix>(); //refactor as it is alwasy 1 matrix now
@@ -82,11 +134,8 @@ public class InputControllerLogicGate : MonoBehaviour
             {
                 if (m.isActiveAndEnabled)
                 {
-                    string label;
-                    if (_arity.Equals(3))
-                        label = m.Truthtable[matrixIndices[2], matrixIndices[1], matrixIndices[0]].label.text;
-                    else
-                        label = m.Truthtable[matrixIndices[0], matrixIndices[1], matrixIndices[2]].label.text;
+                    //index 0 = A(row), index 1 = B (column), index 2 (depth)
+                    string label = m.Truthtable[matrixIndices[0], matrixIndices[1], matrixIndices[2]].label.text;
 
                     if (label.Equals("x"))
                     {
@@ -117,10 +166,7 @@ public class InputControllerLogicGate : MonoBehaviour
                     }
 
                     //highlight active cell (only works for unbalanced ternary ATM)
-                    if (_arity.Equals(3))
-                        m.Truthtable[matrixIndices[2], matrixIndices[1], matrixIndices[0]].label.color = panelColorActive;
-                    else
-                        m.Truthtable[matrixIndices[0], matrixIndices[1], matrixIndices[2]].label.color = panelColorActive;
+                    m.Truthtable[matrixIndices[0], matrixIndices[1], matrixIndices[2]].label.color = panelColorActive;
                 }
             }
 
@@ -179,7 +225,7 @@ public class InputControllerLogicGate : MonoBehaviour
                     break;
                 case RadixOptions.UnbalancedTernary:
                     {
-                        //values match table indices, no conversation needed
+                        new NotImplementedException();
                     }
                     break;
                 case RadixOptions.BalancedTernary:
