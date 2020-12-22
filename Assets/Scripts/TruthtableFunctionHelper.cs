@@ -18,6 +18,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
         carry01,
         sum11b,
         carry11,
+        carry21,
         sum21a,
         sum1a,
         sum1b,
@@ -269,6 +270,24 @@ public class TruthtableFunctionHelper : MonoBehaviour
                     cells[6].label.text = "1";
                     cells[7].label.text = "1";
                     cells[8].label.text = "-1";
+                    break;
+                case TempFunctions.carry21: //checked
+                    //switch to correct size
+                    _DETC.SetPanelSize(3, 2);
+
+                    //get all the cells
+                    cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
+
+                    //fill in the cells
+                    cells[0].label.text = "0";
+                    cells[1].label.text = "0";
+                    cells[2].label.text = "0";
+                    cells[3].label.text = "0";
+                    cells[4].label.text = "0";
+                    cells[5].label.text = "0";
+                    cells[6].label.text = "0";
+                    cells[7].label.text = "0";
+                    cells[8].label.text = "1";
                     break;
                 case TempFunctions.carry00:
                     //switch to correct size
