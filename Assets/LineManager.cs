@@ -12,7 +12,7 @@ public class LineManager : MonoBehaviour, IPointerUpHandler
     GameObject _tempLine;
     BtnInput _tempStartTerminal;
     public GameObject LinePrefab;
-    float _offsetX = 25;
+    float _offsetX = 20;
 
     void Awake()
     {
@@ -44,6 +44,9 @@ public class LineManager : MonoBehaviour, IPointerUpHandler
             _tempLine.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
 
             var lr = _tempLine.GetComponent<LineRenderer>();
+
+            lr.startColor = _tempStartTerminal.wireColor.color;
+
             var positionObject = _tempStartTerminal.transform.position;
             lr.SetPosition(0, positionObject);
             lr.SetPosition(1, new Vector3(positionObject.x + _offsetX, positionObject.y, 0));

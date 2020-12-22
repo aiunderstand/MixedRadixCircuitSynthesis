@@ -50,7 +50,7 @@ public class InputController : MonoBehaviour
         int temp = 0;
         for (int i=0; i<Buttons.Count; i++)
         {
-            temp =  Int32.Parse(Buttons[i].GetComponent<BtnInput>().label.text); //get and convert input
+            temp =  Int32.Parse(Buttons[Buttons.Count-1-i].GetComponent<BtnInput>().label.text); //get and convert input Top is highest 
             sum += (int) (temp * Math.Pow(_radix,i));
         }
 

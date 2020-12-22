@@ -783,6 +783,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1180821701}
     m_Modifications:
+    - target: {fileID: 3187537121255222462, guid: 3f28ed41801b4d9489f08a4a00516520, type: 3}
+      propertyPath: DropdownLabel
+      value: 
+      objectReference: {fileID: 1422241496}
     - target: {fileID: 3933525427255764456, guid: 3f28ed41801b4d9489f08a4a00516520, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -1007,6 +1011,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1150810607}
     m_Modifications:
+    - target: {fileID: 3187537121255222462, guid: 3f28ed41801b4d9489f08a4a00516520, type: 3}
+      propertyPath: DropdownLabel
+      value: 
+      objectReference: {fileID: 1422241496}
     - target: {fileID: 3933525427255764456, guid: 3f28ed41801b4d9489f08a4a00516520, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -4508,6 +4516,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1975872260}
     m_Modifications:
+    - target: {fileID: 1370464168992604418, guid: c3fe3e48b52573343bee0348d9025c30, type: 3}
+      propertyPath: wireColor
+      value: 
+      objectReference: {fileID: 1030241744}
     - target: {fileID: 3899077259890511869, guid: c3fe3e48b52573343bee0348d9025c30, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -4670,6 +4682,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 775245876}
     m_Modifications:
+    - target: {fileID: 3187537121255222462, guid: 3f28ed41801b4d9489f08a4a00516520, type: 3}
+      propertyPath: DropdownLabel
+      value: 
+      objectReference: {fileID: 1422241496}
     - target: {fileID: 3933525427255764456, guid: 3f28ed41801b4d9489f08a4a00516520, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -5306,6 +5322,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 2116785274}
     m_Modifications:
+    - target: {fileID: 3187537121255222462, guid: 3f28ed41801b4d9489f08a4a00516520, type: 3}
+      propertyPath: DropdownLabel
+      value: 
+      objectReference: {fileID: 1422241496}
     - target: {fileID: 3933525427255764456, guid: 3f28ed41801b4d9489f08a4a00516520, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -11265,6 +11285,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 490096736}
     m_Modifications:
+    - target: {fileID: 3187537121255222462, guid: 3f28ed41801b4d9489f08a4a00516520, type: 3}
+      propertyPath: DropdownLabel
+      value: 
+      objectReference: {fileID: 1422241496}
     - target: {fileID: 3933525427255764456, guid: 3f28ed41801b4d9489f08a4a00516520, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -13030,6 +13054,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1760798410}
     m_Modifications:
+    - target: {fileID: 3187537121255222462, guid: 3f28ed41801b4d9489f08a4a00516520, type: 3}
+      propertyPath: DropdownLabel
+      value: 
+      objectReference: {fileID: 1422241496}
     - target: {fileID: 3933525427255764456, guid: 3f28ed41801b4d9489f08a4a00516520, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -14241,6 +14269,17 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 5278398394290056199, guid: cb88a44322456f14d89048a864993695, type: 3}
   m_PrefabInstance: {fileID: 635105272}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &930530224 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5468419398724385841, guid: 3121b335a9bc7a1408a20072e8d37f99, type: 3}
+  m_PrefabInstance: {fileID: 6878002028747508278}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &933299984
 GameObject:
   m_ObjectHideFlags: 0
@@ -15295,6 +15334,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 5278398394290056198, guid: cb88a44322456f14d89048a864993695, type: 3}
   m_PrefabInstance: {fileID: 1466278276}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1030241744 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1322300693484442744, guid: c3fe3e48b52573343bee0348d9025c30, type: 3}
+  m_PrefabInstance: {fileID: 295068936}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1030490504
 GameObject:
   m_ObjectHideFlags: 0
@@ -16045,6 +16095,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.x
       value: 35.6
       objectReference: {fileID: 0}
+    - target: {fileID: 8130865695775829979, guid: 8e1fd375e87e5644396be5929a605d0e, type: 3}
+      propertyPath: wireColor
+      value: 
+      objectReference: {fileID: 1150599453}
     - target: {fileID: 8130865695775829979, guid: 8e1fd375e87e5644396be5929a605d0e, type: 3}
       propertyPath: DropdownLabel
       value: 
@@ -17655,6 +17709,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1146864517}
   m_CullTransparentMesh: 0
+--- !u!114 &1150599453 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5478277081742685041, guid: 8e1fd375e87e5644396be5929a605d0e, type: 3}
+  m_PrefabInstance: {fileID: 1069904743}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1150810606
 GameObject:
   m_ObjectHideFlags: 0
@@ -35073,6 +35138,26 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1082002311}
     m_Modifications:
+    - target: {fileID: 1105304910427427301, guid: 3121b335a9bc7a1408a20072e8d37f99, type: 3}
+      propertyPath: m_Interactable
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1105304910427427301, guid: 3121b335a9bc7a1408a20072e8d37f99, type: 3}
+      propertyPath: m_Colors.m_DisabledColor.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1105304910427427301, guid: 3121b335a9bc7a1408a20072e8d37f99, type: 3}
+      propertyPath: m_Colors.m_DisabledColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1105304910427427301, guid: 3121b335a9bc7a1408a20072e8d37f99, type: 3}
+      propertyPath: m_Colors.m_DisabledColor.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1105304910427427301, guid: 3121b335a9bc7a1408a20072e8d37f99, type: 3}
+      propertyPath: m_Colors.m_DisabledColor.r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1764463984737139572, guid: 3121b335a9bc7a1408a20072e8d37f99, type: 3}
       propertyPath: DropdownLabel
       value: 
@@ -35085,6 +35170,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5385925717001398603, guid: 3121b335a9bc7a1408a20072e8d37f99, type: 3}
+      propertyPath: wireColor
+      value: 
+      objectReference: {fileID: 930530224}
     - target: {fileID: 6929754609896766408, guid: 3121b335a9bc7a1408a20072e8d37f99, type: 3}
       propertyPath: m_Name
       value: Trit-Output

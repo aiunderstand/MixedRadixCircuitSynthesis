@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -7,6 +8,7 @@ using static BtnInput;
 public class InputControllerLogicGate : MonoBehaviour
 {
     public TextMeshProUGUI DropDownFunctionLabel;
+    TextMeshProUGUI _radixTarget; //or source if it is linked to a output
     public Connection[] Connections = new Connection[4]; //needed for data binding 
     public Color panelColorDefault;
     public Color panelColorActive;
@@ -17,9 +19,12 @@ public class InputControllerLogicGate : MonoBehaviour
         {
             Connections[i] = new Connection();
         }
+
+        _radixTarget = GetComponent<Matrix>().DropdownLabel;
+
     }
 
-    public void ComputeTruthTableOutput(RadixOptions radixSource)
+    public void ComputeTruthTableOutput()
     {
         //check if all terminals are connected
         var _arity = GetComponentInChildren<DragExpandTableComponent>().Arity;
@@ -48,30 +53,18 @@ public class InputControllerLogicGate : MonoBehaviour
 
         if (allConnected)
         {
-            //inputs converted to start at 0 since we use them as indices of matrices.
+            //inputs converted to start at 0 since we use them as indices of matrices. 
+            //For binary we use -1 and 1 IF and only if target radix is -1 and 1 then these are converted to 0 and 2. We should visuale this better
             int[] matrixIndices = new int[3];
-            switch (radixSource)
+          
+            for (int i = 0; i < 3; i++)
             {
-                case RadixOptions.Binary:
-                case RadixOptions.UnbalancedTernary:
-                    for (int i = 0; i < 3; i++)
-                    {
-                        if (i < _arity)
-                            matrixIndices[i] = ProtectFromWrongInput(int.Parse(Connections[i].startTerminal.label.text));
-                        else
-                            matrixIndices[i] = 0;
-                    }
-                    break;
-                case RadixOptions.BalancedTernary:
-                    for (int i = 0; i < 3; i++)
-                    {
-                        if (i < _arity)
-                            matrixIndices[i] = ConvertFromBalancedToUnbalanced(int.Parse(Connections[i].startTerminal.label.text));
-                        else
-                            matrixIndices[i] = 0;
-                    }
-                    break;
+                if (i < _arity)
+                    matrixIndices[i] = ConvertInputToTruthtableIndex(Connections[i].startTerminal);
+                else
+                    matrixIndices[i] = 0;
             }
+                
           
             int _output = 0;
             //get the correct matrix
@@ -93,6 +86,7 @@ public class InputControllerLogicGate : MonoBehaviour
                     if (label.Equals("x"))
                     {
                         //this should never happen, 2do generate a warning message
+                        new NotImplementedException();
                         _output = 0;
                     }
                     else
@@ -130,41 +124,112 @@ public class InputControllerLogicGate : MonoBehaviour
                     //determine if logic gate or output 
                     if (c.tag.Equals("Output"))
                     {
-                        c.GetComponentInParent<BtnInput>().SetValue(_output);
+                        RadixOptions radixTarget = (RadixOptions)Enum.Parse(typeof(RadixOptions), _radixTarget.text, true);
+                        c.GetComponentInParent<BtnInput>().SetValue(radixTarget, _output);
                     }
                     else
                     {
-                        c.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput(radixSource);
+                        c.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
                     }
                 }
             }
         }
         else //report that one or more connections are missing
-        { 
+        {
+            new NotImplementedException(); //should not happen
+        }
+    }
+
+    private int ConvertInputToTruthtableIndex(BtnInput startTerminal)
+    {
+        //we could also do this whole conversation at btnInput and use _value which is an index. The only thing we need to catch are x's.
+        string value = startTerminal.label.text;
+        int output=0;
+        RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), startTerminal.DropdownLabel.text, true);
+        RadixOptions radixTarget = (RadixOptions)Enum.Parse(typeof(RadixOptions), _radixTarget.text, true);
+
+        if (value.Equals("x"))
+        {
+            new NotImplementedException();
+        }
+        else
+        {
+            output = int.Parse(value);
+
+            switch (radixSource)
+            {
+                case RadixOptions.Binary:
+                    {
+                        if (radixTarget != RadixOptions.Binary) //from binary to binary we can use 0-1 range
+                        {
+                            if (output == 0)
+                                output = 0;
+                            else
+                                output = 2;
+                        }
+                    }
+                    break;
+                case RadixOptions.UnbalancedTernary:
+                    {
+                        //values match table indices, no conversation needed
+                    }
+                    break;
+                case RadixOptions.BalancedTernary:
+                    {
+                        output = output + 1;
+                    }
+                    break;
+            }
+        }
+
+        return output;
+    }
+
+    private int ConvertFromBinaryToUnbalanced(string v)
+    {
+        int x = 0;
+        if (_radixTarget.text.Equals("Binary"))
+        {
+            //do nothing source and target radix are binary
+            if (v.Equals(x))
+                new NotImplementedException();
+
+            x = int.Parse(v);
+        }
+        else //convert 0's to -1
+        {
+            //do nothing source and target radix are binary
+            if (v.Equals("x"))
+                new NotImplementedException();
+
+            x = int.Parse(v);
+
+            if (x==1)
+                x = 2;
+            else
+                x = 0;
+        }
         
-        }
+        return x;
     }
 
-    private int ConvertFromBalancedToUnbalanced(int v)
+    private int ConvertFromBalancedToUnbalanced(string v)
     {
-        if (v.Equals("x"))
-        {
-            //this should never happen, 2do generate a warning message
-            v = 0;
-        }
-       
-        return v + 1;
-
+            int x = 0;
+            if (v.Equals("x"))
+                new NotImplementedException();
+            else
+                x = int.Parse(v) + 1;
+        return x; //this is not real conversion from balanced to unbalanced ternary just a digit shift for the sake of using it as an index. Maybe use another system
     }
 
-    private int ProtectFromWrongInput(int v)
-    {
-        if (v.Equals("x"))
+        private int CatchBadInput(string v)
         {
-            //this should never happen, 2do generate a warning message
-            v = 0;
+            int x = 0;
+            if (v.Equals("x"))
+                new NotImplementedException();
+            else
+                x = int.Parse(v);
+            return x; //this is not real conversion from balanced to unbalanced ternary just a digit shift for the sake of using it as an index. Maybe use another system
         }
-
-        return v;
     }
-}

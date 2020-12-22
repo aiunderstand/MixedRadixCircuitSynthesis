@@ -146,7 +146,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DropdownLabel: {fileID: 0}
+  wireColor: {fileID: 0}
+  colorBinary: {r: 0, g: 0, b: 0, a: 0}
   label: {fileID: 1067097067356537191}
+  _portIndex: 0
 --- !u!1 &2602930586762411899
 GameObject:
   m_ObjectHideFlags: 0
@@ -335,7 +338,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DropdownLabel: {fileID: 0}
+  wireColor: {fileID: 4852457121634253392}
+  colorBinary: {r: 1, g: 0, b: 0.82745105, a: 1}
   label: {fileID: 1067097067356537191}
+  _portIndex: 0
 --- !u!1 &3267452880450470613
 GameObject:
   m_ObjectHideFlags: 0

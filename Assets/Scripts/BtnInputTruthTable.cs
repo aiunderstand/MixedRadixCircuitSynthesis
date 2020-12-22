@@ -20,29 +20,49 @@ public class BtnInputTruthTable : MonoBehaviour
                 {
                     _minValue = -1;
                     _maxValue = 2;
+
+                    _value++;
+
+                    if (_value > _maxValue)
+                        _value = _minValue;
+
                 }
                 break;
             case "UnbalancedTernary":
                 {
                     _minValue = 0;
                     _maxValue = 3;
+
+                    _value++;
+
+                    if (_value > _maxValue)
+                        _value = _minValue;
+
                 }
                 break;
             case "Binary":
                 {
                     _minValue = 0;
                     _maxValue = 2;
+
+                    switch (_value) {
+                        case 0:
+                            _value = 1;
+                            break;
+                        case 1: 
+                            _value = 2;
+                            break;
+                        case 2:
+                            _value = 0;
+                            break;
+                    }
                 }
                 break;
             default:
                 break;
         }
 
-        _value++;
-
-        if (_value > _maxValue)
-            _value = _minValue;
-
+       
         if (_value == _maxValue)
             label.text = "x";
         else
