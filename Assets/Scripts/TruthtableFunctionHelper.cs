@@ -142,7 +142,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                     cells[5].label.text = "1";
                     cells[6].label.text = "1";
                     cells[7].label.text = "1";
-                    cells[8].label.text = "1";
+                    cells[8].label.text = "-1";
                     break;
                 case TempFunctions.sum11a:
                     //switch to correct size
@@ -152,13 +152,13 @@ public class TruthtableFunctionHelper : MonoBehaviour
                     cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
 
                     //fill in the cells
-                    cells[0].label.text = "0";
+                    cells[0].label.text = "-1";
                     cells[1].label.text = "0";
                     cells[2].label.text = "1";
-                    cells[3].label.text = "1";
-                    cells[4].label.text = "1";
-                    cells[5].label.text = "-1";
-                    cells[6].label.text = "1";
+                    cells[3].label.text = "x";
+                    cells[4].label.text = "x";
+                    cells[5].label.text = "x";
+                    cells[6].label.text = "0";
                     cells[7].label.text = "1";
                     cells[8].label.text = "-1";
                     break;
@@ -188,14 +188,14 @@ public class TruthtableFunctionHelper : MonoBehaviour
                     cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
 
                     //fill in the cells
-                    cells[0].label.text = "0";
-                    cells[1].label.text = "0";
+                    cells[0].label.text = "-1";
+                    cells[1].label.text = "x";
                     cells[2].label.text = "0";
                     cells[3].label.text = "0";
-                    cells[4].label.text = "1";
-                    cells[5].label.text = "1";
-                    cells[6].label.text = "1";
-                    cells[7].label.text = "-1";
+                    cells[4].label.text = "x";
+                    cells[5].label.text = "+";
+                    cells[6].label.text = "+";
+                    cells[7].label.text = "x";
                     cells[8].label.text = "-1";
                     break;
                 case TempFunctions.sum1a: //checked
@@ -329,35 +329,35 @@ public class TruthtableFunctionHelper : MonoBehaviour
                     cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
 
                     //fill in the cells
-                    cells[0].label.text = "1";
-                    cells[3].label.text = "2";
-                    cells[6].label.text = "3";
-                    cells[1].label.text = "4";
-                    cells[4].label.text = "5";
-                    cells[7].label.text = "6";
-                    cells[2].label.text = "7";
-                    cells[5].label.text = "8";
-                    cells[8].label.text = "9";
+                    cells[0].label.text = "-1";
+                    cells[3].label.text = "0";
+                    cells[6].label.text = "0";
+                    cells[1].label.text = "x";
+                    cells[4].label.text = "x";
+                    cells[7].label.text = "x";
+                    cells[2].label.text = "0";
+                    cells[5].label.text = "0";
+                    cells[8].label.text = "0";
 
-                    cells[9].label.text = "10";
-                    cells[12].label.text = "11";
-                    cells[15].label.text = "12";
-                    cells[10].label.text = "13";
-                    cells[13].label.text = "14";
-                    cells[16].label.text = "15";
-                    cells[11].label.text = "16";
-                    cells[14].label.text = "17";
-                    cells[17].label.text = "18";
+                    cells[9].label.text = "0";
+                    cells[12].label.text = "0";
+                    cells[15].label.text = "0";
+                    cells[10].label.text = "x";
+                    cells[13].label.text = "x";
+                    cells[16].label.text = "x";
+                    cells[11].label.text = "0";
+                    cells[14].label.text = "0";
+                    cells[17].label.text = "1";
 
-                    cells[18].label.text = "19";
-                    cells[21].label.text = "20";
-                    cells[24].label.text = "21";
-                    cells[19].label.text = "22";
-                    cells[22].label.text = "23";
-                    cells[25].label.text = "24";
-                    cells[20].label.text = "25";
-                    cells[23].label.text = "26";
-                    cells[26].label.text = "27";
+                    cells[18].label.text = "0";
+                    cells[21].label.text = "0";
+                    cells[24].label.text = "1";
+                    cells[19].label.text = "x";
+                    cells[22].label.text = "x";
+                    cells[25].label.text = "x";
+                    cells[20].label.text = "0";
+                    cells[23].label.text = "1";
+                    cells[26].label.text = "1";
 
                    
 
