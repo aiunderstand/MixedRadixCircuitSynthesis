@@ -87,7 +87,6 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
     public void OnEndDrag(PointerEventData eventData)
     {
         _ddScript.enabled = true;
-        this.transform.parent.transform.parent.GetComponentInChildren<Matrix>().ComputeEmptyTruthTable(Arity);
     }
 
     public void SetPanelSize(int radix, int arity)
@@ -194,5 +193,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
                     break;
             }
         }
+
+        this.transform.parent.transform.parent.GetComponentInChildren<Matrix>().ComputeEmptyTruthTable(Arity);
     }
 }

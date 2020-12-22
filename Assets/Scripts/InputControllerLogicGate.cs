@@ -62,24 +62,28 @@ public class InputControllerLogicGate : MonoBehaviour
             {
                 foreach (var e in c.endTerminal)
                 {
-                    var source = this.GetInstanceID();
-
-                    var test = e.transform.parent.transform.parent.GetComponent<InputControllerLogicGate>();
-                    if (test == null)
+                  
+                    if (e.tag.Equals("Output"))
                     {
-                        int a = 1;
+                        //Connection conn = new Connection();
+                        //conn.startTerminal = c.startTerminal;
+                        //conn.endTerminal.Add(e);
+                        //UniqueConnectionsOfThisLogicGate.Add(conn);
                     }
+                    else
+                    {
+                        int source = this.GetInstanceID();
+                        int target = e.transform.parent.transform.parent.GetComponent<InputControllerLogicGate>().GetInstanceID();
+                        if (source.Equals(target))
+                        {
+                            Connection conn = new Connection();
+                            conn.startTerminal = c.startTerminal;
+                            conn.endTerminal.Add(e);
+                            UniqueConnectionsOfThisLogicGate.Add(conn);
+                        }
+                    }
+
                     
-                    var target = e.transform.parent.transform.parent.GetComponent<InputControllerLogicGate>().GetInstanceID();
-
-                    if (source.Equals(target))
-                    {
-                        Connection conn = new Connection();
-                        conn.startTerminal = c.startTerminal;
-                        conn.endTerminal.Add(e);
-                        UniqueConnectionsOfThisLogicGate.Add(conn);
-                    }
-                        
                 }
 
             }
