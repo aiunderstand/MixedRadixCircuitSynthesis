@@ -73,7 +73,7 @@ public class InputControllerLogicGate : MonoBehaviour
             {
                 var dropdown = GetComponentInChildren<BtnInputTruthTableDropdown>().gameObject.GetComponent<TMP_Dropdown>();
                 //set dropdown index based on found value;
-                dropdown.value = matrixIndices[2];
+                dropdown.value = matrixIndices[0];
             }
 
             var matrices = GetComponentsInChildren<Matrix>(); //refactor as it is alwasy 1 matrix now
@@ -82,7 +82,12 @@ public class InputControllerLogicGate : MonoBehaviour
             {
                 if (m.isActiveAndEnabled)
                 {
-                    var label = m.Truthtable[matrixIndices[0], matrixIndices[1], matrixIndices[2]].label.text;
+                    string label;
+                    if (_arity.Equals(3))
+                        label = m.Truthtable[matrixIndices[2], matrixIndices[1], matrixIndices[0]].label.text;
+                    else
+                        label = m.Truthtable[matrixIndices[0], matrixIndices[1], matrixIndices[2]].label.text;
+
                     if (label.Equals("x"))
                     {
                         //this should never happen, 2do generate a warning message
@@ -112,7 +117,10 @@ public class InputControllerLogicGate : MonoBehaviour
                     }
 
                     //highlight active cell (only works for unbalanced ternary ATM)
-                    m.Truthtable[matrixIndices[0], matrixIndices[1], matrixIndices[2]].label.color = panelColorActive;
+                    if (_arity.Equals(3))
+                        m.Truthtable[matrixIndices[2], matrixIndices[1], matrixIndices[0]].label.color = panelColorActive;
+                    else
+                        m.Truthtable[matrixIndices[0], matrixIndices[1], matrixIndices[2]].label.color = panelColorActive;
                 }
             }
 
