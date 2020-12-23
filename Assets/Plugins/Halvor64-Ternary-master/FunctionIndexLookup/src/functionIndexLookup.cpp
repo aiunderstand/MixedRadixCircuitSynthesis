@@ -96,14 +96,25 @@ void callFunction(int input1, int input2, int index) {
 	cout << "(" << input1 << "," << input2 << ") => " << table[9 - n] << "\n\n";
 }
 
-int* GetTableFromIndex(int tableIndex) {
-	int convert = tableIndex;
+extern "C" __declspec(dllexport) int* GetTableFromIndex(int tableIndex) {
+	//create a new table
+	int tt[9] = //Logic table outputs. It is also the function index expressed in ternary.
+	{
+		//in2   2,1,0	| in1	
+				0,0,0 , //2
+				0,0,0 , //1
+				0,0,0   //0
+	};
 
+	//fill table based on tableIndex
+	int convert = tableIndex;
 	for (int i = 9; i > 0; i--) {
-		table[i] = convert % 3;
+		tt[i] = convert % 3;
 		convert = convert / 3;
 	}
-	return table;
+
+	//return table
+	return tt;
 }
 
 
