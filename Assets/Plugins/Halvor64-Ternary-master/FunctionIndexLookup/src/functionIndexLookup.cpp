@@ -98,23 +98,38 @@ void callFunction(int input1, int input2, int index) {
 
 extern "C" __declspec(dllexport) int* GetTableFromIndex(int tableIndex) {
 	//create a new table
-	int tt[9] = //Logic table outputs. It is also the function index expressed in ternary.
-	{
-		//in2   2,1,0	| in1	
-				0,0,0 , //2
-				0,0,0 , //1
-				0,0,0   //0
-	};
+	int* tt = new int[9];
 
 	//fill table based on tableIndex
 	int convert = tableIndex;
-	for (int i = 9; i > 0; i--) {
+	for (int i = 8; i >= 0; i--) {
 		tt[i] = convert % 3;
 		convert = convert / 3;
 	}
 
-	//return table
+	//return (pointer to) whole table, by reference, needs marshalling to access and memory destroy
 	return tt;
 }
+
+extern "C" __declspec(dllexport) void GetTableFromIndex_Release(int* pArray)
+{
+	delete[] pArray;
+}
+
+extern "C" __declspec(dllexport) int GetTableFromIndexSingle(int tableIndex, int index) {
+	//create a new table
+	int* tt = new int[9];
+
+	//fill table based on tableIndex
+	int convert = tableIndex;
+	for (int i = 8; i >= 0; i--) {
+		tt[i] = convert % 3;
+		convert = convert / 3;
+	}
+
+	//return table cell, by value, no need for marshalling and memory protection
+	return tt[index];
+}
+
 
 

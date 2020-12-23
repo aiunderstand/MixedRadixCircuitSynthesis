@@ -5,6 +5,9 @@ using TMPro;
 using System;
 using System.Runtime.InteropServices;
 
+//see this presentation about marshalling data from c++ to C# and inverse
+//https://www.slideshare.net/unity3d/adding-love-to-an-api-or-how-to-expose-c-in-unity
+
 public class TruthtableFunctionHelper : MonoBehaviour
 {
     TMP_Dropdown _Dropdown;
@@ -31,8 +34,13 @@ public class TruthtableFunctionHelper : MonoBehaviour
     }
 
     [DllImport("FunctionGenerator")]
-    public static extern int[] GetTableFromIndex(int tableIndex);
+    public static extern IntPtr GetTableFromIndex(int tableIndex);
 
+    [DllImport("FunctionGenerator")]
+    public static extern void GetTableFromIndex_Release(IntPtr ptr);
+
+    [DllImport("FunctionGenerator")]
+    public static extern int GetTableFromIndexSingle(int tableIndex, int index);
 
     public void Start()
     {
@@ -507,15 +515,19 @@ public class TruthtableFunctionHelper : MonoBehaviour
                     //get all the cells
                     cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
 
-                    //2d0: https://stackoverflow.com/questions/3776485/marshal-c-int-array-to-c-sharp
-                    int[] ttMatrix = GetTableFromIndex(8119);
-                    
+                    int[] ttMatrix = new int[9];
+                    IntPtr srcPtr = GetTableFromIndex(8119); //if we use this method, we have to release the pointer later!
+                    Marshal.Copy(srcPtr, ttMatrix, 0, 9); 
 
                     //fill in the cells
                     for (int i = 0; i < 9; i++)
                     {
+                        //cells[i].label.text = GetTableFromIndexSingle(8119, i).ToString(); No need creating and releasing pointers
                         cells[i].label.text = ttMatrix[i].ToString();
                     }
+
+                    GetTableFromIndex_Release(srcPtr);
+
                     break;
                 default:
                     break;
