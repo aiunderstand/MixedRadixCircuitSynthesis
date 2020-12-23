@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using System;
+using System.Runtime.InteropServices;
 
 public class TruthtableFunctionHelper : MonoBehaviour
 {
@@ -24,8 +25,13 @@ public class TruthtableFunctionHelper : MonoBehaviour
         sum2a,
         sum2b,
         carry1,
-        carry2
+        carry2,
+        i8119,
     }
+
+    [DllImport("FunctionGenerator")]
+    public static extern int[] GetTableFromIndex(int tableIndex);
+
 
     public void Start()
     {
@@ -458,6 +464,39 @@ public class TruthtableFunctionHelper : MonoBehaviour
                     bittd = transform.parent.GetComponentInChildren<BtnInputTruthTableDropdown>();
                     bittd.DeActivateAll();
                     bittd.Activate(currentIndex);
+                    break;
+
+                //this is a new style of adding TTs using Halvors indexing function. We should refactor the older ones to this new style
+                case TempFunctions.i8119: 
+                    //Balanced Distance Compare(Engdal): 8119 [102010201]\nGives the distance between the two values. 1 is no distance. 0 is a distance of one. 2 is a distance of two. Designed for use with balanced ternary.
+                    //Unbalanced Distance Compare: 3936[012101210]\nAn altered version of Engdal's compare function. Gives the distance between the two values. In unbalanced ternary, it outputs the distance value.
+                    //Size Compare: 7153 [100210221]\nGives which input has the highest value. An output of 0 means the first input has the bigger value, 2 is the second input. Identical values gives 1.
+                    //Max or Or: 19569 [222211210]\nOutputs the highest value of the two inputs.
+                    //Min or And: 16362 [211110000]\nIf BOTH inputs are 2, output is 2. If ANY input is 0, output is 0. Else, output is 1.
+                    //Antimax or Nor: 15633 [210110000]\nOutputs the lowest value of the two inputs.
+                    //Antimin or Nand: 4049 [012112222]If BOTH inputs are 2, output is 0. If ANY input is 0, output is 2. Else, output is 1.
+                    //Xor: 4017 [012111210]\nExcluding the middle value, this functions the same way as binary XOR. If any input is 1, output is 1. If the inputs are opposites, the output is 2. If they are identical, output is 0.
+                    //Balanced Sum: 5681 [021210102]\nAdds the two balanced ternary inputs together.
+                    //Unbalanced Sum: 8229 [102021210]\nAdds the two unbalanced ternary inputs together.
+                    //Consensus: 16401 [211111110]\nIf both inputs are 0, output is 0. If both are 2, output is 2. Else, the output is 1.
+                    //Accept Anything: 18801 [221210100]\n Similar to consensus, except that if one of the outputs are 1, the other will decide the output. If both are 1, output is 1.
+                    //Equality comparison: 13286 [200020002]\n If the inputs are equal, output is 2. Else, output is 0.
+
+                    //switch to correct size
+                    _DETC.SetPanelSize(3, 2);
+
+                    //get all the cells
+                    cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
+
+                    //2d0: https://stackoverflow.com/questions/3776485/marshal-c-int-array-to-c-sharp
+                    int[] ttMatrix = GetTableFromIndex(8119);
+                    
+
+                    //fill in the cells
+                    for (int i = 0; i < 9; i++)
+                    {
+                        cells[i].label.text = ttMatrix[i].ToString();
+                    }
                     break;
                 default:
                     break;
