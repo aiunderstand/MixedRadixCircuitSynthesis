@@ -5,6 +5,7 @@ using TMPro;
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.UI.Extensions;
+using ExtensionMethods;
 
 //see this presentation about marshalling data from c++ to C# and inverse
 //https://www.slideshare.net/unity3d/adding-love-to-an-api-or-how-to-expose-c-in-unity
@@ -561,31 +562,77 @@ public class TruthtableFunctionHelper : MonoBehaviour
             }
             else
             {
-                if (function.Length == 3)
+                //parse into either 3 or 9 (arity 2 or 3)
+                if (function.Length == 3 || function.Length == 9)
                 {
-                    //parse into table index
-                    int tIndex = ConvertHeptavintimalEncodingToArity2TableIndex(function);
-
-                    if (tIndex != -1)
+                    if (function.Length == 3)
                     {
-                        //switch to correct size
-                        _DETC.SetPanelSize(3, 2);
+                        //parse into table index
+                        int tIndex = ConvertHeptavintimalEncodingToArity2TableIndex(function);
 
-                        //get all the cells
-                        BtnInputTruthTable[] cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
-
-                        int[] ttMatrix = new int[9];
-                        IntPtr srcPtr = GetTableFromIndex(tIndex); //if we use this method, we have to release the pointer later!
-                        Marshal.Copy(srcPtr, ttMatrix, 0, 9);
-
-                        //fill in the cells
-                        for (int i = 0; i < 9; i++)
+                        if (tIndex != -1)
                         {
-                            //cells[i].label.text = GetTableFromIndexSingle(8119, i).ToString(); No need creating and releasing pointers
-                            cells[i].label.text = ttMatrix[i].ToString();
-                        }
+                            _DETC.SetPanelSize(3, 2);
+                         
+                            //get all the cells
+                            BtnInputTruthTable[] cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
 
-                        GetTableFromIndex_Release(srcPtr);
+                            int[] ttMatrix = new int[9];
+                            IntPtr srcPtr = GetTableFromIndex(tIndex); //if we use this method, we have to release the pointer later!
+                            Marshal.Copy(srcPtr, ttMatrix, 0, 9);
+
+                            //fill in the cells
+                            for (int i = 0; i < 9; i++)
+                            {
+                                //cells[i].label.text = GetTableFromIndexSingle(8119, i).ToString(); No need creating and releasing pointers
+                                cells[i].label.text = ttMatrix[i].ToString();
+                            }
+
+                            GetTableFromIndex_Release(srcPtr);
+                        }
+                    }
+                    else
+                    {
+                        bool isValid = function.isValidHeptCode();
+                        
+                        if (isValid)
+                        {
+                            _DETC.SetPanelSize(3, 3);
+
+                            //get all the cells
+                            BtnInputTruthTableDropdown bittd = transform.parent.GetComponentInChildren<BtnInputTruthTableDropdown>();
+                            int currentIndex = bittd.GetComponent<TMP_Dropdown>().value;
+
+                            bittd.ActivateAll();
+
+                            //get all the cells
+                            BtnInputTruthTable[] cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
+
+                            for (int i = 0; i < 3; i++)
+                            {
+                                string functionPart = function.Substring(i * 3, 3);
+                                //parse into table index
+                                int tIndex = ConvertHeptavintimalEncodingToArity2TableIndex(functionPart);
+
+                                int[] ttMatrix = new int[9];
+                                IntPtr srcPtr = GetTableFromIndex(tIndex); //if we use this method, we have to release the pointer later!
+                                Marshal.Copy(srcPtr, ttMatrix, 0, 9);
+
+                                //fill in the cells
+                                for (int j = 9 * i; j < (9 * i) +9; j++)
+                                {
+                                    //cells[i].label.text = GetTableFromIndexSingle(8119, i).ToString(); No need creating and releasing pointers
+                                    cells[j].label.text = ttMatrix[j - (9 * i)].ToString();
+                                }
+
+                                GetTableFromIndex_Release(srcPtr);
+
+                            }
+
+                            bittd = transform.parent.GetComponentInChildren<BtnInputTruthTableDropdown>();
+                            bittd.DeActivateAll();
+                            bittd.Activate(currentIndex);
+                        }
                     }
                 }
             }
@@ -594,9 +641,6 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
     public int ConvertHeptavintimalEncodingToArity2TableIndex(string hepCode)
     {
-        //not done yet: catch bad hep code
-
-
         int tableIndex = 0;
 
         //heptiventimal is a base27 encoding. Its alphabet is 0123456789ABCDEFGHKMNPRTVXZ
@@ -635,22 +679,22 @@ public class TruthtableFunctionHelper : MonoBehaviour
         heptiventimalAlphabet.Add("Z", "222");
 
         string ternaryString = "";
-        if (hepCode.Length == 3)
-        {
-            for (int i = 0; i < 3; i++)
+            if (hepCode.isValidHeptCode())
             {
-                ternaryString += heptiventimalAlphabet[hepCode[i].ToString()];
-            }
+                for (int i = 0; i < hepCode.Length; i++)
+                {
+                    ternaryString += heptiventimalAlphabet[hepCode[i].ToString()];
+                }
 
-            //convert to digit
-            for (int i = 0; i < ternaryString.Length; i++)
-            {
-                int v = int.Parse(ternaryString[i].ToString());
-                tableIndex += (int)(v * Mathf.Pow(3, i));
+                //convert to digit
+                for (int i = 0; i < ternaryString.Length; i++)
+                {
+                    int v = int.Parse(ternaryString[i].ToString());
+                    tableIndex += (int)(v * Mathf.Pow(3, i));
+                }
             }
-        }
-        else
-            tableIndex = -1; //error
+            else
+                tableIndex = -1; //error, this is a special code
 
         return tableIndex;
     }
