@@ -1,4 +1,4 @@
-
+﻿
 // Written by Halvor Nybø Risto for a student short paper for SIMS 2020
 // Research group website: http://www.ternaryresearch.com/
 
@@ -82,7 +82,21 @@ void drawMask(int p1, int p2) {		// draws an n-dimensional rectangle between two
 	}
 }
 
-int main() {
+
+extern "C" __declspec(dllexport) int* Convert(int* truthtable, int length) {
+
+	for (int i = 0; i < length; ++i)
+		truthtable[i] = truthtable[i] + 1;
+
+	return truthtable;
+}
+
+extern "C" __declspec(dllexport) int* Convert2(int* tt, int length) {
+
+		for (int i = 0; i < length; ++i)
+			tt[i] = tt[i] +1;
+
+		//return truthtable;
 
 	/////////////////
 	//Stage0: INIT
@@ -455,7 +469,7 @@ int main() {
 	//Stage5: Setup parameters for Netlist file and create directory
 	////////////////
 
-	if (dimensions > 4)//cout << "Custom filename is recommended for high-arity functions\n";
+	//if (dimensions > 4)cout << "Custom filename is recommended for high-arity functions\n";
 	//cout << "Would you like to use the index as the filename? (y/n): ";
 	char nameyn = 'n';
 	///in.ignore(100000, '\n');

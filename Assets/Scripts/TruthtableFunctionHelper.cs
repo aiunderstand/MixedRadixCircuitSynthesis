@@ -9,7 +9,7 @@ using ExtensionMethods;
 
 //see this presentation about marshalling data from c++ to C# and inverse
 //https://www.slideshare.net/unity3d/adding-love-to-an-api-or-how-to-expose-c-in-unity
-
+// https://github.com/lazerfalcon/Unite2018_Native/tree/master/Assets
 public class TruthtableFunctionHelper : MonoBehaviour
 {
     AutoCompleteComboBox _Dropdown;
@@ -44,7 +44,9 @@ public class TruthtableFunctionHelper : MonoBehaviour
     [DllImport("FunctionGenerator")]
     public static extern int GetTableFromIndexSingle(int tableIndex, int index);
 
-   
+    [DllImport("CircuitGenerator")]
+    public static extern int[] Convert(int[] array, int length);
+
     public void Start()
     {
         //Fetch the Dropdown GameObject
@@ -589,6 +591,15 @@ public class TruthtableFunctionHelper : MonoBehaviour
                             }
 
                             GetTableFromIndex_Release(srcPtr);
+
+
+                            //Convert to netlist file
+                            int[] ttMatrix2 = new int[9];
+                            IntPtr srcPtr2 = GetTableFromIndex(tIndex); //if we use this method, we have to release the pointer later!
+                            Marshal.Copy(srcPtr2, ttMatrix, 0, 9);
+
+                            ttMatrix2 = Convert(ttMatrix, ttMatrix.Length);
+
                         }
                     }
                     else
