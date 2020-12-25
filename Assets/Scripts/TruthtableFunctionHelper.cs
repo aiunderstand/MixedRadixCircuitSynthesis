@@ -35,17 +35,21 @@ public class TruthtableFunctionHelper : MonoBehaviour
         sBal_dist_measure
     }
 
-    [DllImport("FunctionGenerator")]
+    [DllImport("CircuitGenerator", EntryPoint = "GetTableFromIndex")]
     public static extern IntPtr GetTableFromIndex(int tableIndex);
 
-    [DllImport("FunctionGenerator")]
+    [DllImport("CircuitGenerator", EntryPoint = "GetTableFromIndex_Release")]
     public static extern void GetTableFromIndex_Release(IntPtr ptr);
 
-    [DllImport("FunctionGenerator")]
+    [DllImport("CircuitGenerator", EntryPoint = "GetTableFromIndexSingle")]
     public static extern int GetTableFromIndexSingle(int tableIndex, int index);
 
-    [DllImport("CircuitGenerator")]
-    public static extern int[] Convert(int[] array, int length);
+    [DllImport("CircuitGenerator", EntryPoint = "CreateNetlist")]
+    public static extern int CreateNetlist(int[] array, int length,int arity);
+
+    [DllImport("CircuitGenerator", EntryPoint = "TestSum")]
+    public static extern int TestSum(int[] array, int length);
+
 
     public void Start()
     {
@@ -594,12 +598,18 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
 
                             //Convert to netlist file
-                            int[] ttMatrix2 = new int[9];
-                            IntPtr srcPtr2 = GetTableFromIndex(tIndex); //if we use this method, we have to release the pointer later!
-                            Marshal.Copy(srcPtr2, ttMatrix, 0, 9);
+                            //int[] ttMatrix2 = new int[9];
+                            //IntPtr srcPtr2 = GetTableFromIndex(tIndex); //if we use this method, we have to release the pointer later!
+                            //Marshal.Copy(srcPtr2, ttMatrix, 0, 9);
 
-                            ttMatrix2 = Convert(ttMatrix, ttMatrix.Length);
+                            //ttMatrix2 = Convert(ttMatrix, ttMatrix.Length);
 
+                            //int sum = TestSum(ttMatrix, ttMatrix.Length); //if we use this method, we have to release the pointer later!
+                            //Debug.Log(sum);
+                     
+
+
+                            int test = CreateNetlist(ttMatrix, ttMatrix.Length, 2);
                         }
                     }
                     else

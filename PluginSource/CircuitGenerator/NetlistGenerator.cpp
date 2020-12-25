@@ -1,14 +1,8 @@
-﻿
-// Written by Halvor Nybø Risto for a student short paper for SIMS 2020
+
+// Written by Halvor Nyb� Risto for a student short paper for SIMS 2020
 // Research group website: http://www.ternaryresearch.com/
 
 // GPL-3 license
-
-
-
-
-using namespace std;
-
 #include <iostream>
 #include <vector>
 #include <math.h>
@@ -21,6 +15,7 @@ using namespace std;
 #include <stdlib.h>
 #include <stdio.h>
 
+using namespace std;
 
 vector<char> truthtable;	//the truthtable for the entire circuit
 vector<char> tempVect;
@@ -83,25 +78,22 @@ void drawMask(int p1, int p2) {		// draws an n-dimensional rectangle between two
 }
 
 
-extern "C" __declspec(dllexport) int* Convert(int* truthtable, int length) {
+//this is a test function
+extern "C" __declspec(dllexport) int TestSum(int* ttFromUnity, int ttFromUnityLength) {
 
-	for (int i = 0; i < length; ++i)
-		truthtable[i] = truthtable[i] + 1;
+	int sum = 0;
+	for (int i = 0; i < ttFromUnityLength; ++i)
+		sum += ttFromUnity[i];
 
-	return truthtable;
+	return sum;
 }
 
-extern "C" __declspec(dllexport) int* Convert2(int* tt, int length) {
+extern "C" __declspec(dllexport) int CreateNetlist(int* ttFromUnity, int ttFromUnityLength, int arity) {
 
-		for (int i = 0; i < length; ++i)
-			tt[i] = tt[i] +1;
-
-		//return truthtable;
-
-	/////////////////
-	//Stage0: INIT
-	////////////////
-	dimensions = 2; //or three, derive from function name
+/////////////////
+//Stage0: INIT
+////////////////
+	dimensions = arity; //or three, derive from function name
 
 	int mysteryNumber = dimensions * dimensions * 100;//dimensions * 1000;	// This number must be higher for more inputs. Program will crash if it is too low. Must be higher than number of groups found.
 	int mysteryExponent = 1.64;		// NOTE: The author is not happy with the use of these mystery numbers. However it will do for now.
@@ -128,15 +120,26 @@ extern "C" __declspec(dllexport) int* Convert2(int* tt, int length) {
 	//Stage1: Fill truthtable (eg. based on hep code)
 	////////////////
 
-	truthtable[0] = '1';
-	truthtable[1] = 'x';
-	truthtable[2] = '0';
-	truthtable[3] = '0';
-	truthtable[4] = '1';
-	truthtable[5] = '2';
-	truthtable[6] = '2';
-	truthtable[7] = '2';
-	truthtable[8] = 'x';
+	for (size_t i = 0; i < ttFromUnityLength; i++)
+	{
+		switch (ttFromUnity[i])
+		{
+		case 0:
+			truthtable[i] = '0';
+			break;
+		case 1:
+			truthtable[i] = '1';
+			break;
+		case 2:
+			truthtable[i] = '2';
+			break;
+		case 3:
+			truthtable[i] = 'x';
+			break;
+		}
+	}
+
+	
 
 	/////////////////
 	//Stage2: Generates the truthtables for the 4 transistor networks based on the full truthtable
@@ -169,7 +172,6 @@ extern "C" __declspec(dllexport) int* Convert2(int* tt, int length) {
 			networks[3][i] = '0';
 		}
 	}
-
 
 	fill(truthtable.begin(), truthtable.end(), '0'); // empties the full truthtable for later use
 
@@ -413,9 +415,6 @@ extern "C" __declspec(dllexport) int* Convert2(int* tt, int length) {
 		cout << truthtable[i];
 	}*/
 
-	vector<char> finaltruthtable = truthtable;
-	
-	
 	/////////////////
 	//Stage4: Discover Hept index based on values (reverse lookup)
 	////////////////
@@ -456,41 +455,23 @@ extern "C" __declspec(dllexport) int* Convert2(int* tt, int length) {
 		else if (hept == "220") { index += "V"; }
 		else if (hept == "221") { index += "X"; }
 		else if (hept == "222") { index += "Z"; }
-
 	}
 
-	
+	//DEBUG
 	//cout << "\nheptavintimal function index: " << index;
-	//cout << "\n\n";
-	string heptIndex = index;
 
 
 	/////////////////
 	//Stage5: Setup parameters for Netlist file and create directory
 	////////////////
 
-	//if (dimensions > 4)cout << "Custom filename is recommended for high-arity functions\n";
-	//cout << "Would you like to use the index as the filename? (y/n): ";
-	char nameyn = 'n';
-	///in.ignore(100000, '\n');
-	//cin >> nameyn;
 	string filename;
-	if (nameyn == 'y') {
-		filename = "f_";
-		for (int i = 0; i < (int(pow(3, dimensions - 1))) - index.length(); i++) { filename += "0"; }
-		filename += index;
-	}
-	else {
-		//cout << "Enter the filename: ";
-		//cin >> filename;
-	}
+	filename = "f_";
+	for (int i = 0; i < (int(pow(3, dimensions - 1))) - index.length(); i++) { filename += "0"; }
+	filename += index;
 
-
-
-	if (_mkdir("./functions") == 0) {
-		printf("Directory './functions' was successfully created\n");
-	} //else printf("Problem creating directory './functions'\n");
-
+	_mkdir("./functions");
+	
 
 	/////////////////
 	//Stage6: Create netlist file
@@ -702,11 +683,8 @@ extern "C" __declspec(dllexport) int* Convert2(int* tt, int length) {
 
 	//cout << "\n\n Circuit outputted into functions/" << filename << ".sp\n\n";
 
+	return truthtable[5];
 	//system("pause");
-
-
-
-	return 0;
 }
 
 
