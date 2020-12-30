@@ -116,7 +116,7 @@ public class InputControllerLogicGate : MonoBehaviour
                 }
 
 
-                Debug.Log(string.Format("{0},{1},{2}",matrixIndices[0], matrixIndices[1], matrixIndices[2]));
+                //Debug.Log(string.Format("{0},{1},{2}",matrixIndices[0], matrixIndices[1], matrixIndices[2]));
 
             }
 

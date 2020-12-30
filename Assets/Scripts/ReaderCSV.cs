@@ -198,15 +198,15 @@ public static class ReaderCSV
                 line = test.Id.ToString() + ",";
                 line += "input,";
                 line += test.N.ToString() +",";
-                for (int i = 0; i < test.N; i++)
+                for (int i = test.N-1; i >= 0; i--)
                 {
                     line += test.Input.IoNames[i] + ",";
                 }
-                for (int i = 0; i < test.N; i++)
+                for (int i = test.N - 1; i >= 0; i--)
                 {
                     line += test.Input.IoRadixTypes[i].ToString() + ",";
                 }
-                for (int i = 0; i < test.N; i++)
+                for (int i = test.N - 1; i >= 0; i--)
                 {
                     line += test.Input.IoValues[i].ToString() + ",";
                 }
@@ -218,15 +218,15 @@ public static class ReaderCSV
                 line = test.Id.ToString() + ",";
                 line += "groundtruth,";
                 line += test.N.ToString() + ",";
-                for (int i = 0; i < test.N; i++)
+                for (int i = test.N - 1; i >= 0; i--)
                 {
                     line += test.Groundtruth.IoNames[i] + ",";
                 }
-                for (int i = 0; i < test.N; i++)
+                for (int i = test.N - 1; i >= 0; i--)
                 {
                     line += test.Groundtruth.IoRadixTypes[i].ToString() + ",";
                 }
-                for (int i = 0; i < test.N; i++)
+                for (int i = test.N - 1; i >= 0; i--)
                 {
                     line += test.Groundtruth.IoValues[i].ToString() + ",";
                 }
@@ -238,15 +238,15 @@ public static class ReaderCSV
                 line = test.Id.ToString() + ",";
                 line += "output,";
                 line += test.N.ToString() + ",";
-                for (int i = 0; i < test.N; i++)
+                for (int i = test.N - 1; i >= 0; i--)
                 {
                     line += test.Output.IoNames[i] + ",";
                 }
-                for (int i = 0; i < test.N; i++)
+                for (int i = test.N - 1; i >= 0; i--)
                 {
                     line += test.Output.IoRadixTypes[i].ToString() + ",";
                 }
-                for (int i = 0; i < test.N; i++)
+                for (int i = test.N - 1; i >= 0; i--)
                 {
                     line += test.Output.IoValues[i].ToString() + ",";
                 }
