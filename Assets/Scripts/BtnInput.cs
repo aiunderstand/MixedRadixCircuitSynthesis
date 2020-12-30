@@ -240,4 +240,125 @@ public class BtnInput : MonoBehaviour
         var ic = gameObject.GetComponentInParent<InputController>();
         ic.ComputeCounter();
     }
+
+    public void SetValueWithPropagation(RadixOptions radixSource, int value)
+    {
+        RadixOptions radixTarget = (RadixOptions)Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
+
+        switch (radixSource)
+        {
+            case RadixOptions.Binary:
+                {
+                    switch (radixTarget)
+                    {
+                        case RadixOptions.Binary:
+                            {
+                                //no conversation needed
+                                _value = value;
+                            }
+                            break;
+                        case RadixOptions.UnbalancedTernary:
+                            {
+                                //convert binary 1 to unbalanced 2
+                                if (value == 1)
+                                    _value = 2;
+                                else
+                                    _value = value;
+                            }
+                            break;
+                        case RadixOptions.BalancedTernary:
+                            {
+                                //convert binary 0 to balanced -1
+                                if (value == 0)
+                                    _value = -1;
+                                else
+                                    _value = value;
+                            }
+                            break;
+                    }
+                }
+                break;
+            case RadixOptions.UnbalancedTernary:
+                {
+                    switch (radixTarget)
+                    {
+                        case RadixOptions.Binary:
+                            {
+                                //convert unbalanced 2 to binary 1
+                                if (value == 2)
+                                    _value = 1;
+                                else
+                                    _value = value;
+                            }
+                            break;
+                        case RadixOptions.UnbalancedTernary:
+                            {
+                                //do nothing
+                                _value = value;
+                            }
+                            break;
+                        case RadixOptions.BalancedTernary:
+                            {
+                                //shift everything with -1
+                                _value = value - 1;
+                            }
+                            break;
+                    }
+                }
+                break;
+            case RadixOptions.BalancedTernary:
+                {
+                    switch (radixTarget)
+                    {
+                        case RadixOptions.Binary:
+                            {
+                                //convert balanced -1 to binary 0
+                                if (value == -1)
+                                    _value = 0;
+                                else
+                                    _value = value;
+                            }
+                            break;
+                        case RadixOptions.UnbalancedTernary:
+                            {
+                                //convert balanced -1 to unbalanced by shifting +1;
+                                _value = value + 1;
+                            }
+                            break;
+                        case RadixOptions.BalancedTernary:
+                            {
+                                //do nothing
+                                _value = value;
+                            }
+                            break;
+                    }
+                }
+                break;
+        }
+
+        label.text = _value.ToString();
+
+        //report back to counter to recount, which is the parent of this object;
+        var ic = gameObject.GetComponentInParent<InputController>();
+        ic.ComputeCounter();
+
+        //update connect
+        //go over connections and update next component, this code is duplicated in inputcontrollerlogicgate
+        int index = int.Parse(this.name);
+        if (ic.Connections[index].endTerminal.Count > 0)
+        {
+            foreach (var c in ic.Connections[index].endTerminal)
+            {
+                //determine if logic gate or output 
+                if (c.tag.Equals("Output"))
+                {
+                    c.GetComponentInParent<BtnInput>().SetValue(radixSource, _value);
+                }
+                else
+                {
+                    c.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                }
+            }
+        }
+    }
 }

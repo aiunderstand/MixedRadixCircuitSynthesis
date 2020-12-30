@@ -117,7 +117,7 @@ extern "C" __declspec(dllexport) int CreateNetlist(int* ttFromUnity, int ttFromU
 	}
 
 	/////////////////
-	//Stage1: Fill truthtable (eg. based on hep code)
+	//Stage1: Fill truthtable
 	////////////////
 
 	for (size_t i = 0; i < ttFromUnityLength; i++)
