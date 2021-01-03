@@ -6,10 +6,30 @@ using UnityEngine;
 using UnityEngine.UI;
 using static InputController;
 
+//We should rename BtnInput to Port as it evolved more into that
 public class BtnInput : MonoBehaviour
 {
     int _value = 0;
     public TextMeshProUGUI DropdownLabel; //redundant as we also have a dropdown
+
+    public void RemoveConnection(int id)
+    {
+        int index = 0;
+        for (int i = 0; i < Connections.Count; i++)
+        {
+            if (Connections[i].connection.id == id)
+                index = i;
+        }
+
+        Connections.RemoveAt(index);
+    }
+
+    public void RemoveAllConnections()
+    {
+        while (Connections.Count > 0)
+            Connections[0].DestroyConnection();
+    }
+
     public Image wireColor; 
     Color _colorTernary = new Color(255,0,211); 
     Color _colorBinary = new Color(0, 214, 255);
@@ -18,6 +38,7 @@ public class BtnInput : MonoBehaviour
     public TextMeshProUGUI label;
     public int _portIndex = 0;
     TMP_Dropdown _Dropdown;
+    public List<LineFunctions> Connections; 
     //refactors as Logic gate doesnt have any onclick events, only used for its references to value.
 
     public enum RadixOptions { 
@@ -28,6 +49,8 @@ public class BtnInput : MonoBehaviour
 
     public void Start()
     {
+        Connections = new List<LineFunctions>();
+        
         if (DropdownLabel != null)
         {
             //Fetch the Dropdown GameObject
@@ -45,9 +68,32 @@ public class BtnInput : MonoBehaviour
         if (wireColor != null)
         {
             if (change.options[change.value].text.Contains("Ter"))
+            {
                 wireColor.color = _colorTernary;
+
+                //only change line color if not output
+                if (!tag.Equals("Output"))
+                {
+                    foreach (var c in Connections)
+                    {
+                        c.Redraw(_colorTernary, true);
+                    }
+                }
+            }
             else
+            {
                 wireColor.color = _colorBinary;
+
+                //only change line color if not output
+                if (!tag.Equals("Output"))
+                {
+                    foreach (var c in Connections)
+                    {
+                        c.Redraw(_colorBinary, true);
+                    }
+                }
+            }
+            
         }
      }
 
@@ -69,7 +115,100 @@ public class BtnInput : MonoBehaviour
         }
     }
 
-        public void OnClick()
+    public int GetValueAsIndex(RadixOptions radixTarget)
+    {
+        int outputValue = 0;
+        RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
+        switch (radixSource)
+        {
+            case RadixOptions.BalancedTernary: //from -1,0,1 to radix 2 (0,1) or to radix 3(0,1,2)
+                {
+                    switch (radixTarget)
+                    {
+                        case RadixOptions.Binary:
+                            {
+                                if (_value  <1)
+                                    outputValue = 0;
+                                else
+                                    outputValue = 1;
+                            }
+                            break;
+                        case RadixOptions.UnbalancedTernary:
+                            {
+                                outputValue = _value + 1;
+                            }
+                            break;
+                        case RadixOptions.BalancedTernary:
+                            {
+                                outputValue = _value + 1;
+                            }
+                            break;
+
+                    }
+
+                }
+                break;
+            case RadixOptions.UnbalancedTernary: //from -1,0,1 to radix 2 (0,1) or to radix 3(0,1,2)
+                {
+                    switch (radixTarget)
+                    {
+                        case RadixOptions.Binary:
+                            {
+                                if (_value < 2)
+                                    outputValue = 0;
+                                else
+                                    outputValue = 1;
+                            }
+                            break;
+                        case RadixOptions.UnbalancedTernary:
+                            {
+                                outputValue = _value;
+                            }
+                            break;
+                        case RadixOptions.BalancedTernary:
+                            {
+                                outputValue = _value;
+                            }
+                            break;
+
+                    }
+
+                }
+                break;
+            case RadixOptions.Binary: //from -1,0,1 to radix 2 (0,1) or to radix 3(0,1,2)
+                {
+                    switch (radixTarget)
+                    {
+                        case RadixOptions.Binary:
+                            {
+                                outputValue = _value;
+                            }
+                            break;
+                        case RadixOptions.UnbalancedTernary:
+                            {
+                                if (_value == 0)
+                                    outputValue = 0;
+                                else
+                                    outputValue = 2;
+                            }
+                            break;
+                        case RadixOptions.BalancedTernary:
+                            {
+                                if (_value == 0)
+                                    outputValue = 0;
+                                else
+                                    outputValue = 2;
+                            }
+                            break;
+                    }
+                }
+                break;
+        }
+
+        return outputValue;
+    }
+
+    public void OnClick()
     {
         RadixOptions radixSource = (RadixOptions) Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
         switch (radixSource)
@@ -111,8 +250,6 @@ public class BtnInput : MonoBehaviour
                 break;
         }
 
-       
-
         label.text = _value.ToString();
 
         //report back to counter to recount, which is the parent of this object;
@@ -121,19 +258,18 @@ public class BtnInput : MonoBehaviour
 
         //update connect
         //go over connections and update next component, this code is duplicated in inputcontrollerlogicgate
-        int index = int.Parse(this.transform.parent.name);
-        if (ic.Connections[index].endTerminal.Count > 0)
+        if (Connections.Count > 0)
         {
-            foreach (var c in ic.Connections[index].endTerminal)
+            foreach (var c in Connections)
             {
                 //determine if logic gate or output 
-                if (c.tag.Equals("Output"))
+                if (c.connection.endTerminal.tag.Equals("Output"))
                 {
-                    c.GetComponentInParent<BtnInput>().SetValue(radixSource, _value);
+                    c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixSource, _value);
                 }
                 else
                 {
-                    c.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                    c.connection.endTerminal.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
                 }
             }
         }
@@ -345,18 +481,18 @@ public class BtnInput : MonoBehaviour
         //update connect
         //go over connections and update next component, this code is duplicated in inputcontrollerlogicgate
         int index = int.Parse(this.name);
-        if (ic.Connections[index].endTerminal.Count > 0)
+        if (Connections.Count > 0)
         {
-            foreach (var c in ic.Connections[index].endTerminal)
+            foreach (var c in Connections)
             {
                 //determine if logic gate or output 
-                if (c.tag.Equals("Output"))
+                if (c.connection.endTerminal.tag.Equals("Output"))
                 {
-                    c.GetComponentInParent<BtnInput>().SetValue(radixSource, _value);
+                    c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixSource, _value);
                 }
                 else
                 {
-                    c.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                    c.connection.endTerminal.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
                 }
             }
         }

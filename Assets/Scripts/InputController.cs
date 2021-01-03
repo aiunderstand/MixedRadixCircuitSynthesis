@@ -18,13 +18,14 @@ public class InputController : MonoBehaviour
     public TextMeshProUGUI DropdownLabel;
 
     int _radix = 0;
-    public Connection[] Connections = new Connection[6]; //needed for data binding 
+    
     private void Awake()
     {
-        for (int i = 0; i < Connections.Length; i++)
-        {
-            Connections[i] = new Connection();
-        }
+        if (this.name.Equals("Trit-Input"))
+            GetComponentInParent<DragDrop>().name  = "Input (" + GetInstanceID().ToString()+")";
+
+        if (this.name.Equals("Trit-Output"))
+            GetComponentInParent<DragDrop>().name = "Output (" + GetInstanceID().ToString() + ")";
     }
 
     public void ComputeCounter()
@@ -58,7 +59,3 @@ public class InputController : MonoBehaviour
     }
 }
 
-public class Connection {
-    public List<BtnInput> endTerminal = new List<BtnInput>();
-    public BtnInput startTerminal;
-}

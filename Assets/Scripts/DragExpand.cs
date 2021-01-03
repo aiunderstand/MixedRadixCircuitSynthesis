@@ -35,7 +35,8 @@ public class DragExpand : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
 
     public void OnDrag(PointerEventData eventData)
     {
-       
+      
+
         _computedHeight = Mathf.FloorToInt(_startMouseHeight - Input.mousePosition.y);
 
 
@@ -78,7 +79,9 @@ public class DragExpand : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
                 {
                     if (_computedAmountOfInputs < _AmountOfInputs) //remove prefab
                     {
+                        
                         var go = InputController.Buttons[_AmountOfInputs-1];
+                        go.GetComponent<BtnInput>().RemoveAllConnections();
                         InputController.Buttons.Remove(go);
                         Destroy(go);
                         _AmountOfInputs--;

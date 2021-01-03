@@ -9,185 +9,135 @@ public class InputControllerLogicGate : MonoBehaviour
 {
     public TextMeshProUGUI DropDownFunctionLabel;
     TextMeshProUGUI _radixTarget; //or source if it is linked to a output
-    public Connection[] Connections = new Connection[4]; //needed for data binding 
     public Color panelColorDefault;
     public Color panelColorActive;
-
+    
     private void Awake()
     {
-        for (int i = 0; i < Connections.Length; i++)
-        {
-            Connections[i] = new Connection();
-        }
-
-        _radixTarget = GetComponent<Matrix>().DropdownLabel;
-
+        if (this.name.Equals("LogicGate"))
+            GetComponentInParent<DragDrop>().name = "LogicGate (" + GetInstanceID().ToString()+")";
     }
 
     public void ComputeTruthTableOutput()
     {
-        //check if all terminals are connected
+        _radixTarget = GetComponent<Matrix>().DropdownLabel;
+        RadixOptions radixTarget = (RadixOptions)Enum.Parse(typeof(RadixOptions), _radixTarget.text, true);
+
         var _arity = GetComponentInChildren<DragExpandTableComponent>().Arity;
-        bool allConnected =true;
-        //switch (_arity)
-        //{
-        //    case 1: //1 input and 1 output
-        //        {
-        //            if ((Connections[0].endTerminal != null) && (Connections[3].endTerminal != null))
-        //                allConnected = true;
-        //        }
-        //        break;
-        //    case 2: //1 input and 1 output
-        //        {
-        //            if ((Connections[0].endTerminal != null) && (Connections[1].endTerminal != null) && (Connections[3].endTerminal != null))
-        //                allConnected = true;
-        //        }
-        //        break;
-        //    case 3: //1 input and 1 output
-        //        {
-        //            if ((Connections[0].endTerminal != null) && (Connections[1].endTerminal != null) && (Connections[2].endTerminal != null) && (Connections[3].endTerminal != null))
-        //                allConnected = true;
-        //        }
-        //        break;
-        //}
+        bool allConnected = false;
+
+        var ports = GetComponentsInChildren<BtnInput>();
+
+        int connectionCount =0;
+        foreach (var p in ports)
+        {
+            if (p.Connections.Count > 0)
+                connectionCount++;
+        }
+
+        if (connectionCount == (_arity +1)) // +1 since this is the output port
+            allConnected = true;
 
         if (allConnected)
         {
-            int[] matrixIndices = new int[3];
-
-            //this is a mess. For every matrix we need to check all connections from source and filter out the useful one and map it to the correct port in the second pass. This is a paper hack
-            //filter useful connection
-            List<Connection> UniqueConnectionsOfThisLogicGate = new List<Connection>();
-            foreach (var c in Connections)
-            {
-                foreach (var e in c.endTerminal)
-                {
-                  
-                    if (e.tag.Equals("Output"))
-                    {
-                        //Connection conn = new Connection();
-                        //conn.startTerminal = c.startTerminal;
-                        //conn.endTerminal.Add(e);
-                        //UniqueConnectionsOfThisLogicGate.Add(conn);
-                    }
-                    else
-                    {
-                        int source = this.GetInstanceID();
-                        int target = e.transform.parent.transform.parent.GetComponent<InputControllerLogicGate>().GetInstanceID();
-                        if (source.Equals(target))
-                        {
-                            Connection conn = new Connection();
-                            conn.startTerminal = c.startTerminal;
-                            conn.endTerminal.Add(e);
-                            UniqueConnectionsOfThisLogicGate.Add(conn);
-                        }
-                    }
-
-                    
-                }
-
-            }
-
-            //map to correct port
-            foreach (var c in UniqueConnectionsOfThisLogicGate)
-            {
-                switch (_arity)
-                {
-                    case 1:
-                        if (c.endTerminal[0].tag.Equals("PortA"))
-                            matrixIndices[0] = ConvertInputToTruthtableIndex(c.startTerminal);
-                        break;
-                    case 2:
-                        //check port numbers
-                        if (c.endTerminal[0].tag.Equals("PortA"))
-                            matrixIndices[0] = ConvertInputToTruthtableIndex(c.startTerminal);
-                        if (c.endTerminal[0].tag.Equals("PortB"))
-                            matrixIndices[1] = ConvertInputToTruthtableIndex(c.startTerminal);
-                        break;
-                    case 3:
-                        //check port numbers
-                        if (c.endTerminal[0].tag.Equals("PortA"))
-                            matrixIndices[0] = ConvertInputToTruthtableIndex(c.startTerminal);
-                        if (c.endTerminal[0].tag.Equals("PortB"))
-                            matrixIndices[1] = ConvertInputToTruthtableIndex(c.startTerminal);
-                        if (c.endTerminal[0].tag.Equals("PortC"))
-                            matrixIndices[2] = ConvertInputToTruthtableIndex(c.startTerminal);
-                        break;
-                }
-
-
-                //Debug.Log(string.Format("{0},{1},{2}",matrixIndices[0], matrixIndices[1], matrixIndices[2]));
-
-            }
-
-            
-
+            //Step 1: get input values of the logic gate
             int _output = 0;
-            //get the correct matrix
-            //if we have arity 3, we first need to set the correct matrix based on the value
-            if (_arity.Equals(3))
-            {
-                var dropdown = GetComponentInChildren<BtnInputTruthTableDropdown>().gameObject.GetComponent<TMP_Dropdown>();
-                //set dropdown index based on found value;
-                dropdown.value = matrixIndices[2];
-            }
+            Dictionary<int, int> inputs = new Dictionary<int, int>();
 
-            var matrices = GetComponentsInChildren<Matrix>(); //refactor as it is alwasy 1 matrix now
-         
-            foreach (var m in matrices)
+            foreach (var p in ports)
             {
-                if (m.isActiveAndEnabled)
+                switch (p.tag)
                 {
-                    //index 0 = A(row), index 1 = B (column), index 2 (depth)
-                    string label = m.Truthtable[matrixIndices[0], matrixIndices[1], matrixIndices[2]].label.text;
-
-                    if (label.Equals("x"))
-                    {
-                        //this should never happen, 2do generate a warning message
-                        new NotImplementedException();
-                        _output = 0;
-                    }
-                    else
-                    {
-                        _output = int.Parse(label);
-                    }
-
-                    //write output to hidden value, for spagetti linking to other logic gate (refactor)
-                    var lcs = GetComponentsInChildren<BtnInput>();
-                    lcs[lcs.Length - 1].label.text = _output.ToString();
-
-
-                    //reset all backgrounds
-                    for (int i = 0; i < m.Truthtable.GetLength(0); i++)
-                    {
-                        for (int j = 0; j < m.Truthtable.GetLength(1); j++)
-                        {
-                            for (int k = 0; k < m.Truthtable.GetLength(2); k++)
-                            {
-                                m.Truthtable[i, j, k].label.color = panelColorDefault;
-                            }
-                        }
-                    }
-
-                    //highlight active cell (only works for unbalanced ternary ATM)
-                    m.Truthtable[matrixIndices[0], matrixIndices[1], matrixIndices[2]].label.color = panelColorActive;
+                    case "PortA":
+                        inputs.Add(0, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+                        break;
+                    case "PortB":
+                        inputs.Add(1, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+                        break;
+                    case "PortC":
+                        inputs.Add(2, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+                        break;
                 }
             }
 
-            //if connection(s), propagate connection(s)
-            if (Connections[3].endTerminal.Count > 0)
+            //Step 2: Get the correct matrix and the cell based on inputs
+            //if we have arity 3, we first need to set the correct matrix based on the value
+           switch (_arity)
             {
-                foreach (var c in Connections[3].endTerminal)
+                case 3:
+                    {
+                        var dropdown = GetComponentInChildren<BtnInputTruthTableDropdown>().gameObject.GetComponent<TMP_Dropdown>();
+                        dropdown.value = inputs[2];
+                    }
+                    break;
+                case 2:
+                    {
+                        inputs.Add(2, 0); //since we use a 3d lookup table we need to supply a depth = 0)
+                    }
+                    break;
+                case 1:
+                    {
+                        inputs.Add(1, 0); //since we use a 3d lookup table we need to supply a column = 0)
+                        inputs.Add(2, 0); //since we use a 3d lookup table we need to supply a depth = 0)
+                    }
+                    break;
+            }
+          
+            Matrix m = GetComponentInChildren<Matrix>();
+
+            //index 0 = A(row), index 1 = B (column), index 2 (depth)
+            string label = m.Truthtable[inputs[0], inputs[1], inputs[2]].label.text;
+
+
+            //Step 3: Write cell value based on inputs to output port
+            if (label.Equals("x"))
+            {
+                //this should never happen, 2do generate a warning message
+                new NotImplementedException();
+            }
+            else
+            {
+                _output = int.Parse(label);
+            }
+
+            BtnInput outputPort = null;
+            foreach (var p in ports)
+            {
+                if (p.tag.Equals("PortD"))
+                {
+                    outputPort = p;
+                    p.label.text = _output.ToString();
+                }
+            }
+
+            //Step 4: UI Stuff,  reset all backgrounds and highlight cell
+            for (int i = 0; i < m.Truthtable.GetLength(0); i++)
+            {
+                for (int j = 0; j < m.Truthtable.GetLength(1); j++)
+                {
+                    for (int k = 0; k < m.Truthtable.GetLength(2); k++)
+                    {
+                        m.Truthtable[i, j, k].label.color = panelColorDefault;
+                    }
+                }
+            }
+
+            //highlight active cell (only works for unbalanced ternary ATM)
+            m.Truthtable[inputs[0], inputs[1], inputs[2]].label.color = panelColorActive;
+
+            //Step 5: Propagate output to its connections
+            if ((outputPort != null) && (outputPort.Connections.Count > 0))
+            {
+                foreach (var c in outputPort.Connections)
                 {
                     //determine if logic gate or output 
-                    if (c.tag.Equals("Output"))
+                    if (c.connection.endTerminal.tag.Equals("Output"))
                     {
-                        RadixOptions radixTarget = (RadixOptions)Enum.Parse(typeof(RadixOptions), _radixTarget.text, true);
-                        c.GetComponentInParent<BtnInput>().SetValue(radixTarget, _output);
+                        c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixTarget, _output);
                     }
                     else
                     {
-                        c.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                        c.connection.endTerminal.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
                     }
                 }
             }
@@ -197,97 +147,4 @@ public class InputControllerLogicGate : MonoBehaviour
             new NotImplementedException(); //should not happen
         }
     }
-
-    private int ConvertInputToTruthtableIndex(BtnInput startTerminal)
-    {
-        //we could also do this whole conversation at btnInput and use _value which is an index. The only thing we need to catch are x's.
-        string value = startTerminal.label.text;
-        int output=0;
-        RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), startTerminal.DropdownLabel.text, true);
-        RadixOptions radixTarget = (RadixOptions)Enum.Parse(typeof(RadixOptions), _radixTarget.text, true);
-
-        if (value.Equals("x"))
-        {
-            new NotImplementedException();
-        }
-        else
-        {
-            output = int.Parse(value);
-
-            switch (radixSource)
-            {
-                case RadixOptions.Binary:
-                    {
-                        if (radixTarget != RadixOptions.Binary) //from binary to binary we can use 0-1 range
-                        {
-                            if (output == 0)
-                                output = 0;
-                            else
-                                output = 2;
-                        }
-                    }
-                    break;
-                case RadixOptions.UnbalancedTernary:
-                    {
-                        new NotImplementedException();
-                    }
-                    break;
-                case RadixOptions.BalancedTernary:
-                    {
-                        output = output + 1;
-                    }
-                    break;
-            }
-        }
-
-        return output;
-    }
-
-    private int ConvertFromBinaryToUnbalanced(string v)
-    {
-        int x = 0;
-        if (_radixTarget.text.Equals("Binary"))
-        {
-            //do nothing source and target radix are binary
-            if (v.Equals(x))
-                new NotImplementedException();
-
-            x = int.Parse(v);
-        }
-        else //convert 0's to -1
-        {
-            //do nothing source and target radix are binary
-            if (v.Equals("x"))
-                new NotImplementedException();
-
-            x = int.Parse(v);
-
-            if (x==1)
-                x = 2;
-            else
-                x = 0;
-        }
-        
-        return x;
-    }
-
-    private int ConvertFromBalancedToUnbalanced(string v)
-    {
-            int x = 0;
-            if (v.Equals("x"))
-                new NotImplementedException();
-            else
-                x = int.Parse(v) + 1;
-        return x; //this is not real conversion from balanced to unbalanced ternary just a digit shift for the sake of using it as an index. Maybe use another system
-    }
-
-        private int CatchBadInput(string v)
-        {
-            int x = 0;
-            if (v.Equals("x"))
-                new NotImplementedException();
-            else
-                x = int.Parse(v);
-            return x; //this is not real conversion from balanced to unbalanced ternary just a digit shift for the sake of using it as an index. Maybe use another system
-        }
-    }
+}

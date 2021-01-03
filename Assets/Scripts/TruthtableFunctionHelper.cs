@@ -609,7 +609,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                      
 
 
-                            int test = CreateNetlist(ttMatrix, ttMatrix.Length, 2);
+                            //int test = CreateNetlist(ttMatrix, ttMatrix.Length, 2);
                         }
                     }
                     else

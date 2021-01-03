@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 7929882714157350813}
   - component: {fileID: 6919787256580564419}
   - component: {fileID: 8040822206609064009}
-  - component: {fileID: 9189446281471059706}
   m_Layer: 5
   m_Name: BtnInput
   m_TagString: Untagged
@@ -121,8 +120,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 9189446281471059706}
-        m_TargetAssemblyTypeName: btnInput, Assembly-CSharp
+      - m_Target: {fileID: 4758748541600591658}
+        m_TargetAssemblyTypeName: BtnInput, Assembly-CSharp
         m_MethodName: OnClick
         m_Mode: 1
         m_Arguments:
@@ -133,23 +132,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &9189446281471059706
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 463661488140664354}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9aa825b5ce1ac8c45acac84a0c100b59, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DropdownLabel: {fileID: 0}
-  wireColor: {fileID: 0}
-  colorBinary: {r: 0, g: 0, b: 0, a: 0}
-  label: {fileID: 1067097067356537191}
-  _portIndex: 0
 --- !u!1 &2602930586762411899
 GameObject:
   m_ObjectHideFlags: 0
@@ -339,9 +321,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DropdownLabel: {fileID: 0}
   wireColor: {fileID: 4852457121634253392}
-  colorBinary: {r: 1, g: 0, b: 0.82745105, a: 1}
   label: {fileID: 1067097067356537191}
   _portIndex: 0
+  Connections: []
 --- !u!1 &3267452880450470613
 GameObject:
   m_ObjectHideFlags: 0

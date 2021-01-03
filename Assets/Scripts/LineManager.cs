@@ -4,15 +4,25 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-public class LineManager : MonoBehaviour, IPointerUpHandler
+public class LineManager : MonoBehaviour
 {
     Action<EventParam> _ConnectionDataListener;
-    bool _isDrawing = false;
+    public static bool IsDrawing = false;
     GameObject _tempLine;
     BtnInput _tempStartTerminal;
     public GameObject LinePrefab;
-    float _offsetX = 20;
+    public static float OffsetX = 10;
+    int connectionId = 0; //this is increasing with every connection and never decreasing.
+
+    public int GetNewConnectionId()
+    {
+        var id = connectionId;
+        connectionId++;
+
+        return id;
+    }
 
     void Awake()
     {
@@ -31,14 +41,19 @@ public class LineManager : MonoBehaviour, IPointerUpHandler
 
     void NewConnectionData(EventParam eventParam)
     {
-       _isDrawing = !_isDrawing;
-
-        if (_isDrawing) //first point found
+        IsDrawing = !IsDrawing;
+        if (IsDrawing) //first point found
         {
             _tempStartTerminal = eventParam.ConnectionData.ConnectionTerminal;
             //add line renderer
             _tempLine = Instantiate(LinePrefab);
-            _tempLine.name = _tempStartTerminal.name + "-";
+
+            if (_tempStartTerminal.tag.Equals("Input"))
+                _tempLine.name = _tempStartTerminal.GetComponentInParent<DragDrop>().name + " Port (" + _tempStartTerminal.GetComponentInChildren<TMPro.TMP_InputField>().text + ") --> ";
+            else
+                _tempLine.name = _tempStartTerminal.GetComponentInParent<DragDrop>().name + " Port (" + _tempStartTerminal.tag + ") --> ";
+
+
             _tempLine.transform.SetParent(this.transform, false);
             _tempLine.transform.localScale = new Vector3(1, 1, 1);
             _tempLine.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
@@ -49,124 +64,50 @@ public class LineManager : MonoBehaviour, IPointerUpHandler
 
             var positionObject = _tempStartTerminal.transform.position;
             lr.SetPosition(0, positionObject);
-            lr.SetPosition(1, new Vector3(positionObject.x + _offsetX, positionObject.y, 0));
-            lr.SetPosition(2, new Vector3(positionObject.x + _offsetX, positionObject.y, 0));
+            lr.SetPosition(1, new Vector3(positionObject.x + OffsetX, positionObject.y, 0));
+            lr.SetPosition(2, new Vector3(positionObject.x + OffsetX, positionObject.y, 0));
         }
         else
         {
             //try finalize line renderer
-            if (!eventParam.ConnectionData.IsInput) //input-output check
+            if (!eventParam.ConnectionData.IsInput) //check that the 2nd ports is input, since the first port is output and no input input connections are allowed)
             {
                 if (!eventParam.ConnectionData.ConnectionTerminal.GetInstanceID().Equals(_tempStartTerminal.GetInstanceID())) //different components check
                 {
-                    if (true) //2do: 1 output has max 1 input check
+                    if (checkOutputHasMaxOneInput(eventParam.ConnectionData.ConnectionTerminal)) //2do: 1 output has max 1 input check
                     {
                         var lr = _tempLine.GetComponent<LineRenderer>();
                         lr.positionCount = 4;
                         var positionObject = eventParam.ConnectionData.ConnectionTerminal.transform.position;
-                        lr.SetPosition(2, new Vector3(positionObject.x - _offsetX, positionObject.y, 0));
+                        lr.SetPosition(2, new Vector3(positionObject.x - OffsetX, positionObject.y, 0));
                         lr.SetPosition(3, new Vector3(positionObject.x, positionObject.y, 0));
-
                         lr.endColor = lr.startColor;
 
-                        //update input controller of link
-                        
-                        var conn = _tempStartTerminal.GetComponentInParent<InputController>().Connections[int.Parse(_tempStartTerminal.name)];
+                        //redraw the line render segments with clickable buttons, strechted and correctly positioned
+                        for (int i = 0; i < 3; i++)
+                        {
+                            DrawButtonSegment(i, _tempLine);
+                        }
+
+                        //create a connection
+                        var conn = new Connection();
                         conn.startTerminal = _tempStartTerminal;
-                        conn.endTerminal.Add(eventParam.ConnectionData.ConnectionTerminal);
-                        _tempLine.name = _tempLine.name + eventParam.ConnectionData.ConnectionTerminal.tag;
+                        conn.endTerminal = eventParam.ConnectionData.ConnectionTerminal;
+                        conn.id = GetNewConnectionId();
 
-                        //if end terminal is an Output 
-                        if (eventParam.ConnectionData.ConnectionTerminal.tag.Equals("Output"))
-                        {
-                            //if start terminal is a input we do nothing 
-                            if (conn.startTerminal.tag.Equals("Input"))
-                            {
-                                
-                            }
-                            else //else we need to propoage the connection
-                            { 
-                                var icl = conn.startTerminal.transform.parent.transform.parent.GetComponent<InputControllerLogicGate>();
-                                icl.Connections[3] = conn; //index 3 is always the output port
-                            }
-                        }
-                        else //if end terminal is a logic gate we need to propagate the conneciton
-                        {
-                            if (conn.startTerminal.name.Equals("3") && !conn.startTerminal.tag.Contains("Input"))
-                            {
-                                var icl2 = conn.startTerminal.transform.parent.transform.parent.GetComponent<InputControllerLogicGate>();
-                                icl2.Connections[3] = conn; //index 3 is always the output port
-                            }
-
-                            var icl = eventParam.ConnectionData.ConnectionTerminal.transform.parent.transform.parent.GetComponent<InputControllerLogicGate>();
-
-                            //this part is messy due to bottom up approach, we need to find the correct index which changes based on arity (number of inputs)
-                            //string tag = eventParam.ConnectionData.ConnectionTerminal.tag;
-                            //var arity = icl.GetComponentInChildren<DragExpandTableComponent>().Arity;
-                            int index = int.Parse(eventParam.ConnectionData.ConnectionTerminal.name);
-
-                            //switch (arity)
-                            //{
-                            //    case 1:
-                            //        if (tag.Equals("PortA"))
-                            //            index = 0;
-                            //        else
-                            //            new NotImplementedException(); //error
-                            //        break;
-                            //    case 2:
-                            //        switch (tag)
-                            //        {
-                            //            case "PortA":
-                            //                index = 1;
-                            //                break;
-                            //            case "PortB":
-                            //                index = 0;
-                            //                break;
-                            //        }
-                            //        break;
-                            //    case 3:
-                            //        switch (tag)
-                            //        {
-                            //            case "PortA":
-                            //                index = 2;
-                            //                break;
-                            //            case "PortB":
-                            //                index = 1;
-                            //                break;
-                            //            case "PortC":
-                            //                index = 0;
-                            //                break;
-                            //        }
-                            //        break;
-                            //}
-
-                            icl.Connections[index] = conn;
-                        }
+                        if (conn.endTerminal.tag.Equals("Output"))
+                            _tempLine.name = conn.id.ToString() + " = " + _tempLine.name + conn.endTerminal.GetComponentInParent<DragDrop>().name + " Port (" + eventParam.ConnectionData.ConnectionTerminal.GetComponentInChildren<TMPro.TMP_InputField>().text + ")";
+                        else
+                            _tempLine.name = conn.id.ToString() + " = " + _tempLine.name + conn.endTerminal.GetComponentInParent<DragDrop>().name + " Port (" + conn.endTerminal.tag + ")";
 
 
+                        _tempLine.GetComponent<LineFunctions>().connection = conn;
 
+                        //add connection to start and end terminals (ports)
+                        conn.startTerminal.Connections.Add(_tempLine.GetComponent<LineFunctions>());
+                        conn.endTerminal.Connections.Add(_tempLine.GetComponent<LineFunctions>());
 
-                    //attempt clickable lines
-                    //option 1
-                    //var mc = _tempLine.AddComponent<MeshCollider>();
-
-                    //Mesh mesh = new Mesh();
-                    //lr.BakeMesh(mesh, true);
-                    //mc.sharedMesh = mesh;
-
-                    //option 2
-                    //Vector3[] points = new Vector3[lr.positionCount];
-                    //lr.GetPositions(points);
-
-                    //var ec = _tempLine.GetComponent<EdgeCollider2D>();
-
-                    //ec.points = points.Select(x =>
-                    //{
-                    //    var pos = ec.transform.InverseTransformPoint(x);
-                    //    return new Vector2(pos.x, pos.y);
-                    //    //return new Vector2(x.x, x.y);
-                    //}).ToArray();
-
+                        //finalize
                         _tempLine = null;
                         _tempStartTerminal = null;
                     }
@@ -185,42 +126,75 @@ public class LineManager : MonoBehaviour, IPointerUpHandler
                 Destroy(_tempLine);
             }
         }
-        
-         
-
-
-
-
-
     }
 
-    public void OnPointerUp(PointerEventData eventData)
+    private void DrawButtonSegment(int i, GameObject tempLine)
     {
-        Debug.Log("test");
+        var lr = _tempLine.GetComponent<LineRenderer>();
+
+        RectTransform button = _tempLine.transform.GetChild(i).gameObject.GetComponent<RectTransform>();
+        var middlepoint = new Vector3(Mathf.Abs(lr.GetPosition(i).x + lr.GetPosition(i+1).x) / 2,
+                                        Mathf.Abs(lr.GetPosition(i).y + lr.GetPosition(i+1).y) / 2,
+                                        0);
+        var width = Vector2.Distance(lr.GetPosition(i), lr.GetPosition(i+1));
+
+        button.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+        button.transform.localPosition = middlepoint;
+        var angle = Mathf.Rad2Deg * Mathf.Atan(Mathf.Abs(lr.GetPosition(i).y - lr.GetPosition(i+1).y) /
+                                                    Mathf.Abs(lr.GetPosition(i).x - lr.GetPosition(i+1).x));
+
+        var deltaY = (lr.GetPosition(i).y - lr.GetPosition(i+1).y);
+        var deltaX = (lr.GetPosition(i).x - lr.GetPosition(i+1).x);
+        if (deltaY < 0 && deltaX > 0)
+            angle = -angle;
+
+        if (deltaY > 0 && deltaX < 0)
+            angle = -angle;
+
+        button.transform.rotation = Quaternion.Euler(0, 0, angle);
+
+        //color the connection line
+        button.GetComponent<Image>().color = lr.startColor;
     }
 
-    public void OnMouseDown()
+    private bool checkOutputHasMaxOneInput(BtnInput endTerminal)
     {
-        Debug.Log("test");
+        if (endTerminal.Connections.Count == 0)
+            return true;
+        else
+            return false;
     }
 
     private void Update()
     {
-        if (_isDrawing)
+        if (IsDrawing)
         {
             //use right mouse aka GetMouseButton(1) to cancel, use left mouse for possible waypoints in the future
             if (Input.GetMouseButton(1))
             {
-                _isDrawing = false;
+                IsDrawing = false;
                 Destroy(_tempLine);
             }
             else
             {
                 var mPos = Input.mousePosition;
                 _tempLine.GetComponent<LineRenderer>().SetPosition(2, new Vector3(mPos.x, mPos.y, 0));
+
+                for (int i = 0; i < 2; i++)
+                {
+                    DrawButtonSegment(i, _tempLine);
+                }
             }
         }
     }
 
    
+}
+
+public class Connection
+{
+    public int id; //Get this from the linemanager.GetNewConnectionId();
+    public BtnInput endTerminal;
+    public BtnInput startTerminal;
+
 }

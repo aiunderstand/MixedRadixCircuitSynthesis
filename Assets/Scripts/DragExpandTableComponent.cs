@@ -91,6 +91,15 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
 
     public void SetPanelSize(int radix, int arity)
     {
+        //remove all possibl existing connections to it
+        var allTerminals = transform.parent.transform.parent.GetComponentsInChildren<BtnInput>();
+
+        foreach (var t in allTerminals)
+        {
+            t.RemoveAllConnections();
+        }
+
+
         //height of panel in uunits
         //          | binary        | ternary
         // 1-ary       85               85

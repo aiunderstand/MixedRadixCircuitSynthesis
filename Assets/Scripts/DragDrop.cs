@@ -73,6 +73,16 @@ public class DragDrop : MonoBehaviour,
         if (p.y < -_limits.y) { p.y = -_limits.y; }
         if (p.y > _limits.y) { p.y = _limits.y; }
         transform.localPosition = p;
+
+        //redraw connections
+        var allTerminals = GetComponentsInChildren<BtnInput>();
+        foreach (var t in allTerminals)
+        {
+            foreach (var c in t.Connections)
+            {
+                c.Redraw(Color.clear); //no color update
+            }
+        }
     }
 
     public void OnEndDrag(PointerEventData eventData)

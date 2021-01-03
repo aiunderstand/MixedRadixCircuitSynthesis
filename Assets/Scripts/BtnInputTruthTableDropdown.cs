@@ -23,9 +23,19 @@ public class BtnInputTruthTableDropdown : MonoBehaviour
         foreach (var o in optionsC)
             o.SetActive(false);
 
-        for (int i = (change.value*9); i < (change.value * 9)+9; i++)
+        if (optionsC.Length == 27) //ternary
         {
-            optionsC[i].SetActive(true);
+            for (int i = (change.value * 9); i < (change.value * 9) + 9; i++)
+            {
+                optionsC[i].SetActive(true);
+            }
+        }
+        else // binary
+        {
+            for (int i = (change.value * 4); i < (change.value * 4) + 4; i++)
+            {
+                optionsC[i].SetActive(true);
+            }
         }
     }
 
@@ -43,9 +53,19 @@ public class BtnInputTruthTableDropdown : MonoBehaviour
 
     public void Activate(int index)
     {
-        for (int i = (index * 9); i < (index * 9) + 9; i++)
+        if (optionsC.Length == 27) //ternary
         {
-            optionsC[i].SetActive(true);
+            for (int i = (index * 9); i < (index * 9) + 9; i++)
+            {
+                optionsC[i].SetActive(true);
+            }
+        }
+        else // binary
+        {
+            for (int i = (index * 4); i < (index * 4) + 4; i++)
+            {
+                optionsC[i].SetActive(true);
+            }
         }
     }
 }

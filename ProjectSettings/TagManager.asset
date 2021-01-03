@@ -11,6 +11,8 @@ TagManager:
   - PortA
   - PortB
   - PortC
+  - PortD
+  - Wire
   layers:
   - Default
   - TransparentFX

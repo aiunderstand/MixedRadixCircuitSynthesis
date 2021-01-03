@@ -14,6 +14,7 @@ public class LetterBoxer : MonoBehaviour
     public float height = 540;
     public bool onAwake = true;
     public bool onUpdate = true;
+    Vector2 resolution;
 
     private Camera cam;        
 
@@ -21,9 +22,10 @@ public class LetterBoxer : MonoBehaviour
     {
         // store reference to the camera
         cam = GetComponent<Camera>();
+        resolution = new Vector2(Screen.width, Screen.height);
 
         // perform sizing if onAwake is set
-        if(onAwake)
+        if (onAwake)
         {
             PerformSizing();
         }
@@ -35,6 +37,19 @@ public class LetterBoxer : MonoBehaviour
         if (onUpdate)
         {
             PerformSizing();
+
+            if (resolution.x != Screen.width || resolution.y != Screen.height)
+            {
+                var wires = GameObject.FindGameObjectsWithTag("Wire");
+
+                foreach (var w in wires)
+                {
+                    w.GetComponent<LineFunctions>().Redraw(Color.clear); //no color update
+                }
+
+                resolution.x = Screen.width;
+                resolution.y = Screen.height;
+            }
         }
     }
 
