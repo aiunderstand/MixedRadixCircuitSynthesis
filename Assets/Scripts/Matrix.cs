@@ -81,6 +81,66 @@ public class Matrix : MonoBehaviour
         }
     }
 
+    public int ComputeArityFromTT()
+    {
+        int arity = 0;
+
+        for (int i = 0; i < 3; i++)
+        {
+            if (Truthtable.GetLength(i) > 1)
+            {
+                arity++;
+            }
+        }
+
+        return arity;
+    }
+
+    public int[] GetMatrixCells()
+    {
+        List<int> tt = new List<int>();
+        var arity = ComputeArityFromTT();
+
+        switch (arity)
+        {
+            case 1:
+                {
+                    for (int A = 0; A < _radix; A++)
+                    {
+                       tt.Add(Truthtable[A, 0, 0].GetValueAsMapped()); //note: we are map binary as 0:0 , 1:2 and bal. ternary as -1:0, 0:1, 1;2)
+                    }
+                }
+                break;
+            case 2:
+                {
+                    for (int A = 0; A < _radix; A++)
+                    {
+                        for (int B = 0; B < _radix; B++)
+                        {
+                            tt.Add(Truthtable[A, B, 0].GetValueAsMapped()); //note: we are map binary as 0:0 , 1:2 and bal. ternary as -1:0, 0:1, 1;2)
+                        }
+                    }
+                }
+                break;
+            case 3:
+                {
+                    for (int A = 0; A < _radix; A++)
+                    {
+                        for (int B = 0; B < _radix; B++)
+                        {
+                            for (int C = 0; C < _radix; C++)
+                            {
+                                tt.Add(Truthtable[A, B, C].GetValueAsMapped()); //note: we are map binary as 0:0 , 1:2 and bal. ternary as -1:0, 0:1, 1;2)
+                            }
+                        }
+                    }
+                }
+                break;
+        }
+
+        return tt.ToArray();
+    }
+
     private void CreateMatrix1ary(int radix, BtnInputTruthTable[] cells)
     {
         Truthtable = new BtnInputTruthTable[radix, 1, 1];

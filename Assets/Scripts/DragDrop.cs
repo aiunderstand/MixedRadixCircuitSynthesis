@@ -53,7 +53,8 @@ public class DragDrop : MonoBehaviour,
             //instantiate new one (below)
             var go = GameObject.Instantiate(this.gameObject);
             go.transform.SetParent(this.transform.parent, false);
-            go.name = this.name;
+            go.name = this.name; //isnt this overwritten?
+           
 
             //change order to lowest (overlay on top)
             this.transform.SetAsLastSibling();
@@ -97,8 +98,10 @@ public class DragDrop : MonoBehaviour,
 
                 //change canvas from UI to dropzone
                 this.transform.SetParent(DragDropArea.transform);
+                this.transform.tag = "DnDComponent";
+
             }
-               
+
             _dragOffset = Vector2.zero;
 
                

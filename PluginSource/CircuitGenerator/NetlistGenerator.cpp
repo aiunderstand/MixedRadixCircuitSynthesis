@@ -88,16 +88,25 @@ extern "C" __declspec(dllexport) int TestSum(int* ttFromUnity, int ttFromUnityLe
 	return sum;
 }
 
-extern "C" __declspec(dllexport) int CreateNetlist(int* ttFromUnity, int ttFromUnityLength, int arity) {
+extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFromUnityLength, int arity) {
 
 /////////////////
 //Stage0: INIT
 ////////////////
+	//clear arrays
+	circuit.clear();
+	truthtable.clear();
+	tempVect.clear();
+	networks.clear();
+	mask.clear();
+	groups.clear();
+	maskIndex = 0;
+	
 	dimensions = arity; //or three, derive from function name
 
 	int mysteryNumber = dimensions * dimensions * 100;//dimensions * 1000;	// This number must be higher for more inputs. Program will crash if it is too low. Must be higher than number of groups found.
 	int mysteryExponent = 1.64;		// NOTE: The author is not happy with the use of these mystery numbers. However it will do for now.
-
+	
 	circuit.resize(4, vector<vector<string>>(mysteryNumber, vector<string>(dimensions)));
 
 	for (int i = 0; i < pow(3, dimensions); i++) {
@@ -683,7 +692,6 @@ extern "C" __declspec(dllexport) int CreateNetlist(int* ttFromUnity, int ttFromU
 
 	//cout << "\n\n Circuit outputted into functions/" << filename << ".sp\n\n";
 
-	return truthtable[5];
 	//system("pause");
 }
 

@@ -18,15 +18,28 @@ public class InputControllerLogicGate : MonoBehaviour
             GetComponentInParent<DragDrop>().name = "LogicGate (" + GetInstanceID().ToString()+")";
     }
 
-    public void ComputeTruthTableOutput()
+    public int GetArity()
+    {
+        return GetComponentInChildren<DragExpandTableComponent>().Arity;
+    }
+
+    public int[] GetTruthTable()
+    {
+        return GetComponent<Matrix>().GetMatrixCells();
+    }
+
+    public RadixOptions GetRadixTarget()
     {
         _radixTarget = GetComponent<Matrix>().DropdownLabel;
-        RadixOptions radixTarget = (RadixOptions)Enum.Parse(typeof(RadixOptions), _radixTarget.text, true);
+        return (RadixOptions)Enum.Parse(typeof(RadixOptions), _radixTarget.text, true);
+    }
 
-        var _arity = GetComponentInChildren<DragExpandTableComponent>().Arity;
+    public void ComputeTruthTableOutput()
+    {
+        RadixOptions radixTarget = GetRadixTarget();
+
         bool allConnected = false;
-
-        var ports = GetComponentsInChildren<BtnInput>();
+         var ports = GetComponentsInChildren<BtnInput>();
 
         int connectionCount =0;
         foreach (var p in ports)
@@ -35,7 +48,7 @@ public class InputControllerLogicGate : MonoBehaviour
                 connectionCount++;
         }
 
-        if (connectionCount == (_arity +1)) // +1 since this is the output port
+        if (connectionCount == (GetArity() + 1)) // +1 since this is the output port
             allConnected = true;
 
         if (allConnected)
@@ -62,7 +75,7 @@ public class InputControllerLogicGate : MonoBehaviour
 
             //Step 2: Get the correct matrix and the cell based on inputs
             //if we have arity 3, we first need to set the correct matrix based on the value
-           switch (_arity)
+           switch (GetArity())
             {
                 case 3:
                     {

@@ -6,6 +6,7 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine.UI.Extensions;
 using ExtensionMethods;
+using static BtnInput;
 
 //see this presentation about marshalling data from c++ to C# and inverse
 //https://www.slideshare.net/unity3d/adding-love-to-an-api-or-how-to-expose-c-in-unity
@@ -45,13 +46,15 @@ public class TruthtableFunctionHelper : MonoBehaviour
     public static extern int GetTableFromIndexSingle(int tableIndex, int index);
 
     [DllImport("CircuitGenerator", EntryPoint = "CreateNetlist")]
-    public static extern int CreateNetlist(int[] array, int length,int arity);
+    public static extern void CreateNetlist(int[] array, int length,int arity);
 
     [DllImport("CircuitGenerator", EntryPoint = "TestSum")]
     public static extern int TestSum(int[] array, int length);
 
-
-    public void Start()
+    [DllImport("CircuitGenerator", EntryPoint = "CreateCircuit")]
+    public static extern int CreateCircuit(int inputs, int outputs, int[] ttIndices, int ttIndicesLength, int[] arityArray, int arityArrayLength, string[] connectionArray, int connectionLength, int[] invArray, int invArrayLength);
+    
+        public void Start()
     {
         //Fetch the Dropdown GameObject
         _Dropdown = GetComponent<AutoCompleteComboBox>();
@@ -571,6 +574,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                 //parse into either 3 or 9 (arity 2 or 3)
                 if (function.Length == 3 || function.Length == 9)
                 {
+                    RadixOptions targetRadix = GetComponentInParent<InputControllerLogicGate>().GetRadixTarget();
                     if (function.Length == 3)
                     {
                         //parse into table index
@@ -579,7 +583,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                         if (tIndex != -1)
                         {
                             _DETC.SetPanelSize(3, 2);
-                         
+
                             //get all the cells
                             BtnInputTruthTable[] cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
 
@@ -590,8 +594,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                             //fill in the cells
                             for (int i = 0; i < 9; i++)
                             {
-                                //cells[i].label.text = GetTableFromIndexSingle(8119, i).ToString(); No need creating and releasing pointers
-                                cells[i].label.text = ttMatrix[i].ToString();
+                                cells[i].label.text = ConvertToCorrectRadix(ttMatrix[i], RadixOptions.UnbalancedTernary, targetRadix).ToString();
                             }
 
                             GetTableFromIndex_Release(srcPtr);
@@ -606,7 +609,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
                             //int sum = TestSum(ttMatrix, ttMatrix.Length); //if we use this method, we have to release the pointer later!
                             //Debug.Log(sum);
-                     
+
 
 
                             //int test = CreateNetlist(ttMatrix, ttMatrix.Length, 2);
@@ -615,7 +618,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                     else
                     {
                         bool isValid = function.isValidHeptCode();
-                        
+
                         if (isValid)
                         {
                             _DETC.SetPanelSize(3, 3);
@@ -631,7 +634,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
                             for (int i = 0; i < 3; i++)
                             {
-                                string functionPart = function.Substring(i * 3, 3);
+                                string functionPart = function.Substring(function.Length - (i + 1) * 3, 3);
                                 //parse into table index
                                 int tIndex = ConvertHeptavintimalEncodingToArity2TableIndex(functionPart);
 
@@ -640,11 +643,15 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 Marshal.Copy(srcPtr, ttMatrix, 0, 9);
 
                                 //fill in the cells
-                                for (int j = 9 * i; j < (9 * i) +9; j++)
-                                {
-                                    //cells[i].label.text = GetTableFromIndexSingle(8119, i).ToString(); No need creating and releasing pointers
-                                    cells[j].label.text = ttMatrix[j - (9 * i)].ToString();
-                                }
+                                cells[i].label.text = ConvertToCorrectRadix(ttMatrix[0], RadixOptions.UnbalancedTernary, targetRadix).ToString();
+                                cells[i + 3].label.text = ConvertToCorrectRadix(ttMatrix[1], RadixOptions.UnbalancedTernary, targetRadix).ToString();
+                                cells[i + 6].label.text = ConvertToCorrectRadix(ttMatrix[2], RadixOptions.UnbalancedTernary, targetRadix).ToString();
+                                cells[i + 9].label.text = ConvertToCorrectRadix(ttMatrix[3], RadixOptions.UnbalancedTernary, targetRadix).ToString();
+                                cells[i + 12].label.text = ConvertToCorrectRadix(ttMatrix[4], RadixOptions.UnbalancedTernary, targetRadix).ToString();
+                                cells[i + 15].label.text = ConvertToCorrectRadix(ttMatrix[5], RadixOptions.UnbalancedTernary, targetRadix).ToString();
+                                cells[i + 18].label.text = ConvertToCorrectRadix(ttMatrix[6], RadixOptions.UnbalancedTernary, targetRadix).ToString();
+                                cells[i + 21].label.text = ConvertToCorrectRadix(ttMatrix[7], RadixOptions.UnbalancedTernary, targetRadix).ToString();
+                                cells[i + 24].label.text = ConvertToCorrectRadix(ttMatrix[8], RadixOptions.UnbalancedTernary, targetRadix).ToString();
 
                                 GetTableFromIndex_Release(srcPtr);
 
@@ -658,6 +665,98 @@ public class TruthtableFunctionHelper : MonoBehaviour
                 }
             }
         }
+    }
+
+    public int ConvertToCorrectRadix(int _value, RadixOptions radixSource, RadixOptions radixTarget)
+    {
+        int outputValue = 0;
+        switch (radixSource)
+        {
+            case RadixOptions.BalancedTernary: 
+                {
+                    switch (radixTarget)
+                    {
+                        case RadixOptions.Binary:
+                            {
+                                if (_value < 1)
+                                    outputValue = 0;
+                                else
+                                    outputValue = 1;
+                            }
+                            break;
+                        case RadixOptions.UnbalancedTernary:
+                            {
+                                outputValue = _value + 1;
+                            }
+                            break;
+                        case RadixOptions.BalancedTernary:
+                            {
+                                outputValue = _value;
+                            }
+                            break;
+
+                    }
+
+                }
+                break;
+            case RadixOptions.UnbalancedTernary: 
+                {
+                    switch (radixTarget)
+                    {
+                        case RadixOptions.Binary:
+                            {
+                                if (_value < 2)
+                                    outputValue = 0;
+                                else
+                                    outputValue = 1;
+                            }
+                            break;
+                        case RadixOptions.UnbalancedTernary:
+                            {
+                                outputValue = _value;
+                            }
+                            break;
+                        case RadixOptions.BalancedTernary:
+                            {
+                                outputValue = _value -1;
+                            }
+                            break;
+
+                    }
+
+                }
+                break;
+            case RadixOptions.Binary:
+                {
+                    switch (radixTarget)
+                    {
+                        case RadixOptions.Binary:
+                            {
+                                outputValue = _value;
+                            }
+                            break;
+                        case RadixOptions.UnbalancedTernary:
+                            {
+                                if (_value == 0)
+                                    outputValue = -1;
+                                else
+                                    outputValue = 1;
+                            }
+                            break;
+                        case RadixOptions.BalancedTernary:
+                            {
+                                if (_value == 0)
+                                    outputValue = 0;
+                                else
+                                    outputValue = 2;
+                            }
+                            break;
+                    }
+                }
+                break;
+        }
+
+        return outputValue;
     }
 
     public int ConvertHeptavintimalEncodingToArity2TableIndex(string hepCode)
@@ -720,4 +819,47 @@ public class TruthtableFunctionHelper : MonoBehaviour
         return tableIndex;
     }
 
+    public static void CreateNetlist(string path, int[] tt, int arity)
+    {
+        //we need to reshuffle the tt order if and only if arity 3
+        if(arity ==3)
+        {
+            List<int> ttList = new List<int>();
+            
+            ttList.Add(tt[0]);
+            ttList.Add(tt[3]);
+            ttList.Add(tt[6]);
+            ttList.Add(tt[9]);
+            ttList.Add(tt[12]);
+            ttList.Add(tt[15]);
+            ttList.Add(tt[18]);
+            ttList.Add(tt[21]);
+            ttList.Add(tt[24]);
+
+            ttList.Add(tt[1]);
+            ttList.Add(tt[4]);
+            ttList.Add(tt[7]);
+            ttList.Add(tt[10]);
+            ttList.Add(tt[13]);
+            ttList.Add(tt[16]);
+            ttList.Add(tt[19]);
+            ttList.Add(tt[22]);
+            ttList.Add(tt[25]);
+
+            ttList.Add(tt[2]);
+            ttList.Add(tt[5]);
+            ttList.Add(tt[8]);
+            ttList.Add(tt[11]);
+            ttList.Add(tt[14]);
+            ttList.Add(tt[17]);
+            ttList.Add(tt[20]);
+            ttList.Add(tt[23]);
+            ttList.Add(tt[26]);
+
+            tt = ttList.ToArray();
+        }
+       
+        CreateNetlist(tt, tt.Length, arity);
+       
+    }
 }

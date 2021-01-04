@@ -1,4 +1,4 @@
-.subckt f_ZZZ out vdd
+.subckt f_DDD out vdd
 
 
 xp0 up out out gnd PCNFET Lch=Lg  Lgeff='Lgef' Lss=32e-9  Ldd=32e-9 

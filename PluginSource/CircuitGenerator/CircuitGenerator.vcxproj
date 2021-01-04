@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CircuitGenerator.cpp" />
     <ClCompile Include="FunctionGenerator.cpp" />
     <ClCompile Include="NetlistGenerator.cpp" />
   </ItemGroup>

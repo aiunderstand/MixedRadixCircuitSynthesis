@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using static BtnInput;
 using static InputController;
 
 public class BtnInputTruthTable : MonoBehaviour
@@ -67,5 +69,46 @@ public class BtnInputTruthTable : MonoBehaviour
             label.text = "x";
         else
             label.text = _value.ToString();
+    }
+
+    public int GetValueAsMapped()
+    {
+        //NOTE: we want use Dont Care values (marked as "x"). We label them as value 3 and decode them in the c++ function. 
+        //NOTE: targetradix is always unbalanced;
+       
+        int outputValue = 0;
+        RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
+        switch (radixSource)
+        {
+            case RadixOptions.BalancedTernary:
+                {
+                    if (label.text == "x")
+                        outputValue = 3;
+                    else
+                        outputValue = int.Parse(label.text) + 1;
+                }
+                break;
+            case RadixOptions.UnbalancedTernary: 
+                {
+                    if (label.text == "x")
+                        outputValue = 3;
+                    else
+                        outputValue = int.Parse(label.text);
+                }
+                break;
+            case RadixOptions.Binary: 
+                {
+                    if (label.text == "x")
+                        outputValue = 3;
+                  
+                    if (int.Parse(label.text) == 1)
+                        outputValue = 2; //this is the high value;
+                    else
+                        outputValue = 0;
+                }
+                break;
+        }
+
+        return outputValue;
     }
 }
