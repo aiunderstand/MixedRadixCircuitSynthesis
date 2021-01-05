@@ -1,30 +1,29 @@
-.subckt circuit in0 in1 out0 out1 vdd
+.subckt circuit in0 in1 in2 out0 out1 vdd
+.lib 'CNFET.lib' CNFET 
 .include "f_20K.sp"
 .include "f_K00.sp"
 .include "f_ZKK.sp"
 .include "nti.sp" 
 .include "pti.sp"
 
-xpti0 in0 in0_p vdd pti
-xpti1 in1 in1_p vdd pti
+xpti0 -4520inputb -4520inputb_p vdd pti
+xnti1 -4520inputb -4520inputb_n vdd nti
+xpti2 -4520inputcarry -4520inputcarry_p vdd pti
+xnti3 -4520inputcarry -4520inputcarry_n vdd nti
 
-xckt0 in0 in0_p in1 in1_p out_ckt0 vdd f_20K
-
-xpti2 out_ckt0 out_ckt0_p vdd pti
-xpti3 in2 in2_p vdd pti
-
-xckt1 out_ckt0 out_ckt0_p in2 in2_p out0 vdd f_20K
+xckt0 -4520inputb -4520inputb_p -4520inputb_n -4520inputcarry -4520inputcarry_p -4520inputcarry_n -157332PortB vdd f_20K
 
 
-xckt2 in0_p in1_p out_ckt2 vdd f_K00
+xckt1 -4520inputb -4520inputb_p -4520inputb_n -4520inputcarry -4520inputcarry_p -4520inputcarry_n -157332PortB vdd f_20K
 
 
-xckt3 out_ckt0_p in2_p out_ckt3 vdd f_K00
+xckt2 -4520inputb -4520inputb_p -4520inputb_n -4520inputcarry -4520inputcarry_p -4520inputcarry_n -157332PortB vdd f_K00
 
-xpti4 out_ckt2 out_ckt2_p vdd pti
-xpti5 out_ckt3 out_ckt3_p vdd pti
 
-xckt4 out_ckt2_p out_ckt3_p out2 vdd f_ZKK
+xckt3 -4520inputb -4520inputb_p -4520inputb_n -4520inputcarry -4520inputcarry_p -4520inputcarry_n -157332PortB vdd f_K00
+
+
+xckt4 -4520inputb -4520inputb_p -4520inputb_n -4520inputcarry -4520inputcarry_p -4520inputcarry_n -157332PortB vdd f_ZKK
 
 
 

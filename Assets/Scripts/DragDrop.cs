@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ExtensionMethods;
+using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -62,9 +64,20 @@ public class DragDrop : MonoBehaviour,
             //show expanded version of control
             MenuVersion.SetActive(false);
             FullVersion.SetActive(true);
+
+            //check if saved state
+            if (GetComponent<DragDropSaved>() != null)
+            {
+                StartCoroutine("LoadSave");                
+            }
         }
     }
-
+    
+    public IEnumerator LoadSave ()
+    {
+        yield return WaitFor.Frames(1); // wait for 1 frames since various components need to init. Otherwise race condition
+        GetComponent<DragDropSaved>().LoadSavedState();
+    }
     public void OnDrag(PointerEventData eventData)
     {
         transform.position = eventData.position - _dragOffset;

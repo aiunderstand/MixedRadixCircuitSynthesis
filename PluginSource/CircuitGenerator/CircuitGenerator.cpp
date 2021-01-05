@@ -112,47 +112,76 @@ void printData() {
 }
 
 
-vector<vector<string>> ParseConnectionIntoVectorStructure(char** cArray, int cLength)
+vector<vector<string>> ParseConnectionIntoVectorStructure(char** a, int rows)
 {
-    return {
-    {"in0", "in1", "", "out_ckt0"}  ,       //20K
-    {"out_ckt0", "in2", "", "out0"}  ,      //20K
-    {"in0", "in1", "", "out_ckt2"},         //K00
-    {"out_ckt0", "in2", "", "out_ckt3"},    //K00
-    {"out_ckt2", "out_ckt3", "", "out2"},   //ZKK
-    };
+    vector<vector<string>>connVector;
+    for (size_t i = 0; i < rows; i++)
+    {
+        vector<string> tempVector;
+
+        //create a row of vectors, with fixed length 4 (due to arity 3, arity 2 will not use third spot)
+        for (size_t i = 0; i < 4; i++)
+        {
+            tempVector.push_back(a[i]);
+        }
+
+        connVector.push_back(tempVector);
+    }
+
+    return connVector;
 }
 
-vector<vector<bool>> ParseInverterIntoBoolStructure(int* a, int length)
+vector<vector<bool>> ParseInverterIntoBoolStructure(int* a, int rows)
 {
-    return {
-    {true,true,false,true,true,false,false,false,false},
-    {true,true,false,true,true,false,false,false,false},
-    {false,true,false,false,true,false,false,false,false},
-    {false,true,false,false,true,false,false,false,false},
-    {false,true,false,false,true,false,false,false,false}
-    };
+    vector<vector<bool>>invVector;
+    for (size_t i = 0; i < rows; i++)
+    {
+        vector<bool> tempVector;
+        
+        //create a row of vectors, with fixed length 9 (due to ternary, binary will avoid middle value)
+        for (size_t i = 0; i < 9; i++)
+        {
+            if (a[i] == 0)
+                tempVector.push_back(false);
+            else
+                tempVector.push_back(true);
+        }
 
+        invVector.push_back(tempVector);
+    }
+
+    return invVector;
 }
 
-vector<string> ParseIndicesIntoVectorStructure(int* a, int length)
+vector<string> ParseIndicesIntoVectorStructure(char** a, int length)
 {
-    return {
-    "20K", "20K", "K00", "K00", "ZKK"
-    };
+    vector<string> indexVector;
+    for (size_t i = 0; i < length; i++)
+    {
+        indexVector.push_back(a[i]);
+    }
+
+    return indexVector;
 }
 
 vector<int> ParseArityIntoVectorStructure(int* a, int length)
 {
-    return { 2,2,2,2,2 };
+    vector<int> arityVector;
+    for (size_t i = 0; i < length; i++)
+    {
+        arityVector.push_back(a[i]);
+    }
+    
+    return arityVector;
 }
-extern "C" __declspec(dllexport) void CreateCircuit(int inputs, int outputs, int* ttIndices, int ttIndicesLength, int* arityArray, int arityArrayLength, char** connectionArray, int connectionLength, int* invArray, int invArrayLength ) {
+
+extern "C" __declspec(dllexport) void CreateCircuit(int inputs, int outputs, int compCount, char** ttIndices, int* arityArray, char** connectionArray,  int* invArray) {
 
     //STEP 1: assign parameters with some conversion due to c# to c++
-    connections = ParseConnectionIntoVectorStructure(connectionArray, connectionLength);
-    inv = ParseInverterIntoBoolStructure(invArray, invArrayLength);
-    index = ParseIndicesIntoVectorStructure(ttIndices, ttIndicesLength);
-    arity = ParseArityIntoVectorStructure(arityArray, arityArrayLength);
+    connections = ParseConnectionIntoVectorStructure(connectionArray, compCount);
+    inv = ParseInverterIntoBoolStructure(invArray, compCount);
+    index = ParseIndicesIntoVectorStructure(ttIndices, compCount);
+    arity = ParseArityIntoVectorStructure(arityArray, compCount);
 
     //STEP 2: INIT
     IO input;
@@ -162,8 +191,7 @@ extern "C" __declspec(dllexport) void CreateCircuit(int inputs, int outputs, int
 
     netlists.clear();
     netlists.resize(connections.size());
-
-    
+        
     enterData();
     //printData();
 
@@ -183,6 +211,7 @@ extern "C" __declspec(dllexport) void CreateCircuit(int inputs, int outputs, int
         myfile << " out" << i;
     }
     myfile << " vdd\n";
+    myfile << ".lib 'CNFET.lib' CNFET \n";
 
     vector<string> includedIndex;
 

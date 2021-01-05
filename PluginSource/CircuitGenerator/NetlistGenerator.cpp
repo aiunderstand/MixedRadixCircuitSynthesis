@@ -27,6 +27,8 @@ vector<char> downhalfvdd;	//network[3][x]
 vector<vector<vector<string>>> circuit;	//network, group, series. The transistor types and their connections are encoded in this vector
 vector<char> mask;	// the rectangular groupings are first generated here, then compared to the truthtable.
 vector<vector<char>> groups;	//groupnr, values. The valid rectangular groupings are stored here.
+string optimizedIndex;
+vector<bool> invArray;
 
 int dimensions = -1; // the number of inputs
 int maskIndex = 0;
@@ -77,6 +79,55 @@ void drawMask(int p1, int p2) {		// draws an n-dimensional rectangle between two
 	}
 }
 
+extern "C" __declspec(dllexport) int* GetOptimzedTT() {
+	int* tt = new int[truthtable.size()];
+
+	for (size_t i = 0; i < truthtable.size(); i++)
+	{
+		switch (truthtable[i])
+		{
+		case '0':
+			tt[i] = 0;
+			break;
+		case '1':
+			tt[i] = 1;
+			break;
+		case '2':
+			tt[i] = 2;
+			break;
+		}
+	}
+
+	return tt;
+}
+
+extern "C" __declspec(dllexport) void GetOptimzedTT_Release(int* pArray)
+{
+	delete[] pArray;
+}
+
+extern "C" __declspec(dllexport) int* GetInvArray() {
+	int* tt = new int[invArray.size()];
+
+	for (size_t i = 0; i < invArray.size(); i++)
+	{
+		if (invArray[i])
+		{
+			tt[i] = 1;
+		}
+		else
+		{
+			tt[i] = 0;
+		}
+	}
+
+	return tt;
+}
+
+extern "C" __declspec(dllexport) void GetInvArray_Release(int* pArray)
+{
+	delete[] pArray;
+}
 
 //this is a test function
 extern "C" __declspec(dllexport) int TestSum(int* ttFromUnity, int ttFromUnityLength) {
@@ -87,6 +138,9 @@ extern "C" __declspec(dllexport) int TestSum(int* ttFromUnity, int ttFromUnityLe
 
 	return sum;
 }
+
+
+
 
 extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFromUnityLength, int arity) {
 
@@ -101,7 +155,8 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 	mask.clear();
 	groups.clear();
 	maskIndex = 0;
-	
+	invArray.clear();
+
 	dimensions = arity; //or three, derive from function name
 
 	int mysteryNumber = dimensions * dimensions * 100;//dimensions * 1000;	// This number must be higher for more inputs. Program will crash if it is too low. Must be higher than number of groups found.
@@ -431,39 +486,39 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 	// THE BASE-27 HEPTAVINTIMAL NOTATION
 	// 000 001 002 010 011 012 020 021 022 100 101 102 110 111 112 120 121 122 200 201 202 210 211 212 220 221 222
 	//  0	1	2	3	4	5	6	7	8	9	A	B	C	D	E	F	G	H	K	M	N	P	R	T	V	X	Z
-	string index = "";
+	optimizedIndex = "";
 	string hept;
 	for (int i = truthtable.size() - 1; i > 0; i -= 3) { // the heptavintimal function index is generated
 		hept = truthtable[i];
 		hept += truthtable[i - 1];
 		hept += truthtable[i - 2];
-		if (hept == "000") { index += "0"; }
-		else if (hept == "001") { index += "1"; }
-		else if (hept == "002") { index += "2"; }
-		else if (hept == "010") { index += "3"; }
-		else if (hept == "011") { index += "4"; }
-		else if (hept == "012") { index += "5"; }
-		else if (hept == "020") { index += "6"; }
-		else if (hept == "021") { index += "7"; }
-		else if (hept == "022") { index += "8"; }
-		else if (hept == "100") { index += "9"; }
-		else if (hept == "101") { index += "A"; }
-		else if (hept == "102") { index += "B"; }
-		else if (hept == "110") { index += "C"; }
-		else if (hept == "111") { index += "D"; }
-		else if (hept == "112") { index += "E"; }
-		else if (hept == "120") { index += "F"; }
-		else if (hept == "121") { index += "G"; }
-		else if (hept == "122") { index += "H"; }
-		else if (hept == "200") { index += "K"; }
-		else if (hept == "201") { index += "M"; }
-		else if (hept == "202") { index += "N"; }
-		else if (hept == "210") { index += "P"; }
-		else if (hept == "211") { index += "R"; }
-		else if (hept == "212") { index += "T"; }
-		else if (hept == "220") { index += "V"; }
-		else if (hept == "221") { index += "X"; }
-		else if (hept == "222") { index += "Z"; }
+		if (hept == "000") { optimizedIndex += "0"; }
+		else if (hept == "001") { optimizedIndex += "1"; }
+		else if (hept == "002") { optimizedIndex += "2"; }
+		else if (hept == "010") { optimizedIndex += "3"; }
+		else if (hept == "011") { optimizedIndex += "4"; }
+		else if (hept == "012") { optimizedIndex += "5"; }
+		else if (hept == "020") { optimizedIndex += "6"; }
+		else if (hept == "021") { optimizedIndex += "7"; }
+		else if (hept == "022") { optimizedIndex += "8"; }
+		else if (hept == "100") { optimizedIndex += "9"; }
+		else if (hept == "101") { optimizedIndex += "A"; }
+		else if (hept == "102") { optimizedIndex += "B"; }
+		else if (hept == "110") { optimizedIndex += "C"; }
+		else if (hept == "111") { optimizedIndex += "D"; }
+		else if (hept == "112") { optimizedIndex += "E"; }
+		else if (hept == "120") { optimizedIndex += "F"; }
+		else if (hept == "121") { optimizedIndex += "G"; }
+		else if (hept == "122") { optimizedIndex += "H"; }
+		else if (hept == "200") { optimizedIndex += "K"; }
+		else if (hept == "201") { optimizedIndex += "M"; }
+		else if (hept == "202") { optimizedIndex += "N"; }
+		else if (hept == "210") { optimizedIndex += "P"; }
+		else if (hept == "211") { optimizedIndex += "R"; }
+		else if (hept == "212") { optimizedIndex += "T"; }
+		else if (hept == "220") { optimizedIndex += "V"; }
+		else if (hept == "221") { optimizedIndex += "X"; }
+		else if (hept == "222") { optimizedIndex += "Z"; }
 	}
 
 	//DEBUG
@@ -476,8 +531,8 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 
 	string filename;
 	filename = "f_";
-	for (int i = 0; i < (int(pow(3, dimensions - 1))) - index.length(); i++) { filename += "0"; }
-	filename += index;
+	for (int i = 0; i < (int(pow(3, dimensions - 1))) - optimizedIndex.length(); i++) { filename += "0"; }
+	filename += optimizedIndex;
 
 	_mkdir("./functions");
 	
@@ -543,6 +598,10 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 		if (bI) myfile << "i" << i << " ";
 		if (bIP) myfile << "i" << i << "_p ";
 		if (bIN) myfile << "i" << i << "_n ";
+
+		invArray.push_back(bI);
+		invArray.push_back(bIP);
+		invArray.push_back(bIN);
 	}
 
 	myfile << "out vdd\n"; // end of inputs/outputs interface

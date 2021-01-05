@@ -208,6 +208,12 @@ public class BtnInput : MonoBehaviour
         return outputValue;
     }
 
+    public void SetValueWithoutConversionAndCounter(int output)
+    {
+        _value = output;
+        label.text = _value.ToString();
+    }
+
     public void OnClick()
     {
         RadixOptions radixSource = (RadixOptions) Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);

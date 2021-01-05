@@ -25,7 +25,7 @@ namespace UnityEngine.UI.Extensions
         private bool _isPanelActive = false;
         private bool _hasDrawnOnce = false;
 
-        private InputField _mainInput;
+        public InputField _mainInput;
         private RectTransform _inputRT;
 
 		//private Button _arrow_Button;
@@ -384,7 +384,8 @@ namespace UnityEngine.UI.Extensions
 				OnSelectionValidityChanged.Invoke (_selectionIsValid);
 			}
 
-			SetInputTextColor ();
+           
+            SetInputTextColor ();
         }
 
 		private void SetInputTextColor(){

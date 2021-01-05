@@ -49,9 +49,9 @@ public class LineManager : MonoBehaviour
             _tempLine = Instantiate(LinePrefab);
 
             if (_tempStartTerminal.tag.Equals("Input"))
-                _tempLine.name = _tempStartTerminal.GetComponentInParent<DragDrop>().name + " Port (" + _tempStartTerminal.GetComponentInChildren<TMPro.TMP_InputField>().text + ") --> ";
+                _tempLine.name = _tempStartTerminal.GetComponentInParent<DragDrop>().name + ";" + _tempStartTerminal.GetComponentInChildren<TMPro.TMP_InputField>().text + "; --> ";
             else
-                _tempLine.name = _tempStartTerminal.GetComponentInParent<DragDrop>().name + " Port (" + _tempStartTerminal.tag + ") --> ";
+                _tempLine.name = _tempStartTerminal.GetComponentInParent<DragDrop>().name + ";" + _tempStartTerminal.tag + "; --> ";
 
 
             _tempLine.transform.SetParent(this.transform, false);
@@ -96,9 +96,9 @@ public class LineManager : MonoBehaviour
                         conn.id = GetNewConnectionId();
 
                         if (conn.endTerminal.tag.Equals("Output"))
-                            _tempLine.name = conn.id.ToString() + " = " + _tempLine.name + conn.endTerminal.GetComponentInParent<DragDrop>().name + " Port (" + eventParam.ConnectionData.ConnectionTerminal.GetComponentInChildren<TMPro.TMP_InputField>().text + ")";
+                            _tempLine.name = conn.id.ToString() + " = " + _tempLine.name + conn.endTerminal.GetComponentInParent<DragDrop>().name + ";" + eventParam.ConnectionData.ConnectionTerminal.GetComponentInChildren<TMPro.TMP_InputField>().text;
                         else
-                            _tempLine.name = conn.id.ToString() + " = " + _tempLine.name + conn.endTerminal.GetComponentInParent<DragDrop>().name + " Port (" + conn.endTerminal.tag + ")";
+                            _tempLine.name = conn.id.ToString() + " = " + _tempLine.name + conn.endTerminal.GetComponentInParent<DragDrop>().name + ";" + conn.endTerminal.tag;
 
 
                         _tempLine.GetComponent<LineFunctions>().connection = conn;

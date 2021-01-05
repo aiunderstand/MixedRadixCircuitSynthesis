@@ -98,44 +98,128 @@ public class Matrix : MonoBehaviour
 
     public int[] GetMatrixCells()
     {
+        //GET THE UNOPTIMIZED SO WITH DontCare X value
+
+        //always return as 3x3 cells x arity, even when binary.
         List<int> tt = new List<int>();
         var arity = ComputeArityFromTT();
 
-        switch (arity)
+        bool isBinary = Truthtable.GetLength(0) == 2 ? true : false;
+
+        if (isBinary)
         {
-            case 1:
-                {
-                    for (int A = 0; A < _radix; A++)
-                    {
-                       tt.Add(Truthtable[A, 0, 0].GetValueAsMapped()); //note: we are map binary as 0:0 , 1:2 and bal. ternary as -1:0, 0:1, 1;2)
-                    }
-                }
-                break;
-            case 2:
-                {
-                    for (int A = 0; A < _radix; A++)
-                    {
-                        for (int B = 0; B < _radix; B++)
-                        {
-                            tt.Add(Truthtable[A, B, 0].GetValueAsMapped()); //note: we are map binary as 0:0 , 1:2 and bal. ternary as -1:0, 0:1, 1;2)
-                        }
-                    }
-                }
-                break;
-            case 3:
-                {
-                    for (int A = 0; A < _radix; A++)
-                    {
-                        for (int B = 0; B < _radix; B++)
-                        {
-                            for (int C = 0; C < _radix; C++)
-                            {
-                                tt.Add(Truthtable[A, B, C].GetValueAsMapped()); //note: we are map binary as 0:0 , 1:2 and bal. ternary as -1:0, 0:1, 1;2)
-                            }
-                        }
-                    }
-                }
-                break;
+            if (arity == 3)
+            {
+                tt.Add(Truthtable[0, 0, 0].GetValueAsMapped());
+                tt.Add(3); //x
+                tt.Add(Truthtable[0, 1, 0].GetValueAsMapped());
+                tt.Add(3); //x
+                tt.Add(3); //x
+                tt.Add(3); //x
+                tt.Add(Truthtable[1, 0, 0].GetValueAsMapped());
+                tt.Add(3); //x
+                tt.Add(Truthtable[1, 1, 0].GetValueAsMapped());
+
+                tt.Add(3); //x
+                tt.Add(3); //x
+                tt.Add(3); //x
+                tt.Add(3); //x
+                tt.Add(3); //x
+                tt.Add(3); //x
+                tt.Add(3); //x
+                tt.Add(3); //x
+                tt.Add(3); //x
+
+            
+
+                tt.Add(Truthtable[0, 0, 1].GetValueAsMapped());
+                tt.Add(3); //x
+                tt.Add(Truthtable[0, 1, 1].GetValueAsMapped());
+                tt.Add(3); //x
+                tt.Add(3); //x
+                tt.Add(3); //x
+                tt.Add(Truthtable[1, 0, 1].GetValueAsMapped());
+                tt.Add(3); //x
+                tt.Add(Truthtable[1, 1, 1].GetValueAsMapped());
+            }
+
+            if (arity == 2)
+            {
+                tt.Add(Truthtable[0, 0, 0].GetValueAsMapped());
+                tt.Add(3); //x
+                tt.Add(Truthtable[1, 0, 0].GetValueAsMapped());
+                tt.Add(3); //x
+                tt.Add(3); //x
+                tt.Add(3); //x
+                tt.Add(Truthtable[0, 1, 0].GetValueAsMapped());
+                tt.Add(3); //x
+                tt.Add(Truthtable[1, 1, 0].GetValueAsMapped());
+            }
+
+            if (arity == 1)
+            {
+                tt.Add(Truthtable[1, 0, 0].GetValueAsMapped());
+                tt.Add(3); //x
+                tt.Add(Truthtable[0, 0, 0].GetValueAsMapped());
+            }
+        }
+        else
+        {
+            if (arity == 3)
+            {
+                tt.Add(Truthtable[0, 0, 0].GetValueAsMapped());
+                tt.Add(Truthtable[0, 1, 0].GetValueAsMapped());
+                tt.Add(Truthtable[0, 2, 0].GetValueAsMapped());
+                tt.Add(Truthtable[1, 0, 0].GetValueAsMapped());
+                tt.Add(Truthtable[1, 1, 0].GetValueAsMapped());
+                tt.Add(Truthtable[1, 2, 0].GetValueAsMapped());
+                tt.Add(Truthtable[2, 0, 0].GetValueAsMapped());
+                tt.Add(Truthtable[2, 1, 0].GetValueAsMapped());
+                tt.Add(Truthtable[2, 2, 0].GetValueAsMapped());
+
+                tt.Add(Truthtable[0, 0, 1].GetValueAsMapped());
+                tt.Add(Truthtable[0, 1, 1].GetValueAsMapped());
+                tt.Add(Truthtable[0, 2, 1].GetValueAsMapped());
+                tt.Add(Truthtable[1, 0, 1].GetValueAsMapped());
+                tt.Add(Truthtable[1, 1, 1].GetValueAsMapped());
+                tt.Add(Truthtable[1, 2, 1].GetValueAsMapped());
+                tt.Add(Truthtable[2, 0, 1].GetValueAsMapped());
+                tt.Add(Truthtable[2, 1, 1].GetValueAsMapped());
+                tt.Add(Truthtable[2, 2, 1].GetValueAsMapped());
+
+        
+
+                tt.Add(Truthtable[0, 0, 2].GetValueAsMapped());
+                tt.Add(Truthtable[0, 1, 2].GetValueAsMapped());
+                tt.Add(Truthtable[0, 2, 2].GetValueAsMapped());
+                tt.Add(Truthtable[1, 0, 2].GetValueAsMapped());
+                tt.Add(Truthtable[1, 1, 2].GetValueAsMapped());
+                tt.Add(Truthtable[1, 2, 2].GetValueAsMapped());
+                tt.Add(Truthtable[2, 0, 2].GetValueAsMapped());
+                tt.Add(Truthtable[2, 1, 2].GetValueAsMapped());
+                tt.Add(Truthtable[2, 2, 2].GetValueAsMapped());
+
+            }
+
+            if (arity == 2)
+            {
+                tt.Add(Truthtable[0, 0, 0].GetValueAsMapped());
+                tt.Add(Truthtable[0, 1, 0].GetValueAsMapped());
+                tt.Add(Truthtable[0, 2, 0].GetValueAsMapped());
+                tt.Add(Truthtable[1, 0, 0].GetValueAsMapped());
+                tt.Add(Truthtable[1, 1, 0].GetValueAsMapped());
+                tt.Add(Truthtable[1, 2, 0].GetValueAsMapped());
+                tt.Add(Truthtable[2, 0, 0].GetValueAsMapped());
+                tt.Add(Truthtable[2, 1, 0].GetValueAsMapped());
+                tt.Add(Truthtable[2, 2, 0].GetValueAsMapped());
+            }
+
+            if (arity == 1)
+            {
+                tt.Add(Truthtable[2, 0, 0].GetValueAsMapped());
+                tt.Add(Truthtable[1, 0, 0].GetValueAsMapped());
+                tt.Add(Truthtable[0, 0, 0].GetValueAsMapped());
+            }
         }
 
         return tt.ToArray();

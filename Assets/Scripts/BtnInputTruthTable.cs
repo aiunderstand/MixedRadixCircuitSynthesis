@@ -45,16 +45,16 @@ public class BtnInputTruthTable : MonoBehaviour
             case "Binary":
                 {
                     _minValue = 0;
-                    _maxValue = 2;
+                    _maxValue = 3;
 
                     switch (_value) {
                         case 0:
                             _value = 1;
                             break;
                         case 1: 
-                            _value = 2;
+                            _value = 3; // is x
                             break;
-                        case 2:
+                        case 3:
                             _value = 0;
                             break;
                     }

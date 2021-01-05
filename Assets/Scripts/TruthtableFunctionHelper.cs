@@ -16,24 +16,28 @@ public class TruthtableFunctionHelper : MonoBehaviour
     AutoCompleteComboBox _Dropdown;
     DragExpandTableComponent _DETC;
     public enum TempFunctions { //special name must be start with s
-        sSum00a,
-        sSum00b,
-        sCarry00,
-        sSum10,
-        sSum11a,
-        sSum01,
-        sCarry01,
-        sSum11b,
-        sCarry11,
-        sCarry21,
-        sSum21a,
-        sSum1a,
-        sSum1b,
-        sSum2a,
-        sSum2b,
-        sCarry1,
-        sCarry2,
-        sBal_dist_measure
+        _AND,
+        _OR,
+        _NOT,
+        _XOR,
+        _Sum00a,
+        _Sum00b,
+        _Carry00,
+        _Sum10,
+        _Sum11a,
+        _Sum01,
+        _Carry01,
+        _Sum11b,
+        _Carry11,
+        _Carry21,
+        _Sum21a,
+        _Sum1a,
+        _Sum1b,
+        _Sum2a,
+        _Sum2b,
+        _Carry1,
+        _Carry2,
+        _Bal_dist_measure
     }
 
     [DllImport("CircuitGenerator", EntryPoint = "GetTableFromIndex")]
@@ -51,10 +55,58 @@ public class TruthtableFunctionHelper : MonoBehaviour
     [DllImport("CircuitGenerator", EntryPoint = "TestSum")]
     public static extern int TestSum(int[] array, int length);
 
+    public static int[] GetAndConvertInvArrayFormat(int arity)
+    {
+        List<int> invArray = new List<int>();
+        int tablesize = arity*3;
+
+        int[] tempInvArray = new int[tablesize];
+        IntPtr srcPtr = GetInvArray(); //if we use this method, we have to release the pointer later!
+        Marshal.Copy(srcPtr, tempInvArray, 0, tablesize);
+
+        for (int j = 0; j < tablesize; j++)
+        {
+            invArray.Add(tempInvArray[j]);
+        }
+
+        GetInvArray_Release(srcPtr);
+
+        if (arity ==2)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                invArray.Add(0);
+            }
+        }
+
+        if (arity == 1)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                invArray.Add(0);
+            }
+        }
+
+        return invArray.ToArray();
+    }
+
     [DllImport("CircuitGenerator", EntryPoint = "CreateCircuit")]
-    public static extern int CreateCircuit(int inputs, int outputs, int[] ttIndices, int ttIndicesLength, int[] arityArray, int arityArrayLength, string[] connectionArray, int connectionLength, int[] invArray, int invArrayLength);
+    public static extern int CreateCircuit(int inputs, int outputs, int compCount, string[] ttIndices, int[] arityArray, string[] connectionArray, int[] invArray);
+
+    [DllImport("CircuitGenerator", EntryPoint = "GetOptimzedTT")]
+    public static extern IntPtr GetOptimzedTT();
+
+    [DllImport("CircuitGenerator", EntryPoint = "GetOptimzedTT_Release")]
+    public static extern void GetOptimzedTT_Release(IntPtr ptr);
+
+    [DllImport("CircuitGenerator", EntryPoint = "GetInvArray")]
+    public static extern IntPtr GetInvArray();
+
+    [DllImport("CircuitGenerator", EntryPoint = "GetInvArray_Release")]
+    public static extern void GetInvArray_Release(IntPtr ptr);
     
-        public void Start()
+
+    public void Start()
     {
         //Fetch the Dropdown GameObject
         _Dropdown = GetComponent<AutoCompleteComboBox>();
@@ -90,7 +142,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
         var function = change.Text;
         if (function.Length > 0)
         {
-            if (function[0].ToString().Equals("s"))
+            if (function[0].ToString().Equals("_"))
             {
                 TempFunctions func;
                 if (Enum.TryParse(function, true, out func))
@@ -102,9 +154,69 @@ public class TruthtableFunctionHelper : MonoBehaviour
                         switch (func)
                         {
                             //we read a vector list row by row, so r by r
+                            case TempFunctions._AND:
+                                //switch to correct radix
+                                _DETC.DropdownLabel.gameObject.GetComponentInParent<TMP_Dropdown>().value = 2;
 
+                                //switch to correct size
+                                _DETC.SetPanelSize(2, 2);
 
-                            case TempFunctions.sSum00a:
+                                //get all the cells
+                                cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
+
+                                //fill in the cells
+                                cells[0].label.text = "0";
+                                cells[1].label.text = "0";
+                                cells[2].label.text = "0";
+                                cells[3].label.text = "1";
+                                break;
+                            case TempFunctions._OR:
+                                //switch to correct radix
+                                _DETC.DropdownLabel.gameObject.GetComponentInParent<TMP_Dropdown>().value = 2;
+
+                                //switch to correct size
+                                _DETC.SetPanelSize(2, 2);
+
+                                //get all the cells
+                                cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
+
+                                //fill in the cells
+                                cells[0].label.text = "0";
+                                cells[1].label.text = "1";
+                                cells[2].label.text = "1";
+                                cells[3].label.text = "1";
+                                break;
+                            case TempFunctions._XOR:
+                                //switch to correct radix
+                                _DETC.DropdownLabel.gameObject.GetComponentInParent<TMP_Dropdown>().value = 2;
+
+                                //switch to correct size
+                                _DETC.SetPanelSize(2, 2);
+
+                                //get all the cells
+                                cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
+
+                                //fill in the cells
+                                cells[0].label.text = "0";
+                                cells[1].label.text = "1";
+                                cells[2].label.text = "1";
+                                cells[3].label.text = "0";
+                                break;
+                            case TempFunctions._NOT:
+                                //switch to correct radix
+                                _DETC.DropdownLabel.gameObject.GetComponentInParent<TMP_Dropdown>().value = 2;
+
+                                //switch to correct size
+                                _DETC.SetPanelSize(2, 1);
+
+                                //get all the cells
+                                cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
+
+                                //fill in the cells
+                                cells[0].label.text = "1";
+                                cells[1].label.text = "0";
+                                break;
+                            case TempFunctions._Sum00a:
                                 //switch to correct size
                                 _DETC.SetPanelSize(3, 2);
 
@@ -122,7 +234,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 cells[7].label.text = "0";
                                 cells[8].label.text = "0";
                                 break;
-                            case TempFunctions.sSum00b:
+                            case TempFunctions._Sum00b:
                                 //switch to correct size
                                 _DETC.SetPanelSize(3, 2);
 
@@ -140,7 +252,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 cells[7].label.text = "1";
                                 cells[8].label.text = "-1";
                                 break;
-                            case TempFunctions.sSum01:
+                            case TempFunctions._Sum01:
                                 //switch to correct size
                                 _DETC.SetPanelSize(3, 2);
 
@@ -158,7 +270,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 cells[7].label.text = "-1";
                                 cells[8].label.text = "0";
                                 break;
-                            case TempFunctions.sCarry01:
+                            case TempFunctions._Carry01:
                                 //switch to correct size
                                 _DETC.SetPanelSize(3, 2);
 
@@ -176,7 +288,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 cells[7].label.text = "0";
                                 cells[8].label.text = "0";
                                 break;
-                            case TempFunctions.sSum10:
+                            case TempFunctions._Sum10:
                                 //switch to correct size
                                 _DETC.SetPanelSize(3, 2);
 
@@ -194,7 +306,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 cells[7].label.text = "1";
                                 cells[8].label.text = "-1";
                                 break;
-                            case TempFunctions.sSum11a:
+                            case TempFunctions._Sum11a:
                                 //switch to correct size
                                 _DETC.SetPanelSize(3, 2);
 
@@ -212,7 +324,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 cells[7].label.text = "1";
                                 cells[8].label.text = "-1";
                                 break;
-                            case TempFunctions.sSum11b:
+                            case TempFunctions._Sum11b:
                                 //switch to correct size
                                 _DETC.SetPanelSize(3, 2);
 
@@ -230,7 +342,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 cells[7].label.text = "0";
                                 cells[8].label.text = "1";
                                 break;
-                            case TempFunctions.sSum21a:
+                            case TempFunctions._Sum21a:
                                 //switch to correct size
                                 _DETC.SetPanelSize(3, 2);
 
@@ -248,7 +360,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 cells[7].label.text = "x";
                                 cells[8].label.text = "-1";
                                 break;
-                            case TempFunctions.sSum1a: //checked
+                            case TempFunctions._Sum1a: //checked
                                                        //switch to correct size
                                 _DETC.SetPanelSize(3, 2);
 
@@ -266,7 +378,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 cells[7].label.text = "0";
                                 cells[8].label.text = "0";
                                 break;
-                            case TempFunctions.sSum1b: //checked
+                            case TempFunctions._Sum1b: //checked
                                                        //switch to correct size
                                 _DETC.SetPanelSize(3, 2);
 
@@ -284,7 +396,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 cells[7].label.text = "1";
                                 cells[8].label.text = "-1";
                                 break;
-                            case TempFunctions.sSum2a: //checked
+                            case TempFunctions._Sum2a: //checked
                                                        //switch to correct size
                                 _DETC.SetPanelSize(3, 2);
 
@@ -302,7 +414,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 cells[7].label.text = "1";
                                 cells[8].label.text = "-1";
                                 break;
-                            case TempFunctions.sSum2b: //checked
+                            case TempFunctions._Sum2b: //checked
                                                        //switch to correct size
                                 _DETC.SetPanelSize(3, 2);
 
@@ -320,7 +432,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 cells[7].label.text = "1";
                                 cells[8].label.text = "-1";
                                 break;
-                            case TempFunctions.sCarry21: //checked
+                            case TempFunctions._Carry21: //checked
                                                          //switch to correct size
                                 _DETC.SetPanelSize(3, 2);
 
@@ -338,7 +450,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 cells[7].label.text = "0";
                                 cells[8].label.text = "1";
                                 break;
-                            case TempFunctions.sCarry00:
+                            case TempFunctions._Carry00:
                                 //switch to correct size
                                 _DETC.SetPanelSize(3, 3);
 
@@ -384,7 +496,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 bittd.Activate(currentIndex);
 
                                 break;
-                            case TempFunctions.sCarry11:
+                            case TempFunctions._Carry11:
                                 //switch to correct size
                                 _DETC.SetPanelSize(3, 3);
 
@@ -433,7 +545,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 bittd.DeActivateAll();
                                 bittd.Activate(currentIndex);
                                 break;
-                            case TempFunctions.sCarry1:
+                            case TempFunctions._Carry1:
                                 //switch to correct size
                                 _DETC.SetPanelSize(3, 3);
 
@@ -480,7 +592,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 bittd.DeActivateAll();
                                 bittd.Activate(currentIndex);
                                 break;
-                            case TempFunctions.sCarry2:
+                            case TempFunctions._Carry2:
                                 //switch to correct size
                                 _DETC.SetPanelSize(3, 3);
 
@@ -529,7 +641,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 break;
 
                             //this is a new style of adding TTs using Halvors indexing function. We should refactor the older ones to this new style
-                            case TempFunctions.sBal_dist_measure:
+                            case TempFunctions._Bal_dist_measure:
                                 //Balanced Distance Compare(Engdal): 8119 [102010201]\nGives the distance between the two values. 1 is no distance. 0 is a distance of one. 2 is a distance of two. Designed for use with balanced ternary.
                                 //Unbalanced Distance Compare: 3936[012101210]\nAn altered version of Engdal's compare function. Gives the distance between the two values. In unbalanced ternary, it outputs the distance value.
                                 //Size Compare: 7153 [100210221]\nGives which input has the highest value. An output of 0 means the first input has the bigger value, 2 is the second input. Identical values gives 1.
@@ -819,47 +931,111 @@ public class TruthtableFunctionHelper : MonoBehaviour
         return tableIndex;
     }
 
+    public static string ConvertTTtoHeptEncoding(int[] tt)
+    {
+        Hashtable heptiventimalAlphabet = new Hashtable();
+        heptiventimalAlphabet.Add("000", "0");
+        heptiventimalAlphabet.Add("001", "1");
+        heptiventimalAlphabet.Add("002", "2");
+        heptiventimalAlphabet.Add("010", "3");
+        heptiventimalAlphabet.Add("011", "4");
+        heptiventimalAlphabet.Add("012", "5");
+        heptiventimalAlphabet.Add("020", "6");
+        heptiventimalAlphabet.Add("021", "7");
+        heptiventimalAlphabet.Add("022", "8");
+        heptiventimalAlphabet.Add("100", "9");
+        heptiventimalAlphabet.Add("101", "A");
+        heptiventimalAlphabet.Add("102", "B");
+        heptiventimalAlphabet.Add("110", "C");
+        heptiventimalAlphabet.Add("111", "D");
+        heptiventimalAlphabet.Add("112", "E");
+        heptiventimalAlphabet.Add("120", "F");
+        heptiventimalAlphabet.Add("121", "G");
+        heptiventimalAlphabet.Add("122", "H");
+        heptiventimalAlphabet.Add("200", "K");
+        heptiventimalAlphabet.Add("201", "M");
+        heptiventimalAlphabet.Add("202", "N");
+        heptiventimalAlphabet.Add("210", "P");
+        heptiventimalAlphabet.Add("211", "R");
+        heptiventimalAlphabet.Add("212", "T");
+        heptiventimalAlphabet.Add("220", "V");
+        heptiventimalAlphabet.Add("221", "X");
+        heptiventimalAlphabet.Add("222", "Z");
+
+        string index = "";
+
+        for (int i = tt.Length -1; i >0; i -= 3)
+        {
+            string hept = tt[i].ToString() + tt[i-1].ToString() + tt[i-2].ToString();
+            index += heptiventimalAlphabet[hept];
+        }
+
+        return index;
+    }
+
     public static void CreateNetlist(string path, int[] tt, int arity)
     {
-        //we need to reshuffle the tt order if and only if arity 3
-        if(arity ==3)
-        {
-            List<int> ttList = new List<int>();
-            
-            ttList.Add(tt[0]);
-            ttList.Add(tt[3]);
-            ttList.Add(tt[6]);
-            ttList.Add(tt[9]);
-            ttList.Add(tt[12]);
-            ttList.Add(tt[15]);
-            ttList.Add(tt[18]);
-            ttList.Add(tt[21]);
-            ttList.Add(tt[24]);
-
-            ttList.Add(tt[1]);
-            ttList.Add(tt[4]);
-            ttList.Add(tt[7]);
-            ttList.Add(tt[10]);
-            ttList.Add(tt[13]);
-            ttList.Add(tt[16]);
-            ttList.Add(tt[19]);
-            ttList.Add(tt[22]);
-            ttList.Add(tt[25]);
-
-            ttList.Add(tt[2]);
-            ttList.Add(tt[5]);
-            ttList.Add(tt[8]);
-            ttList.Add(tt[11]);
-            ttList.Add(tt[14]);
-            ttList.Add(tt[17]);
-            ttList.Add(tt[20]);
-            ttList.Add(tt[23]);
-            ttList.Add(tt[26]);
-
-            tt = ttList.ToArray();
-        }
-       
+        //from unoptimized tt
         CreateNetlist(tt, tt.Length, arity);
        
+    }
+
+    public static int[] GetOptimizedTT(int arity)
+    {
+        List<int> tt = new List<int>();
+
+        switch(arity)
+        {
+            case 3:
+                {
+                    int tablesize = 27;
+
+                    int[] ttMatrix = new int[tablesize];
+                    IntPtr srcPtr = GetOptimzedTT(); //if we use this method, we have to release the pointer later!
+                    Marshal.Copy(srcPtr, ttMatrix, 0, tablesize);
+
+                    for (int j = 0; j < tablesize; j++)
+                    {
+                        tt.Add(ttMatrix[j]);
+                    }
+
+                    GetOptimzedTT_Release(srcPtr);
+                }
+                break;
+            case 2:
+                {
+                    int tablesize = 9;
+
+                    int[] ttMatrix = new int[tablesize];
+                    IntPtr srcPtr = GetOptimzedTT(); //if we use this method, we have to release the pointer later!
+                    Marshal.Copy(srcPtr, ttMatrix, 0, tablesize);
+
+                    for (int j = 0; j < tablesize; j++)
+                    {
+                        tt.Add(ttMatrix[j]);
+                    }
+
+                    GetOptimzedTT_Release(srcPtr);
+                }
+                break;
+            case 1:
+                {
+                    int tablesize = 3;
+
+                    int[] ttMatrix = new int[tablesize];
+                    IntPtr srcPtr = GetOptimzedTT(); //if we use this method, we have to release the pointer later!
+                    Marshal.Copy(srcPtr, ttMatrix, 0, tablesize);
+
+                    for (int j = 0; j < tablesize; j++)
+                    {
+                        tt.Add(ttMatrix[j]);
+                    }
+
+                    GetOptimzedTT_Release(srcPtr);
+                }
+                break;
+        }
+
+        return tt.ToArray();
     }
 }

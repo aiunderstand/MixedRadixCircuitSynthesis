@@ -11,11 +11,21 @@ public class InputControllerLogicGate : MonoBehaviour
     TextMeshProUGUI _radixTarget; //or source if it is linked to a output
     public Color panelColorDefault;
     public Color panelColorActive;
-    
+    public int Id;
+    //internal values
+    int portA = 0;
+    int portB = 0;
+    int portC = 0;
+    int portD = 0;
+
+
     private void Awake()
     {
         if (this.name.Equals("LogicGate"))
-            GetComponentInParent<DragDrop>().name = "LogicGate (" + GetInstanceID().ToString()+")";
+        {
+            GetComponentInParent<DragDrop>().name = ";LogicGate;" + GetInstanceID().ToString();
+            Id = GetInstanceID();
+        }
     }
 
     public int GetArity()
@@ -25,6 +35,7 @@ public class InputControllerLogicGate : MonoBehaviour
 
     public int[] GetTruthTable()
     {
+        //always return as 3x3 cells x arity, even when binary.
         return GetComponent<Matrix>().GetMatrixCells();
     }
 
@@ -36,6 +47,7 @@ public class InputControllerLogicGate : MonoBehaviour
 
     public void ComputeTruthTableOutput()
     {
+        bool stateChanged = false;
         RadixOptions radixTarget = GetRadixTarget();
 
         bool allConnected = false;
@@ -63,12 +75,33 @@ public class InputControllerLogicGate : MonoBehaviour
                 {
                     case "PortA":
                         inputs.Add(0, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+                        
+                        if (inputs[0] != portA)
+                        {
+                            stateChanged = true;
+                            portA = inputs[0];
+                        }
+
+                        
                         break;
                     case "PortB":
                         inputs.Add(1, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+
+                        if (inputs[1] != portB)
+                        {
+                            stateChanged = true;
+                            portB = inputs[1];
+                        }
+
                         break;
                     case "PortC":
                         inputs.Add(2, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+                        
+                        if (inputs[2] != portC)
+                        {
+                            stateChanged = true;
+                            portC = inputs[2];
+                        }
                         break;
                 }
             }
@@ -119,7 +152,8 @@ public class InputControllerLogicGate : MonoBehaviour
                 if (p.tag.Equals("PortD"))
                 {
                     outputPort = p;
-                    p.label.text = _output.ToString();
+                    p.SetValueWithoutConversionAndCounter(_output);
+                    portD = _output;
                 }
             }
 
@@ -150,7 +184,9 @@ public class InputControllerLogicGate : MonoBehaviour
                     }
                     else
                     {
-                        c.connection.endTerminal.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                        //only propagate when states have changed
+                        if (stateChanged)
+                            c.connection.endTerminal.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
                     }
                 }
             }

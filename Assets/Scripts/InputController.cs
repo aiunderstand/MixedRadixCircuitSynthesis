@@ -22,10 +22,10 @@ public class InputController : MonoBehaviour
     private void Awake()
     {
         if (this.name.Equals("Trit-Input"))
-            GetComponentInParent<DragDrop>().name  = "Input (" + GetInstanceID().ToString()+")";
+            GetComponentInParent<DragDrop>().name  = ";Input;" + GetInstanceID().ToString();
 
         if (this.name.Equals("Trit-Output"))
-            GetComponentInParent<DragDrop>().name = "Output (" + GetInstanceID().ToString() + ")";
+            GetComponentInParent<DragDrop>().name = ";Output;" + GetInstanceID().ToString();
     }
 
     public void ComputeCounter()
