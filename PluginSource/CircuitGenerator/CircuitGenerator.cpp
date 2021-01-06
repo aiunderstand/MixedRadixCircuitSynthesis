@@ -68,6 +68,10 @@ vector<string> index = {
 };
 
 vector<int> arity = { 2,2,2,2,2 };
+
+vector<string> parsedInputNames;
+vector<string> parsedOutputNames;
+
 ///////////////////////////////// DATA
 
 
@@ -120,9 +124,9 @@ vector<vector<string>> ParseConnectionIntoVectorStructure(char** a, int rows)
         vector<string> tempVector;
 
         //create a row of vectors, with fixed length 4 (due to arity 3, arity 2 will not use third spot)
-        for (size_t i = 0; i < 4; i++)
+        for (size_t j = 0; j < 4; j++)
         {
-            tempVector.push_back(a[i]);
+            tempVector.push_back(a[i*4 + j]);
         }
 
         connVector.push_back(tempVector);
@@ -139,9 +143,9 @@ vector<vector<bool>> ParseInverterIntoBoolStructure(int* a, int rows)
         vector<bool> tempVector;
         
         //create a row of vectors, with fixed length 9 (due to ternary, binary will avoid middle value)
-        for (size_t i = 0; i < 9; i++)
+        for (size_t j = 0; j < 9; j++)
         {
-            if (a[i] == 0)
+            if (a[i*9 + j] == 0)
                 tempVector.push_back(false);
             else
                 tempVector.push_back(true);
@@ -175,13 +179,37 @@ vector<int> ParseArityIntoVectorStructure(int* a, int length)
     return arityVector;
 }
 
-extern "C" __declspec(dllexport) void CreateCircuit(int inputs, int outputs, int compCount, char** ttIndices, int* arityArray, char** connectionArray,  int* invArray) {
+vector<string> ParseInputNames(char** a, int length)
+{
+    vector<string> stringVector;
+    for (size_t i = 0; i < length; i++)
+    {
+        stringVector.push_back(a[i]);
+    }
 
-    //STEP 1: assign parameters with some conversion due to c# to c++
+    return stringVector;
+}
+
+vector<string> ParseOutputNames(char** a, int length)
+{
+    vector<string> stringVector;
+    for (size_t i = 0; i < length; i++)
+    {
+        stringVector.push_back(a[i]);
+    }
+
+    return stringVector;
+}
+
+extern "C" __declspec(dllexport) void CreateCircuit(char** inputNames, int inputs, char** outputNames, int outputs, int compCount, char** ttIndices, int* arityArray, char** connectionArray,  int* invArray) {
+
+    //STEP 1: assign parameters with some conversion due to c# to c++ (we can refactor this as some of the fucntions use the same code)
     connections = ParseConnectionIntoVectorStructure(connectionArray, compCount);
     inv = ParseInverterIntoBoolStructure(invArray, compCount);
     index = ParseIndicesIntoVectorStructure(ttIndices, compCount);
     arity = ParseArityIntoVectorStructure(arityArray, compCount);
+    parsedInputNames = ParseInputNames(inputNames, inputs);
+    parsedOutputNames = ParseOutputNames(outputNames, outputs);
 
     //STEP 2: INIT
     IO input;
@@ -205,10 +233,10 @@ extern "C" __declspec(dllexport) void CreateCircuit(int inputs, int outputs, int
 
     myfile << ".subckt " << filename;
     for (int i = 0; i < input.getNr(); i++) {
-        myfile << " in" << i;
+        myfile << " " << parsedInputNames[i];
     }
     for (int i = 0; i < output.getNr(); i++) {
-        myfile << " out" << i;
+        myfile << " " << parsedOutputNames[i];
     }
     myfile << " vdd\n";
     myfile << ".lib 'CNFET.lib' CNFET \n";

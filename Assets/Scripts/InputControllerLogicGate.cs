@@ -11,7 +11,7 @@ public class InputControllerLogicGate : MonoBehaviour
     TextMeshProUGUI _radixTarget; //or source if it is linked to a output
     public Color panelColorDefault;
     public Color panelColorActive;
-    public int Id;
+    
     //internal values
     int portA = 0;
     int portB = 0;
@@ -24,7 +24,6 @@ public class InputControllerLogicGate : MonoBehaviour
         if (this.name.Equals("LogicGate"))
         {
             GetComponentInParent<DragDrop>().name = ";LogicGate;" + GetInstanceID().ToString();
-            Id = GetInstanceID();
         }
     }
 

@@ -38672,6 +38672,10 @@ PrefabInstance:
       propertyPath: BtnInputPrefab
       value: 
       objectReference: {fileID: 1673454640}
+    - target: {fileID: 2894429824347699670, guid: 8e1fd375e87e5644396be5929a605d0e, type: 3}
+      propertyPath: m_Text
+      value: DataIn
+      objectReference: {fileID: 0}
     - target: {fileID: 3134612565084355782, guid: 8e1fd375e87e5644396be5929a605d0e, type: 3}
       propertyPath: m_Name
       value: 0
@@ -80294,6 +80298,10 @@ PrefabInstance:
     - target: {fileID: 3199073089193898886, guid: 3121b335a9bc7a1408a20072e8d37f99, type: 3}
       propertyPath: m_Name
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3444709543961409174, guid: 3121b335a9bc7a1408a20072e8d37f99, type: 3}
+      propertyPath: m_Text
+      value: DataOut
       objectReference: {fileID: 0}
     - target: {fileID: 5385925717001398603, guid: 3121b335a9bc7a1408a20072e8d37f99, type: 3}
       propertyPath: wireColor
