@@ -68,43 +68,84 @@ public class InputControllerLogicGate : MonoBehaviour
             int _output = 0;
             Dictionary<int, int> inputs = new Dictionary<int, int>();
 
-            foreach (var p in ports)
+            if (applicationmanager.UseBigEndianForLogicGates())
             {
-                switch (p.tag)
+                foreach (var p in ports)
                 {
-                    case "PortA":
-                        inputs.Add(0, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
-                        
-                        if (inputs[0] != portA)
-                        {
-                            stateChanged = true;
-                            portA = inputs[0];
-                        }
+                    switch (p.tag)
+                    {
+                        case "PortA":
+                            inputs.Add(0, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
 
-                        
-                        break;
-                    case "PortB":
-                        inputs.Add(1, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+                            if (inputs[0] != portA)
+                            {
+                                stateChanged = true;
+                                portA = inputs[0];
+                            }
 
-                        if (inputs[1] != portB)
-                        {
-                            stateChanged = true;
-                            portB = inputs[1];
-                        }
 
-                        break;
-                    case "PortC":
-                        inputs.Add(2, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
-                        
-                        if (inputs[2] != portC)
-                        {
-                            stateChanged = true;
-                            portC = inputs[2];
-                        }
-                        break;
+                            break;
+                        case "PortB":
+                            inputs.Add(1, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+
+                            if (inputs[1] != portB)
+                            {
+                                stateChanged = true;
+                                portB = inputs[1];
+                            }
+
+                            break;
+                        case "PortC":
+                            inputs.Add(2, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+
+                            if (inputs[2] != portC)
+                            {
+                                stateChanged = true;
+                                portC = inputs[2];
+                            }
+                            break;
+                    }
                 }
             }
+            else
+            {
+                foreach (var p in ports)
+                {
+                    switch (p.tag)
+                    {
+                        case "PortA":
+                            inputs.Add(2, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
 
+                            if (inputs[2] != portA)
+                            {
+                                stateChanged = true;
+                                portA = inputs[2];
+                            }
+
+
+                            break;
+                        case "PortB":
+                            inputs.Add(1, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+
+                            if (inputs[1] != portB)
+                            {
+                                stateChanged = true;
+                                portB = inputs[1];
+                            }
+
+                            break;
+                        case "PortC":
+                            inputs.Add(0, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+
+                            if (inputs[0] != portC)
+                            {
+                                stateChanged = true;
+                                portC = inputs[0];
+                            }
+                            break;
+                    }
+                }
+            }
             //Step 2: Get the correct matrix and the cell based on inputs
             //if we have arity 3, we first need to set the correct matrix based on the value
            switch (GetArity())

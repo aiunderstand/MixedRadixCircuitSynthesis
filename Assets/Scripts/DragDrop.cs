@@ -13,8 +13,12 @@ public class DragDrop : MonoBehaviour,
     Vector2 _limits = Vector2.zero;
     bool _isDeleteDropZone = false;
     Action<EventParam> _DeleteDropZoneListener;
-    public GameObject MenuVersion;
-    public GameObject FullVersion;
+    public GameObject MenuVersion; //view 0
+    public GameObject FullVersion; //view 1 
+    public GameObject TextVersion; //view 2
+    public GameObject SymbolVersion; //view 3
+
+
     bool _isFullVersion = false;
 
     public GameObject DragDropArea; //ugly, refactor so this is unneeded
@@ -72,7 +76,29 @@ public class DragDrop : MonoBehaviour,
             }
         }
     }
-    
+
+    public void SetAbstractionLevelTo(int abstractionLevel)
+    {
+        
+        MenuVersion.SetActive(false);
+        FullVersion.SetActive(false);
+        TextVersion.SetActive(false);
+        SymbolVersion.SetActive(false);
+
+        switch (abstractionLevel)
+        {
+            case 0:
+                MenuVersion.SetActive(true);
+                break;
+            case 1: FullVersion.SetActive(true);
+                break;
+            case 2: TextVersion.SetActive(true);
+                break;
+            case 3: SymbolVersion.SetActive(true);
+                break;
+        }
+    }
+
     public IEnumerator LoadSave ()
     {
         yield return WaitFor.Frames(1); // wait for 1 frames since various components need to init. Otherwise race condition

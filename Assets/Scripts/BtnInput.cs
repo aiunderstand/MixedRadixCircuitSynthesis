@@ -214,8 +214,9 @@ public class BtnInput : MonoBehaviour
         label.text = _value.ToString();
     }
 
-    public void OnClick()
+    public void OnClick(int amount)
     {
+      
         RadixOptions radixSource = (RadixOptions) Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
         switch (radixSource)
         {
@@ -224,10 +225,13 @@ public class BtnInput : MonoBehaviour
                     _minValue = -1;
                     _maxValue = 1;
 
-                    _value++;
+                    _value+= amount;
 
                     if (_value > _maxValue)
                         _value = _minValue;
+
+                    if (_value < _minValue)
+                        _value = _maxValue;
                 }
                 break;
             case RadixOptions.UnbalancedTernary:
@@ -235,10 +239,13 @@ public class BtnInput : MonoBehaviour
                     _minValue = 0;
                     _maxValue = 2;
 
-                    _value++;
+                    _value += amount;
 
                     if (_value > _maxValue)
                         _value = _minValue;
+
+                    if (_value < _minValue)
+                        _value = _maxValue;
                 }
                 break;
             case RadixOptions.Binary:
