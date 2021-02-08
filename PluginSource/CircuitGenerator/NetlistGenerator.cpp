@@ -612,9 +612,10 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 	//in case there should be a direct connection within a transistor network, it's connected without transistors 
 	if (directConnection[0]) {
 		myfile << "vdd "; //output is VDD
-	}
-	if (directConnection[1]) {
+	} else if (directConnection[1]) {
 		myfile << "gnd "; //output is VDD
+	}  else {
+		myfile << "out ";
 	}
 	
 	
@@ -627,7 +628,7 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 	myfile << "out out" << p0;
 	
 	myfile << "\nxn1 ";
-	myfile << "out out";
+	myfile << "out out ";
 	if (directConnection[3]) {
 		myfile << "gnd "; //connects "down" to GND
 	} else {myfile << "down";}
@@ -644,9 +645,7 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 	string vsource = "";	// the first connection (gnd, vdd)
 
 	for (int n = 0; n < 4; n++) {
-		if (directConnection[n]){
-			myfile << "\nDirect Connection\n";	
-		}
+		
 
 		if (n == 0) {
 			out = "out";
@@ -670,7 +669,9 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 			myfile << "\n\n***pulldown half" << endl;
 		}
 
-		
+		if (directConnection[n]){
+			myfile << "\nDirect Connection\n";	
+		}
 
 		for (int g = 0; g < mysteryNumber; g++) {
 			// the first and last groups to be implemented indicates when the connections should be at vsource and out
