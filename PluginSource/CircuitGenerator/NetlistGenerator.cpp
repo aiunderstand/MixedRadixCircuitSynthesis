@@ -610,21 +610,13 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 	}
 
 	//in case there should be a direct connection within a transistor network, it's connected without transistors 
-		
-		if (directConnection[0]) {
-			myfile << "vdd "; //output is VDD
-		}
-		if (directConnection[1]) {
-			myfile << "gnd "; //output is VDD
-		}
-		if (directConnection[2]) {
-			myfile << "vdd "; //connects "up" to VDD
-		}
-		if (directConnection[3]) {
-			myfile << "gnd "; //connects "down" to GND
-		}
+	if (directConnection[0]) {
+		myfile << "vdd "; //output is VDD
+	}
+	if (directConnection[1]) {
+		myfile << "gnd "; //output is VDD
+	}
 	
-		/////
 	
 	myfile << "vdd\n"; // end of inputs/outputs interface
 
