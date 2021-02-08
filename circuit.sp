@@ -1,18 +1,20 @@
-.subckt circuit -4520DataIn:0 -4520DataIn:1 -4520DataIn:2 -7310DataOut:0 vdd
+.subckt circuit DataIn0_-4520 DataIn1_-4520 DataIn2_-4520 DataOut0_-7310 vdd
 .lib 'CNFET.lib' CNFET 
-.include "f_GGD.sp"
-.include "f_TTZ.sp"
+.include "f_GZG.sp"
+.include "f_ABC.sp"
 .include "nti.sp" 
 .include "pti.sp"
 
-xnti0 -4520DataIn:1 -4520DataIn:1_n vdd nti
-xnti1 -4520DataIn:0 -4520DataIn:0_n vdd nti
+xnti0 DataIn2_-4520 DataIn2_-4520_n vdd nti
+xnti1 PortD-42634_to_PortB21992 PortD-42634_to_PortB21992_n vdd nti
 
-xckt0 -4520DataIn:1 -4520DataIn:1_n -4520DataIn:0_n -12282PortD_to_-15862PortB vdd f_GGD
+xckt0 DataIn2_-4520 DataIn2_-4520_n PortD-42634_to_PortB21992 PortD-42634_to_PortB21992_n DataOut0_-7310 vdd f_GZG
 
-xpti2 -4520DataIn:2 -4520DataIn:2_p vdd pti
+xpti2 DataIn1_-4520 DataIn1_-4520_p vdd pti
+xnti3 DataIn1_-4520 DataIn1_-4520_n vdd nti
+xnti4 DataIn0_-4520 DataIn0_-4520_n vdd nti
 
-xckt1 -4520DataIn:2 -4520DataIn:2_p -12282PortD_to_-15862PortB -7310DataOut:0 vdd f_TTZ
+xckt1 DataIn1_-4520 DataIn1_-4520_p DataIn1_-4520_n DataIn0_-4520 DataIn0_-4520_n PortD-42634_to_PortB21992 vdd f_ABC
 
 
 

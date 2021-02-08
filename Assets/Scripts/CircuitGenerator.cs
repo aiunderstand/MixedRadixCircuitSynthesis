@@ -68,11 +68,11 @@ public class CircuitGenerator : MonoBehaviour
                             //check if this is a terminal output, if so add to list
                             if (parts[5].Contains("Output"))
                             {
-                                tempConnArray[3] = parts[6] + parts[7].Replace(" ", string.Empty);
+                                tempConnArray[3] = parts[7].Replace(" ", string.Empty) + "_" + parts[6];
                             }
                             else
                             {
-                                tempConnArray[3] = parts[2] + parts[3] + "_to_" + parts[6] + parts[7];                                
+                                tempConnArray[3] = parts[3] + parts[2] + "_to_" + parts[7] + parts[6];                                
                             }
                         }
                         else //it is input
@@ -82,21 +82,21 @@ public class CircuitGenerator : MonoBehaviour
                             {
                                 case "PortA":
                                     if (parts[1].Contains("Input"))
-                                        tempConnArray[0] = parts[2] + parts[3].Replace(" ", string.Empty);
+                                        tempConnArray[0] = parts[3].Replace(" ", string.Empty) + "_" + parts[2];
                                     else
-                                        tempConnArray[0] = parts[2] + parts[3] + "_to_" + parts[6] + parts[7];
+                                        tempConnArray[0] = parts[3] + parts[2] + "_to_" + parts[7] + parts[6];
                                     break;
                                 case "PortB":
                                     if (parts[1].Contains("Input"))
-                                        tempConnArray[1] = parts[2] + parts[3].Replace(" ", string.Empty);
+                                        tempConnArray[1] = parts[3].Replace(" ", string.Empty) + "_" + parts[2];
                                     else
-                                        tempConnArray[1] = parts[2] + parts[3] + "_to_" + parts[6] + parts[7];
+                                        tempConnArray[1] = parts[3] + parts[2] + "_to_" + parts[7] + parts[6];
                                     break;
                                 case "PortC":
                                     if (parts[1].Contains("Input"))
-                                        tempConnArray[2] = parts[2] + parts[3].Replace(" ", string.Empty);
+                                        tempConnArray[2] = parts[3].Replace(" ", string.Empty) + "_" + parts[2];
                                     else
-                                        tempConnArray[2] = parts[2] + parts[3] + "_to_" + parts[6] + parts[7];
+                                        tempConnArray[2] = parts[3] + parts[2] + "_to_" + parts[7] + parts[6];
                                     break;
 
                             }
@@ -138,7 +138,7 @@ public class CircuitGenerator : MonoBehaviour
                 {
                     int portIndex = b.GetComponent<BtnInput>()._portIndex;
                     string port = b.GetComponentInChildren<TMP_InputField>().text;
-                    inputNames.Add(id+port.Replace(" ", string.Empty) + ":" + portIndex);
+                    inputNames.Add(port.Replace(" ", string.Empty)+portIndex+"_"+id);
                 }
             }
         }
@@ -154,7 +154,7 @@ public class CircuitGenerator : MonoBehaviour
                 {
                     int portIndex = b.GetComponent<BtnInput>()._portIndex;
                     string port = b.GetComponentInChildren<TMP_InputField>().text;
-                    outputNames.Add(id + port.Replace(" ", string.Empty) +":" +portIndex);
+                    outputNames.Add(port.Replace(" ", string.Empty)+portIndex + "_" + id);
                 }
             }
         }
