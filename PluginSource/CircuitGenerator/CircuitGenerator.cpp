@@ -89,7 +89,7 @@ void enterData() {
         }
 
         // entering subcircuit interface data
-        for (int j = 0; j < 6; j++) {
+        for (int j = 0; j < 9; j++) {
             netlists[i].setInverters(j, inv[i][j]);
         }
     }

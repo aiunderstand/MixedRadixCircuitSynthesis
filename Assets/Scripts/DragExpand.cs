@@ -68,9 +68,10 @@ public class DragExpand : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
                     //add to input controller
                    _AmountOfInputs++;
                     go.name = (_AmountOfInputs -1).ToString(); //reuse name for index, refactor this is bad practise
+                    go.GetComponent<BtnInput>()._portIndex = _AmountOfInputs - 1;
                     InputController.Buttons.Add(go);
                     InputController.ComputeCounter();
-
+                    
 
 
 

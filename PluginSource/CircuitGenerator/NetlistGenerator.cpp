@@ -253,6 +253,7 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 	////////////////
 	int groupNr = 0;
 	bool lessthan = false; // if p2 is lower in any dimension than p1, it is not a valid rectangle
+	bool directConnection[4];
 
 	for (int n = 0; n < 4; n++) {
 		// For each of the 4 network, a set of optimal groupings of 1s are found. 
@@ -456,6 +457,10 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 			}
 		}
 
+		directConnection[n] = true;
+		for (int i = 0; i < truthtable.size(); i++) {
+			if (groups[0][i] != '1') { directConnection[n] = false; }
+		}
 	}
 
 
@@ -643,6 +648,22 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 			myfile << "\n\n***pulldown half" << endl;
 		}
 
+		//in case there should be a direct connection within a transistor network, it's connected without transistors 
+		if (directConnection[n]) {
+			if (n == 0) {
+				out = "vdd";
+			}
+			else if (n == 1) {
+				out = "gnd";
+			}
+			else if (n == 2) {
+				out = "vdd";
+			}
+			else if (n == 3) {
+				out = "gnd";
+			}
+		}
+		/////
 
 		for (int g = 0; g < mysteryNumber; g++) {
 			// the first and last groups to be implemented indicates when the connections should be at vsource and out

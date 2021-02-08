@@ -49,7 +49,10 @@ public class LineManager : MonoBehaviour
             _tempLine = Instantiate(LinePrefab);
 
             if (_tempStartTerminal.tag.Equals("Input"))
-                _tempLine.name = _tempStartTerminal.GetComponentInParent<DragDrop>().name + ";" + _tempStartTerminal.GetComponentInChildren<TMPro.TMP_InputField>().text + "; --> ";
+                _tempLine.name = _tempStartTerminal.GetComponentInParent<DragDrop>().name + ";" +
+                                 _tempStartTerminal.GetComponentInChildren<TMPro.TMP_InputField>().text + ":" +
+                                 _tempStartTerminal._portIndex + 
+                                 "; --> ";
             else
                 _tempLine.name = _tempStartTerminal.GetComponentInParent<DragDrop>().name + ";" + _tempStartTerminal.tag + "; --> ";
 
@@ -96,7 +99,10 @@ public class LineManager : MonoBehaviour
                         conn.id = GetNewConnectionId();
 
                         if (conn.endTerminal.tag.Equals("Output"))
-                            _tempLine.name = conn.id.ToString() + " = " + _tempLine.name + conn.endTerminal.GetComponentInParent<DragDrop>().name + ";" + eventParam.ConnectionData.ConnectionTerminal.GetComponentInChildren<TMPro.TMP_InputField>().text;
+                            _tempLine.name = conn.id.ToString() + " = " + _tempLine.name + 
+                                             conn.endTerminal.GetComponentInParent<DragDrop>().name + ";" +
+                                             eventParam.ConnectionData.ConnectionTerminal.GetComponentInChildren<TMPro.TMP_InputField>().text + ":" +
+                                             conn.endTerminal._portIndex;
                         else
                             _tempLine.name = conn.id.ToString() + " = " + _tempLine.name + conn.endTerminal.GetComponentInParent<DragDrop>().name + ";" + conn.endTerminal.tag;
 

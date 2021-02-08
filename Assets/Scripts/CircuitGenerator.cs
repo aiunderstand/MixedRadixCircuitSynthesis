@@ -65,19 +65,14 @@ public class CircuitGenerator : MonoBehaviour
                         //is output
                         if (parts[2] == controller.GetInstanceID().ToString())
                         {
-                            
-
                             //check if this is a terminal output, if so add to list
                             if (parts[5].Contains("Output"))
                             {
-                                string id = parts[2];
-                                string port = parts[3];
-                                outputNames.Add(id + port.Replace(" ", string.Empty));
-                                tempConnArray[3] = parts[2] + parts[3].Replace(" ", string.Empty);
+                                tempConnArray[3] = parts[6] + parts[7].Replace(" ", string.Empty);
                             }
                             else
                             {
-                                tempConnArray[3] = parts[6] + parts[7].Replace(" ", string.Empty);
+                                tempConnArray[3] = parts[2] + parts[3] + "_to_" + parts[6] + parts[7];                                
                             }
                         }
                         else //it is input
@@ -86,13 +81,22 @@ public class CircuitGenerator : MonoBehaviour
                             switch (parts[7])
                             {
                                 case "PortA":
-                                    tempConnArray[0] = parts[2] + parts[3].Replace(" ", string.Empty);
+                                    if (parts[1].Contains("Input"))
+                                        tempConnArray[0] = parts[2] + parts[3].Replace(" ", string.Empty);
+                                    else
+                                        tempConnArray[0] = parts[2] + parts[3] + "_to_" + parts[6] + parts[7];
                                     break;
                                 case "PortB":
-                                    tempConnArray[1] = parts[2] + parts[3].Replace(" ", string.Empty);
+                                    if (parts[1].Contains("Input"))
+                                        tempConnArray[1] = parts[2] + parts[3].Replace(" ", string.Empty);
+                                    else
+                                        tempConnArray[1] = parts[2] + parts[3] + "_to_" + parts[6] + parts[7];
                                     break;
                                 case "PortC":
-                                    tempConnArray[2] = parts[2] + parts[3].Replace(" ", string.Empty);
+                                    if (parts[1].Contains("Input"))
+                                        tempConnArray[2] = parts[2] + parts[3].Replace(" ", string.Empty);
+                                    else
+                                        tempConnArray[2] = parts[2] + parts[3] + "_to_" + parts[6] + parts[7];
                                     break;
 
                             }
@@ -122,18 +126,35 @@ public class CircuitGenerator : MonoBehaviour
         }
        
         //find inputs and outputs, currently we look at the created amount not the connected amount. This could lead to bugs?
-        //also only one input and one output component is allowed (for PoC)
+        //also only one input and one output component is allowed (for PoC) -- is this still true?
         foreach (var c in components)
         {
             if (c.name.Contains("Input"))
             {
                 var inputControler = c.GetComponentInChildren<InputController>();
                 string id = inputControler.GetInstanceID().ToString();
+                
+                foreach (var b in inputControler.Buttons)
+                {
+                    int portIndex = b.GetComponent<BtnInput>()._portIndex;
+                    string port = b.GetComponentInChildren<TMP_InputField>().text;
+                    inputNames.Add(id+port.Replace(" ", string.Empty) + ":" + portIndex);
+                }
+            }
+        }
+
+        foreach (var c in components)
+        {
+            if (c.name.Contains("Output"))
+            {
+                var inputControler = c.GetComponentInChildren<InputController>();
+                string id = inputControler.GetInstanceID().ToString();
 
                 foreach (var b in inputControler.Buttons)
                 {
+                    int portIndex = b.GetComponent<BtnInput>()._portIndex;
                     string port = b.GetComponentInChildren<TMP_InputField>().text;
-                    inputNames.Add(id+port.Replace(" ", string.Empty));
+                    outputNames.Add(id + port.Replace(" ", string.Empty) +":" +portIndex);
                 }
             }
         }
