@@ -1,5 +1,5 @@
 
-// Written by Halvor Nybø Risto for a student short paper for SIMS 2020
+// Written by Halvor NybÃ¸ Risto for a student short paper for SIMS 2020
 // Research group website: http://www.ternaryresearch.com/
 
 // GPL-3 license
@@ -609,10 +609,38 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 		invArray.push_back(bIN);
 	}
 
-	myfile << "out vdd\n"; // end of inputs/outputs interface
+	//in case there should be a direct connection within a transistor network, it's connected without transistors 
+		
+		if (directConnection[0]) {
+			myfile << "vdd "; //output is VDD
+		}
+		if (directConnection[1]) {
+			myfile << "gnd "; //output is VDD
+		}
+		if (directConnection[2]) {
+			myfile << "vdd "; //connects "up" to VDD
+		}
+		if (directConnection[3]) {
+			myfile << "gnd "; //connects "down" to GND
+		}
+	
+		/////
+	
+	myfile << "vdd\n"; // end of inputs/outputs interface
 
-	myfile << "\n\nxp0 up out out" << p0;
-	myfile << "\nxn1 out out down" << n0 << "\n";
+	myfile << "\n\nxp0 ";
+	if (directConnection[2]) {
+		myfile << "vdd "; //connects "up" to VDD
+	} else {myfile << "up ";}
+	myfile << "out out" << p0;
+	
+	myfile << "\nxn1 ";
+	myfile << "out out";
+	if (directConnection[3]) {
+		myfile << "gnd "; //connects "down" to GND
+	} else {myfile << "down";}
+	myfile << n0 << "\n";
+	
 	int connections = 0; //counts number of connection nodes
 	int transistors = 2; //counts number of transistors
 
@@ -624,7 +652,9 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 	string vsource = "";	// the first connection (gnd, vdd)
 
 	for (int n = 0; n < 4; n++) {
-
+		if (directConnection[n]){
+			myfile << "\nDirect Connection\n";	
+		}
 
 		if (n == 0) {
 			out = "out";
@@ -648,22 +678,7 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 			myfile << "\n\n***pulldown half" << endl;
 		}
 
-		//in case there should be a direct connection within a transistor network, it's connected without transistors 
-		if (directConnection[n]) {
-			if (n == 0) {
-				out = "vdd";
-			}
-			else if (n == 1) {
-				out = "gnd";
-			}
-			else if (n == 2) {
-				out = "vdd";
-			}
-			else if (n == 3) {
-				out = "gnd";
-			}
-		}
-		/////
+		
 
 		for (int g = 0; g < mysteryNumber; g++) {
 			// the first and last groups to be implemented indicates when the connections should be at vsource and out
