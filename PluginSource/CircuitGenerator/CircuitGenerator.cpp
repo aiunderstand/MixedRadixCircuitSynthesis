@@ -201,7 +201,7 @@ vector<string> ParseOutputNames(char** a, int length)
     return stringVector;
 }
 
-extern "C" __declspec(dllexport) void CreateCircuit(char** inputNames, int inputs, char** outputNames, int outputs, int compCount, char** ttIndices, int* arityArray, char** connectionArray,  int* invArray) {
+extern "C" __declspec(dllexport) void CreateCircuit(char* filePath, char* fileName, char** inputNames, int inputs, char** outputNames, int outputs, int compCount, char** ttIndices, int* arityArray, char** connectionArray,  int* invArray) {
 
     //STEP 1: assign parameters with some conversion due to c# to c++ (we can refactor this as some of the fucntions use the same code)
     connections = ParseConnectionIntoVectorStructure(connectionArray, compCount);
@@ -210,7 +210,7 @@ extern "C" __declspec(dllexport) void CreateCircuit(char** inputNames, int input
     arity = ParseArityIntoVectorStructure(arityArray, compCount);
     parsedInputNames = ParseInputNames(inputNames, inputs);
     parsedOutputNames = ParseOutputNames(outputNames, outputs);
-
+  
     //STEP 2: INIT
     IO input;
     input.setNr(inputs);
@@ -225,13 +225,12 @@ extern "C" __declspec(dllexport) void CreateCircuit(char** inputNames, int input
 
     //STEP 3: generate file
     ofstream myfile;
-    //string path = "functions/";
-    string filename = "circuit";
-    string path = filename;
+    string path = filePath;
+    path += fileName;
     path += ".sp";
     myfile.open(path);
 
-    myfile << ".subckt " << filename;
+    myfile << ".subckt " << fileName;
     for (int i = 0; i < input.getNr(); i++) {
         myfile << " " << parsedInputNames[i];
     }

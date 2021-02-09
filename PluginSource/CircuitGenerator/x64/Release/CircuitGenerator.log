@@ -1,8 +1,8 @@
 ﻿  CircuitGenerator.cpp
   FunctionGenerator.cpp
   NetlistGenerator.cpp
-C:\Users\maxde\Documents\git-repos\MixedRadixCircuitSynthesis\PluginSource\CircuitGenerator\NetlistGenerator.cpp(163,22): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\maxde\Documents\git-repos\MixedRadixCircuitSynthesis\PluginSource\CircuitGenerator\NetlistGenerator.cpp(496,2): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\maxde\Documents\git-repos\MixedRadixCircuitSynthesis\PluginSource\CircuitGenerator\NetlistGenerator.cpp(162,22): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\maxde\Documents\git-repos\MixedRadixCircuitSynthesis\PluginSource\CircuitGenerator\NetlistGenerator.cpp(495,2): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
      Creating library C:\Users\maxde\Documents\git-repos\MixedRadixCircuitSynthesis\PluginSource\CircuitGenerator\x64\Release\CircuitGenerator.lib and object C:\Users\maxde\Documents\git-repos\MixedRadixCircuitSynthesis\PluginSource\CircuitGenerator\x64\Release\CircuitGenerator.exp
   Generating code
   Previous IPDB not found, fall back to full compilation.

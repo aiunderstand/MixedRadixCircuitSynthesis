@@ -11,7 +11,6 @@
 #include <algorithm> 
 #include <functional>
 #include <cctype>
-#include <direct.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -142,7 +141,7 @@ extern "C" __declspec(dllexport) int TestSum(int* ttFromUnity, int ttFromUnityLe
 
 
 
-extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFromUnityLength, int arity) {
+extern "C" __declspec(dllexport) void CreateNetlist(char* filePath, int* ttFromUnity, int ttFromUnityLength, int arity) {
 
 /////////////////
 //Stage0: INIT
@@ -539,15 +538,13 @@ extern "C" __declspec(dllexport) void CreateNetlist(int* ttFromUnity, int ttFrom
 	for (int i = 0; i < (int(pow(3, dimensions - 1))) - optimizedIndex.length(); i++) { filename += "0"; }
 	filename += optimizedIndex;
 
-	_mkdir("./functions");
 	
-
 	/////////////////
 	//Stage6: Create netlist file
 	////////////////
 
 	ofstream myfile;
-	string path = "functions/";
+	string path = filePath;
 	path += filename;
 	path += ".sp";
 	myfile.open(path);

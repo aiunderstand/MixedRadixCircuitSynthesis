@@ -50,7 +50,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
     public static extern int GetTableFromIndexSingle(int tableIndex, int index);
 
     [DllImport("CircuitGenerator", EntryPoint = "CreateNetlist")]
-    public static extern void CreateNetlist(int[] array, int length,int arity);
+    public static extern void CreateNetlist(string filePath, int[] array, int length,int arity);
 
     [DllImport("CircuitGenerator", EntryPoint = "TestSum")]
     public static extern int TestSum(int[] array, int length);
@@ -91,7 +91,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
     }
 
     [DllImport("CircuitGenerator", EntryPoint = "CreateCircuit")]
-    public static extern int CreateCircuit(string[] inputNames, int inputs, string[] outputNames, int outputs, int compCount, string[] ttIndices, int[] arityArray, string[] connectionArray, int[] invArray);
+    public static extern int CreateCircuit(string filePath, string fileName, string[] inputNames, int inputs, string[] outputNames, int outputs, int compCount, string[] ttIndices, int[] arityArray, string[] connectionArray, int[] invArray);
 
     [DllImport("CircuitGenerator", EntryPoint = "GetOptimzedTT")]
     public static extern IntPtr GetOptimzedTT();
@@ -976,7 +976,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
     public static void CreateNetlist(string path, int[] tt, int arity)
     {
         //from unoptimized tt
-        CreateNetlist(tt, tt.Length, arity);
+        CreateNetlist(path, tt, tt.Length, arity);
        
     }
 

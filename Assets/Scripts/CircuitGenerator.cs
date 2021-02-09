@@ -6,13 +6,12 @@ using UnityEngine;
 
 public class CircuitGenerator : MonoBehaviour
 {
-    public string path = "";
-  public void OnClick()
+    public void OnClick()
     {
-        GenerateCircuit(path);
+        GenerateCircuit("Temp/", "circuit");
     }
 
-    private void GenerateCircuit(string path)
+    private void GenerateCircuit(string filePath, string fileName)
     {
         int compCount = 0;
         List<string> ttIndices = new List<string>();
@@ -22,7 +21,11 @@ public class CircuitGenerator : MonoBehaviour
         List<string> inputNames = new List<string>();
         List<string> outputNames = new List<string>();
 
-        path = Application.dataPath + "/GeneratedCircuits/" + path;
+        string path = Application.persistentDataPath + "/User/Generated/" + filePath;
+
+        //check if folder exist otherwise create folder 
+        System.IO.Directory.CreateDirectory(path);
+
         //get all connections and truth tables
         var connections = GameObject.FindGameObjectsWithTag("Wire");
         var components = GameObject.FindGameObjectsWithTag("DnDComponent");
@@ -159,6 +162,11 @@ public class CircuitGenerator : MonoBehaviour
             }
         }
 
-        TruthtableFunctionHelper.CreateCircuit(inputNames.ToArray(), inputNames.Count, outputNames.ToArray(), outputNames.Count,compCount, ttIndices.ToArray(), arityArray.ToArray(), connectionArray.ToArray(), invArray.ToArray());
+        TruthtableFunctionHelper.CreateCircuit(path, fileName, inputNames.ToArray(), inputNames.Count, outputNames.ToArray(), outputNames.Count,compCount, ttIndices.ToArray(), arityArray.ToArray(), connectionArray.ToArray(), invArray.ToArray());
+    }
+
+    public void SaveComponent(string name)
+    {
+        GenerateCircuit(name +"/", name);
     }
 }
