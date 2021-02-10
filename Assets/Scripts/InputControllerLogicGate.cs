@@ -189,7 +189,7 @@ public class InputControllerLogicGate : MonoBehaviour
             BtnInput outputPort = null;
             foreach (var p in ports)
             {
-                if (p.tag.Equals("PortD"))
+                if (p.isOutput)
                 {
                     outputPort = p;
                     p.SetValueWithoutConversionAndCounter(_output);

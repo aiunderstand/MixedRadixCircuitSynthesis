@@ -128,8 +128,6 @@ public class CircuitGenerator : MonoBehaviour
             }
         }
        
-        //find inputs and outputs, currently we look at the created amount not the connected amount. This could lead to bugs?
-        //also only one input and one output component is allowed (for PoC) -- is this still true?
         foreach (var c in components)
         {
             if (c.name.Contains("Input"))
@@ -139,9 +137,15 @@ public class CircuitGenerator : MonoBehaviour
                 
                 foreach (var b in inputControler.Buttons)
                 {
-                    int portIndex = b.GetComponent<BtnInput>()._portIndex;
-                    string port = b.GetComponentInChildren<TMP_InputField>().text;
-                    inputNames.Add(port.Replace(" ", string.Empty)+portIndex+"_"+id);
+                    //double check if button is connected to something
+                    var bi = b.GetComponent<BtnInput>();
+
+                    if (bi.Connections.Count > 0)
+                    {
+                        int portIndex = bi._portIndex;
+                        string port = b.GetComponentInChildren<TMP_InputField>().text;
+                        inputNames.Add(port.Replace(" ", string.Empty) + portIndex + "_" + id);
+                    }
                 }
             }
         }
@@ -155,9 +159,15 @@ public class CircuitGenerator : MonoBehaviour
 
                 foreach (var b in inputControler.Buttons)
                 {
-                    int portIndex = b.GetComponent<BtnInput>()._portIndex;
-                    string port = b.GetComponentInChildren<TMP_InputField>().text;
-                    outputNames.Add(port.Replace(" ", string.Empty)+portIndex + "_" + id);
+                    //double check if button is connected to something
+                    var bi = b.GetComponent<BtnInput>();
+
+                    if (bi.Connections.Count > 0)
+                    {
+                        int portIndex = bi._portIndex;
+                        string port = b.GetComponentInChildren<TMP_InputField>().text;
+                        outputNames.Add(port.Replace(" ", string.Empty) + portIndex + "_" + id);
+                    }
                 }
             }
         }

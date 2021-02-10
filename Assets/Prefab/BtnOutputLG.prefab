@@ -34,8 +34,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -10.1, y: 0}
-  m_SizeDelta: {x: 11.6, y: 9.1}
+  m_AnchoredPosition: {x: -17.25, y: 0}
+  m_SizeDelta: {x: 23, y: 9}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8635270299261261119
 CanvasRenderer:
@@ -92,11 +92,11 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 8
+  m_fontSize: 8.05
   m_fontSizeBase: 8
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 8
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 4
   m_fontSizeMax: 10
   m_fontStyle: 1
   m_HorizontalAlignment: 2
@@ -108,9 +108,9 @@ MonoBehaviour:
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 0
+  m_enableWordWrapping: 1
   m_wordWrappingRatios: 0.4
-  m_overflowMode: 3
+  m_overflowMode: 0
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 1
@@ -547,3 +547,5 @@ MonoBehaviour:
   wireColor: {fileID: 2843942066859329541}
   label: {fileID: 7931423915526616644}
   _portIndex: 0
+  isOutput: 0
+  Connections: []

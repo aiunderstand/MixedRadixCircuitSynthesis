@@ -38,6 +38,7 @@ public class BtnInput : MonoBehaviour
     public TextMeshProUGUI label;
     public int _portIndex = 0;
     TMP_Dropdown _Dropdown;
+    public bool isOutput = false; //duplicate because we also set this in lineController, refactor
     public List<LineFunctions> Connections; 
     //refactors as Logic gate doesnt have any onclick events, only used for its references to value.
 

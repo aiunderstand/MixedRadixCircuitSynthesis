@@ -14,6 +14,23 @@ public class applicationmanager : MonoBehaviour
         return m.useBigEndianForLogicGates;
     }
 
+    public static void ClearCanvas()
+    {
+        //get all connections and truth tables
+        var connections = GameObject.FindGameObjectsWithTag("Wire");
+        var components = GameObject.FindGameObjectsWithTag("DnDComponent");
+
+        for (int i = 0; i < connections.Length; i++)
+        {
+            Destroy(connections[i]);
+        }
+
+        for (int i = 0; i < components.Length; i++)
+        {
+            Destroy(components[i]);
+        }
+    }
+
     public void Update()
     {
         float scrollDelta = Input.mouseScrollDelta.y;
@@ -36,16 +53,16 @@ public class applicationmanager : MonoBehaviour
             }
         }
 
-        if(abstractionLevelChanged)
-        {
-            //get all logic gates (we can optimize this by registering this call to a manager instead of searching for this every event)
-            var components =GameObject.FindGameObjectsWithTag("DnDComponent");
-            foreach (var c in components)
-            {
-                if (c.name.Contains("LogicGate"))
-                    c.GetComponent<DragDrop>().SetAbstractionLevelTo(abstractionLevel);
-            }
+        //if(abstractionLevelChanged)
+        //{
+        //    //get all logic gates (we can optimize this by registering this call to a manager instead of searching for this every event)
+        //    var components =GameObject.FindGameObjectsWithTag("DnDComponent");
+        //    foreach (var c in components)
+        //    {
+        //        if (c.name.Contains("LogicGate"))
+        //            c.GetComponent<DragDrop>().SetAbstractionLevelTo(abstractionLevel);
+        //    }
 
-        }
+        //}
     }
 }
