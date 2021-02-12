@@ -694,7 +694,9 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
                         if (tIndex != -1)
                         {
-                            _DETC.SetPanelSize(3, 2);
+                            //only change panel size if needed, otherwise all connections are reset
+                            if (_DETC.Arity != 2)
+                                _DETC.SetPanelSize(3, 2);
 
                             //get all the cells
                             BtnInputTruthTable[] cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
@@ -733,7 +735,9 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
                         if (isValid)
                         {
-                            _DETC.SetPanelSize(3, 3);
+                            //only change panel size if needed, otherwise all connections are reset
+                            if (_DETC.Arity != 3)
+                                _DETC.SetPanelSize(3, 3);
 
                             //get all the cells
                             BtnInputTruthTableDropdown bittd = transform.parent.GetComponentInChildren<BtnInputTruthTableDropdown>();

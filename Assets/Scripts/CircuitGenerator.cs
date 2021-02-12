@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI.Extensions;
 
 public class CircuitGenerator : MonoBehaviour
 {
@@ -13,6 +14,7 @@ public class CircuitGenerator : MonoBehaviour
 
     private void GenerateCircuit(string filePath, string fileName)
     {
+        int uid = 0;
         int compCount = 0;
         List<string> ttIndices = new List<string>();
         List<int> arityArray = new List<int>();
@@ -30,7 +32,77 @@ public class CircuitGenerator : MonoBehaviour
         var connections = GameObject.FindGameObjectsWithTag("Wire");
         var components = GameObject.FindGameObjectsWithTag("DnDComponent");
 
-        //foreach tt, generate a netlist
+        Hashtable inputLOT = new Hashtable();
+        
+        //PASS 1: input names with semantic names
+        foreach (var c in components)
+        {
+            if (c.name.Contains("Input"))
+            {
+                var inputControler = c.GetComponentInChildren<InputController>();
+                string id = inputControler.GetInstanceID().ToString();
+
+                foreach (var b in inputControler.Buttons)
+                {
+                    //double check if button is connected to something
+                    var bi = b.GetComponent<BtnInput>();
+
+                    if (bi.Connections.Count > 0)
+                    {
+                        //check if connection is directly to output, since then it should not be added
+                        int outputCounter = 0;
+                        foreach (var conn in bi.Connections)
+                        {
+                            var parts = conn.name.Split(';');
+
+                            if (parts[5].Contains("Output"))
+                            {
+                                outputCounter++;
+                            }
+                        }
+
+                        //only add input if there is at least one connection to a logicgate
+                        if (outputCounter != bi.Connections.Count)
+                        {
+                            int portIndex = bi._portIndex;
+                            string portLabel = b.GetComponentInChildren<TMP_InputField>().text;
+                            inputNames.Add(portLabel + "_" + uid); //refactor to only use inputLOT, build the tree and then convert the inputlot to input names
+                            inputLOT.Add(portIndex + "_" + id, portLabel + "_" + uid);
+                            uid++;
+                        }
+                    }
+                }
+            }
+        }
+
+        //PASS 2: output names with semantic names
+        Hashtable outputLOT = new Hashtable();
+        //create output names hashtable, this code section is solely for adding the output label to an logic gate terminal, refactor?
+        foreach (var c in components)
+        {
+            if (c.name.Contains("Output"))
+            {
+                var inputControler = c.GetComponentInChildren<InputController>();
+                string id = inputControler.GetInstanceID().ToString();
+
+                foreach (var b in inputControler.Buttons)
+                {
+                    //double check if button is connected to something
+                    var bi = b.GetComponent<BtnInput>();
+
+                    if (bi.Connections.Count > 0)
+                    {
+                        int portIndex = bi._portIndex;
+                        string portLabel = b.GetComponentInChildren<TMP_InputField>().text;
+                        outputLOT.Add(portIndex + "_" + id, portLabel);
+                    }
+                }
+            }
+        }
+
+        //PASS 3: logic gate generate TT netlist and LOT with semantic names 
+        Hashtable logicgateLOT = new Hashtable();
+        Hashtable logicgateIndicesLOT = new Hashtable();
         foreach (var c in components)
         {
             if (c.name.Contains("LogicGate"))
@@ -47,6 +119,12 @@ public class CircuitGenerator : MonoBehaviour
                 int[] optimizedTT = TruthtableFunctionHelper.GetOptimizedTT(arity);
                 string optimizedTTindex = TruthtableFunctionHelper.ConvertTTtoHeptEncoding(optimizedTT);
                 ttIndices.Add(optimizedTTindex);
+                logicgateIndicesLOT.Add(controller.GetInstanceID().ToString(), optimizedTTindex);
+                //controller.DropDownFunctionLabel.text = optimizedTTindex;
+
+                var functionDropDown = controller.GetComponentInChildren<AutoCompleteComboBox>();
+                functionDropDown._mainInput.text = optimizedTTindex;
+                //functionDropDown.ToggleDropdownPanel();
 
                 int[] tempInvArray = TruthtableFunctionHelper.GetAndConvertInvArrayFormat(arity);
 
@@ -54,6 +132,71 @@ public class CircuitGenerator : MonoBehaviour
                 {
                     invArray.Add(tempInvArray[i]);
                 }
+
+            }
+        }
+
+        //PASS 4: connections with output (backwards pass with only nodes thats are connected to output)
+        foreach (var c in components)
+        {
+            if (c.name.Contains("LogicGate"))
+            {
+                var controller = c.GetComponentInChildren<InputControllerLogicGate>();
+                int arity = controller.GetArity();
+
+                foreach (var conn in connections)
+                {
+                    if (conn.name.Contains(controller.GetInstanceID().ToString()))
+                    {
+                        var parts = conn.name.Split(';');
+
+                        if (parts[2] == controller.GetInstanceID().ToString())  //check if output
+                        {
+                            if (parts[5].Contains("Output"))
+                            {
+                                //not really efficient code
+                                bool isFound = false;
+                                foreach (DictionaryEntry id in logicgateLOT)
+                                {
+                                    if ((string)id.Key == (parts[3] + "_" + parts[2])) //match identifier of component
+                                    {
+                                        isFound = true;
+                            
+                                        //check if output is the same if not, add
+                                        var current = (string)outputLOT[(string)(parts[7] + "_" + parts[6])];
+                                        var stored = (string)logicgateLOT[id.Key];
+                                        if (current != stored)
+                                        {
+                                            outputNames.Add((string)logicgateLOT[id.Key]);
+                                            outputLOT[(string)(parts[7] + "_" + parts[6])] = stored;
+                                        }
+                                    }
+                                }
+
+                                if (!isFound) //add to hastables and tempConnArray
+                                {
+                                    //update the output LOT with a UID and add to final outputNames list
+                                    var id = (string)outputLOT[(string)(parts[7] + "_" + parts[6])] + "_" + uid;
+                                    outputLOT[(string)(parts[7] + "_" + parts[6])] = id; //update id with uid
+                                    outputNames.Add(id);
+                                    uid++;
+
+                                    logicgateLOT.Add((parts[3] + "_" + parts[2]), id);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        //PASS 5: forward pass, fill connection array
+        foreach (var c in components)
+        {
+            if (c.name.Contains("LogicGate"))
+            {
+                var controller = c.GetComponentInChildren<InputControllerLogicGate>();
+                int arity = controller.GetArity();
 
                 //find all connections belonging to logic gate
                 string[] tempConnArray = new string[4];
@@ -64,44 +207,76 @@ public class CircuitGenerator : MonoBehaviour
                     {
                         var parts = conn.name.Split(';');
 
-
-                        //is output
-                        if (parts[2] == controller.GetInstanceID().ToString())
+                        if (parts[2] == controller.GetInstanceID().ToString())  //check if output
                         {
-                            //check if this is a terminal output, if so add to list
                             if (parts[5].Contains("Output"))
                             {
-                                tempConnArray[3] = parts[7].Replace(" ", string.Empty) + "_" + parts[6];
+                                foreach (DictionaryEntry id in logicgateLOT)
+                                {
+                                    if ((string)id.Key == (parts[3] + "_" + parts[2])) //match identifier of component
+                                    {
+                                        tempConnArray[3] = (string)logicgateLOT[id.Key];
+                                    }
+                                }
                             }
                             else
                             {
-                                tempConnArray[3] = parts[3] + parts[2] + "_to_" + parts[7] + parts[6];                                
+                                bool isFound = false;
+                                foreach (DictionaryEntry id in logicgateLOT)
+                                {
+                                    if ((string)id.Key == (parts[3] + "_" + parts[2])) //match identifier of component
+                                    {
+                                        isFound = true;
+                                        tempConnArray[3] = (string)logicgateLOT[id.Key];
+                                    }
+                                }
+
+                                if (!isFound) //add to hastables and tempConnArray
+                                {
+                                    //update the output LOT with a UID and add to final outputNames list
+                                    var id = (string)logicgateIndicesLOT[(string)(parts[2])] + "_" + uid;
+                                    uid++;
+
+                                    logicgateLOT.Add((parts[3] + "_" + parts[2]), id);
+                                    tempConnArray[3] = id;
+                                }
                             }
                         }
                         else //it is input
                         {
-                            //find out if input 1,2 or 3 (port A,B,C)
-                            switch (parts[7])
-                            {
-                                case "PortA":
-                                    if (parts[1].Contains("Input"))
-                                        tempConnArray[0] = parts[3].Replace(" ", string.Empty) + "_" + parts[2];
-                                    else
-                                        tempConnArray[0] = parts[3] + parts[2] + "_to_" + parts[7] + parts[6];
-                                    break;
-                                case "PortB":
-                                    if (parts[1].Contains("Input"))
-                                        tempConnArray[1] = parts[3].Replace(" ", string.Empty) + "_" + parts[2];
-                                    else
-                                        tempConnArray[1] = parts[3] + parts[2] + "_to_" + parts[7] + parts[6];
-                                    break;
-                                case "PortC":
-                                    if (parts[1].Contains("Input"))
-                                        tempConnArray[2] = parts[3].Replace(" ", string.Empty) + "_" + parts[2];
-                                    else
-                                        tempConnArray[2] = parts[3] + parts[2] + "_to_" + parts[7] + parts[6];
-                                    break;
+                            int index = int.Parse(parts[7]);
 
+                            if (parts[1].Contains("Input"))
+                            {
+                                foreach (DictionaryEntry id in inputLOT)
+                                {
+                                    if ((string)id.Key == (parts[3] + "_" + parts[2])) //match identifier of component
+                                    {
+                                        tempConnArray[index] = (string)inputLOT[id.Key];
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                bool isFound = false;
+                                foreach (DictionaryEntry id in logicgateLOT)
+                                {
+                                    if ((string)id.Key == (parts[3] + "_" + parts[2])) //match identifier of component
+                                    {
+                                        tempConnArray[index] = (string)logicgateLOT[id.Key];
+                                        isFound = true;
+                                    }
+                                }
+
+                                if (!isFound)
+                                {
+                                    //update the output LOT with a UID and add to final outputNames list
+                                    var id = (string)logicgateIndicesLOT[(string)(parts[2])] + "_" + uid;
+                                    uid++;
+
+                                    logicgateLOT.Add((parts[3] + "_" + parts[2]), id);
+                                    tempConnArray[index] = id;
+                                }
                             }
                         }
                     }
@@ -127,52 +302,17 @@ public class CircuitGenerator : MonoBehaviour
                 }
             }
         }
-       
-        foreach (var c in components)
-        {
-            if (c.name.Contains("Input"))
-            {
-                var inputControler = c.GetComponentInChildren<InputController>();
-                string id = inputControler.GetInstanceID().ToString();
-                
-                foreach (var b in inputControler.Buttons)
-                {
-                    //double check if button is connected to something
-                    var bi = b.GetComponent<BtnInput>();
 
-                    if (bi.Connections.Count > 0)
-                    {
-                        int portIndex = bi._portIndex;
-                        string port = b.GetComponentInChildren<TMP_InputField>().text;
-                        inputNames.Add(port.Replace(" ", string.Empty) + portIndex + "_" + id);
-                    }
-                }
-            }
+        //doube check if everything is there before submitting to memory sensitive c++ land
+        bool fail = false;
+        foreach (var conn in connectionArray)
+        {
+            if (conn == null)
+                fail = true;
         }
 
-        foreach (var c in components)
-        {
-            if (c.name.Contains("Output"))
-            {
-                var inputControler = c.GetComponentInChildren<InputController>();
-                string id = inputControler.GetInstanceID().ToString();
-
-                foreach (var b in inputControler.Buttons)
-                {
-                    //double check if button is connected to something
-                    var bi = b.GetComponent<BtnInput>();
-
-                    if (bi.Connections.Count > 0)
-                    {
-                        int portIndex = bi._portIndex;
-                        string port = b.GetComponentInChildren<TMP_InputField>().text;
-                        outputNames.Add(port.Replace(" ", string.Empty) + portIndex + "_" + id);
-                    }
-                }
-            }
-        }
-
-        TruthtableFunctionHelper.CreateCircuit(path, fileName, inputNames.ToArray(), inputNames.Count, outputNames.ToArray(), outputNames.Count,compCount, ttIndices.ToArray(), arityArray.ToArray(), connectionArray.ToArray(), invArray.ToArray());
+        if (!fail)
+            TruthtableFunctionHelper.CreateCircuit(path, fileName, inputNames.ToArray(), inputNames.Count, outputNames.ToArray(), outputNames.Count,compCount, ttIndices.ToArray(), arityArray.ToArray(), connectionArray.ToArray(), invArray.ToArray());
     }
 
     public void SaveComponent(string name)

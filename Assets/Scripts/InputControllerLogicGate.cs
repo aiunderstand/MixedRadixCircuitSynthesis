@@ -3,11 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using static BtnInput;
 
 public class InputControllerLogicGate : MonoBehaviour
 {
-    public TextMeshProUGUI DropDownFunctionLabel;
+    public InputField DropDownFunctionLabel;
     TextMeshProUGUI _radixTarget; //or source if it is linked to a output
     public Color panelColorDefault;
     public Color panelColorActive;

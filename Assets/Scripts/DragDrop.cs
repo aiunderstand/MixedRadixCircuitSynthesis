@@ -125,26 +125,39 @@ public class DragDrop : MonoBehaviour,
         }
     }
 
+    public bool IsDropZone(PointerEventData eventData)
+    {
+        if (eventData.position.x > 160)
+            return true;
+        else
+            return false;
+    }
     public void OnEndDrag(PointerEventData eventData)
     {
         if (_isDeleteDropZone)
             Destroy(gameObject);
         else
         {
-            if (!_isFullVersion)
+            //check if dropped in drop zone
+            if (IsDropZone(eventData))
             {
-                _isFullVersion = true;
+                if (!_isFullVersion)
+                {
+                    _isFullVersion = true;
 
-                //change canvas from UI to dropzone
-                this.transform.SetParent(DragDropArea.transform);
-                this.transform.tag = "DnDComponent";
+                    //change canvas from UI to dropzone
+                    this.transform.SetParent(DragDropArea.transform);
+                    this.transform.tag = "DnDComponent";
 
+                    //snap to right side
+                    if (this.transform.localPosition.x < -295)
+                        this.transform.localPosition = new Vector3(-275, this.transform.localPosition.y, 0);
+                }
             }
-
-            _dragOffset = Vector2.zero;
-
-               
-
+            else
+                Destroy(gameObject);
         }
+
+        _dragOffset = Vector2.zero;
     }
 }

@@ -48,15 +48,9 @@ public class LineManager : MonoBehaviour
             //add line renderer
             _tempLine = Instantiate(LinePrefab);
 
-            if (_tempStartTerminal.tag.Equals("Input"))
-                _tempLine.name = _tempStartTerminal.GetComponentInParent<DragDrop>().name + ";" +
-                                 _tempStartTerminal.GetComponentInChildren<TMPro.TMP_InputField>().text +
-                                 _tempStartTerminal._portIndex + 
-                                 "; --> ";
-            else
-                _tempLine.name = _tempStartTerminal.GetComponentInParent<DragDrop>().name + ";" +
-                                 _tempStartTerminal.tag + "; --> ";
-
+            _tempLine.name = _tempStartTerminal.GetComponentInParent<DragDrop>().name + ";" +
+                             _tempStartTerminal._portIndex + 
+                             "; --> ";
 
             _tempLine.transform.SetParent(this.transform, false);
             _tempLine.transform.localScale = new Vector3(1, 1, 1);
@@ -99,17 +93,10 @@ public class LineManager : MonoBehaviour
                         conn.endTerminal = eventParam.ConnectionData.ConnectionTerminal;
                         conn.id = GetNewConnectionId();
 
-                        if (conn.endTerminal.tag.Equals("Output"))
-                            _tempLine.name = conn.id.ToString() + " = " + _tempLine.name + 
-                                             conn.endTerminal.GetComponentInParent<DragDrop>().name + ";" +
-                                             eventParam.ConnectionData.ConnectionTerminal.GetComponentInChildren<TMPro.TMP_InputField>().text +
-                                             conn.endTerminal._portIndex;
-                        else
-                            _tempLine.name = conn.id.ToString() + " = " + _tempLine.name + 
-                                             conn.endTerminal.GetComponentInParent<DragDrop>().name + ";" + 
-                                             conn.endTerminal.tag;
-
-
+                        _tempLine.name = conn.id.ToString() + " = " + _tempLine.name + 
+                                         conn.endTerminal.GetComponentInParent<DragDrop>().name + ";" +
+                                         conn.endTerminal._portIndex;
+                      
                         _tempLine.GetComponent<LineFunctions>().connection = conn;
 
                         //add connection to start and end terminals (ports)
