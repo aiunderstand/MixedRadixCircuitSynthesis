@@ -3,6 +3,8 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using UnityEngine.UI.Extensions;
 
 //Adapted from https://stackoverflow.com/questions/37473802/unity3d-ui-calculation-for-position-dragging-an-item/37473953#37473953
 [RequireComponent(typeof(EventTrigger))]
@@ -17,8 +19,9 @@ public class DragDrop : MonoBehaviour,
     public GameObject FullVersion; //view 1 
     public GameObject TextVersion; //view 2
     public GameObject SymbolVersion; //view 3
-
-
+    Color panelColorDefault;
+    Color panelColorActive = new Color(255/255,82/255,45/255);
+    public Image panelBg;
     bool _isFullVersion = false;
 
     public GameObject DragDropArea; //ugly, refactor so this is unneeded
@@ -26,6 +29,8 @@ public class DragDrop : MonoBehaviour,
     void Awake()
     {
         _DeleteDropZoneListener = new Action<EventParam>(UpdateDeleteDropZoneParam);
+       
+
     }
 
     void OnEnable()
@@ -41,6 +46,14 @@ public class DragDrop : MonoBehaviour,
     void UpdateDeleteDropZoneParam(EventParam eventParam)
     {
         _isDeleteDropZone = eventParam.IsDeleteDropZone;
+
+        if (_isFullVersion)
+        {
+            if (_isDeleteDropZone)
+                panelBg.color = panelColorActive;
+            else
+                panelBg.color = panelColorDefault;
+        }
     }
 
 
@@ -56,23 +69,27 @@ public class DragDrop : MonoBehaviour,
             _dragOffset = eventData.position - (Vector2)transform.position;
             _limits = transform.parent.GetComponent<RectTransform>().rect.max;
 
-            //instantiate new one (below)
+            //instantiate new one for menu
             var go = GameObject.Instantiate(this.gameObject);
             go.transform.SetParent(this.transform.parent, false);
             go.name = this.name; //isnt this overwritten?
-           
+            go.transform.SetSiblingIndex(this.transform.GetSiblingIndex());
 
-            //change order to lowest (overlay on top)
+            //update current drag drop component 
+            this.transform.SetParent(DragDropArea.transform);
+            this.transform.tag = "DnDComponent";
             this.transform.SetAsLastSibling();
-
+           
             //show expanded version of control
             MenuVersion.SetActive(false);
             FullVersion.SetActive(true);
+            panelColorDefault = panelBg.color;
+            _limits = transform.parent.GetComponent<RectTransform>().rect.max;
 
             //check if saved state
             if (GetComponent<DragDropSaved>() != null)
             {
-                StartCoroutine("LoadSave");                
+                StartCoroutine("LoadSave");
             }
         }
     }
@@ -114,6 +131,11 @@ public class DragDrop : MonoBehaviour,
         if (p.y > _limits.y) { p.y = _limits.y; }
         transform.localPosition = p;
 
+        if (IsDeleteDropZone(eventData))
+            panelBg.color = panelColorActive;
+        else
+            panelBg.color = panelColorDefault;
+
         //redraw connections
         var allTerminals = GetComponentsInChildren<BtnInput>();
         foreach (var t in allTerminals)
@@ -127,35 +149,40 @@ public class DragDrop : MonoBehaviour,
 
     public bool IsDropZone(PointerEventData eventData)
     {
-        if (eventData.position.x > 160)
+        if (eventData.position.x > 140)
             return true;
         else
             return false;
     }
+
+    public bool IsDeleteDropZone(PointerEventData eventData)
+    {
+        if (eventData.position.x < 80)
+            return true;
+        else
+            return false;
+    }
+
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (_isDeleteDropZone)
+        if (!_isFullVersion)
+        {
+            _isFullVersion = true;
+        }
+
+        if (IsDeleteDropZone(eventData))
+        {
             Destroy(gameObject);
+        }
         else
         {
             //check if dropped in drop zone
-            if (IsDropZone(eventData))
+            if (!IsDropZone(eventData))
             {
-                if (!_isFullVersion)
-                {
-                    _isFullVersion = true;
-
-                    //change canvas from UI to dropzone
-                    this.transform.SetParent(DragDropArea.transform);
-                    this.transform.tag = "DnDComponent";
-
-                    //snap to right side
-                    if (this.transform.localPosition.x < -295)
-                        this.transform.localPosition = new Vector3(-275, this.transform.localPosition.y, 0);
-                }
+                //snap to right side
+                if (this.transform.localPosition.x < -295)
+                    this.transform.localPosition = new Vector3(-275, this.transform.localPosition.y, 0);
             }
-            else
-                Destroy(gameObject);
         }
 
         _dragOffset = Vector2.zero;

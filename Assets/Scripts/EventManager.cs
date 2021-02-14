@@ -91,6 +91,7 @@ public struct EventParam
     //public int param2;
     //public float param3;
     public bool IsDeleteDropZone;
+    public int Id;
     public ConnectionData ConnectionData;
 }
 
