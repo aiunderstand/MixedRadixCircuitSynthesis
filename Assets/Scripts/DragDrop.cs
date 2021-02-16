@@ -86,6 +86,13 @@ public class DragDrop : MonoBehaviour,
             panelColorDefault = panelBg.color;
             _limits = transform.parent.GetComponent<RectTransform>().rect.max;
 
+            //increase size if a saved component (detected by having a layout element)
+            if (this.GetComponent<LayoutElement>())
+            {
+                this.transform.localScale = new Vector3 (SaveCircuit.FullScale, SaveCircuit.FullScale, SaveCircuit.FullScale);
+            }
+
+
             //check if saved state
             if (GetComponent<DragDropSaved>() != null)
             {
@@ -131,7 +138,7 @@ public class DragDrop : MonoBehaviour,
         if (p.y > _limits.y) { p.y = _limits.y; }
         transform.localPosition = p;
 
-        if (IsDeleteDropZone(eventData))
+        if (IsDeleteDropZone(transform.position))
             panelBg.color = panelColorActive;
         else
             panelBg.color = panelColorDefault;
@@ -147,17 +154,17 @@ public class DragDrop : MonoBehaviour,
         }
     }
 
-    public bool IsDropZone(PointerEventData eventData)
+    public bool IsDropZone(Vector3 position)
     {
-        if (eventData.position.x > 140)
+        if (position.x > 140)
             return true;
         else
             return false;
     }
 
-    public bool IsDeleteDropZone(PointerEventData eventData)
+    public bool IsDeleteDropZone(Vector3 position)
     {
-        if (eventData.position.x < 80)
+        if (position.x < 50)
             return true;
         else
             return false;
@@ -170,18 +177,48 @@ public class DragDrop : MonoBehaviour,
             _isFullVersion = true;
         }
 
-        if (IsDeleteDropZone(eventData))
+        if (IsDeleteDropZone(transform.position))
         {
+            //remove connections first
+
+            //get all connections
+            var connections = GameObject.FindGameObjectsWithTag("Wire");
+
+            //get all connections from this component
+            var ioConns = gameObject.GetComponentsInChildren<BtnInput>();
+
+            for (int i = 0; i < connections.Length; i++)
+            {
+                for (int j = 0; j < ioConns.Length; j++)
+                {
+                    for (int k = 0; k < ioConns[j].Connections.Count; k++)
+                    {
+                        if (connections[i].name.Contains(ioConns[j].Connections[k].gameObject.name))
+                            connections[i].GetComponent<LineFunctions>().DestroyConnection();
+                    }
+                }
+            }
+
             Destroy(gameObject);
         }
         else
         {
             //check if dropped in drop zone
-            if (!IsDropZone(eventData))
+            if (!IsDropZone(transform.position))
             {
                 //snap to right side
                 if (this.transform.localPosition.x < -295)
                     this.transform.localPosition = new Vector3(-275, this.transform.localPosition.y, 0);
+            }
+
+            //redraw connections
+            var allTerminals = GetComponentsInChildren<BtnInput>();
+            foreach (var t in allTerminals)
+            {
+                foreach (var c in t.Connections)
+                {
+                    c.Redraw(Color.clear); //no color update
+                }
             }
         }
 
