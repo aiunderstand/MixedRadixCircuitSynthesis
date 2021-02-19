@@ -8,6 +8,7 @@ public class applicationmanager : MonoBehaviour
     public static int abstractionLevel = 1;
     int minLevel = 1;
     int maxLevel = 3;
+
     public static bool UseBigEndianForLogicGates()
     {
         var m = GameObject.FindObjectOfType<applicationmanager>();

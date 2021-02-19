@@ -141,7 +141,7 @@ extern "C" __declspec(dllexport) int TestSum(int* ttFromUnity, int ttFromUnityLe
 
 
 
-extern "C" __declspec(dllexport) void CreateNetlist(char* filePath, int* ttFromUnity, int ttFromUnityLength, int arity) {
+extern "C" __declspec(dllexport) int CreateNetlist(char* filePath, int* ttFromUnity, int ttFromUnityLength, int arity) {
 
 /////////////////
 //Stage0: INIT
@@ -778,6 +778,8 @@ extern "C" __declspec(dllexport) void CreateNetlist(char* filePath, int* ttFromU
 	//cout << "\n\n Circuit outputted into functions/" << filename << ".sp\n\n";
 
 	//system("pause");
+
+	return transistors;
 }
 
 

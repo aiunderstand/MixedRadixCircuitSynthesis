@@ -279,7 +279,8 @@ public class BtnInput : MonoBehaviour
                 //determine if logic gate or output 
                 if (c.connection.endTerminal.tag.Equals("Output"))
                 {
-                    c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixSource, _value);
+                    var val = c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixSource, _value);
+                    c.connection.endTerminal.GetComponentInChildren<LEDtoggle>().SetLedColor(val);
                 }
                 else
                 {
@@ -289,7 +290,7 @@ public class BtnInput : MonoBehaviour
         }
     } 
 
-    public void SetValue(RadixOptions radixSource, int value)
+    public int SetValue(RadixOptions radixSource, int value)
     {
         RadixOptions radixTarget = (RadixOptions)Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
        
@@ -389,6 +390,8 @@ public class BtnInput : MonoBehaviour
         //report back to counter to recount, which is the parent of this object;
         var ic = gameObject.GetComponentInParent<InputController>();
         ic.ComputeCounter();
+
+        return _value;
     }
 
     public void SetValueWithPropagation(RadixOptions radixSource, int value)

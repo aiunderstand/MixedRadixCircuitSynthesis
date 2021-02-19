@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI.Extensions;
@@ -9,10 +10,21 @@ public class CircuitGenerator : MonoBehaviour
 {
     public void OnClick()
     {
-        GenerateCircuit("Temp/", "circuit");
+        var stats = GenerateCircuit("Temp/", "circuit");
+
+        //show statistics
+        var sc = GameObject.FindObjectOfType<SaveCircuit>();
+        sc.StatisticsScreen.SetActive(true);
+        var ss = sc.StatisticsScreen.GetComponent<Statistics>();
+        ss.transistorCount.text = stats.transistorCount.ToString();
+        ss.uniqueLogicGateCount.text = stats.uniqueLogicGateCount.ToString();
+        ss.totalLogicGateCount.text = stats.totalLogicGateCount.ToString();
+        ss.abstractionLevelCount.text = stats.abstractionLevelCount.ToString();
+        ss.NetlistPath = Application.persistentDataPath + "/User/Generated/Temp/";
+        ss.NetlistName = "Circuit";
     }
 
-    private bool GenerateCircuit(string filePath, string fileName)
+    private Stats GenerateCircuit(string filePath, string fileName)
     {
         int uid = 0;
         int compCount = 0;
@@ -26,7 +38,14 @@ public class CircuitGenerator : MonoBehaviour
         string path = Application.persistentDataPath + "/User/Generated/" + filePath;
 
         bool exists = System.IO.Directory.Exists(path);
-
+        Stats stats = new Stats();
+        stats.transistorCount = 0;
+        stats.abstractionLevelCount = 0;
+        stats.success = false;
+        stats.netlistPath = "";
+        stats.totalLogicGateCount = 0;
+        stats.uniqueLogicGateCount = 0;
+        stats.netlistName = "";
         if (!exists || filePath.Equals("Temp/"))
         {
             System.IO.Directory.CreateDirectory(path);
@@ -118,7 +137,7 @@ public class CircuitGenerator : MonoBehaviour
                     compCount++;
 
                     //we should just create a c++ data structure and marshall this. Now it is important that we first call create netlist!
-                    TruthtableFunctionHelper.CreateNetlist(path, tt, arity); //from unoptimized tt
+                    stats.transistorCount += TruthtableFunctionHelper.CreateNetlist(path, tt, arity); //from unoptimized tt
                     int[] optimizedTT = TruthtableFunctionHelper.GetOptimizedTT(arity);
                     string optimizedTTindex = TruthtableFunctionHelper.ConvertTTtoHeptEncoding(optimizedTT);
                     ttIndices.Add(optimizedTTindex);
@@ -315,22 +334,45 @@ public class CircuitGenerator : MonoBehaviour
             }
 
             if (!fail)
-                TruthtableFunctionHelper.CreateCircuit(path, fileName, inputNames.ToArray(), inputNames.Count, outputNames.ToArray(), outputNames.Count, compCount, ttIndices.ToArray(), arityArray.ToArray(), connectionArray.ToArray(), invArray.ToArray());
+            {
+                var inverterCount = TruthtableFunctionHelper.CreateCircuit(path, fileName, inputNames.ToArray(), inputNames.Count, outputNames.ToArray(), outputNames.Count, compCount, ttIndices.ToArray(), arityArray.ToArray(), connectionArray.ToArray(), invArray.ToArray());
+                stats.transistorCount += inverterCount;
+                stats.totalLogicGateCount = ttIndices.Count;
+                stats.uniqueLogicGateCount = ttIndices.Distinct().Count();
+                stats.abstractionLevelCount = 1;
+                stats.success = true;
+            }
+            else
+            {
+                Debug.Log("Connections error, check if everything is connected");
+                stats.success = false;
+            }
 
-            return true;
+            return stats;
         }
         else
         {
             Debug.Log("Folder Exist, choose different name");
-            return false;
+            stats.success = false;
+            return stats;
         }
     }
 
-    public bool SaveComponent(string name)
+    public Stats SaveComponent(string name)
     {
-        bool success = GenerateCircuit(name +"/", name);
+        Stats stats = GenerateCircuit(name +"/", name);
 
-        return success;
-
+        return stats;
     }
 }
+
+public class Stats
+{
+    public int transistorCount;
+    public int uniqueLogicGateCount;
+    public int totalLogicGateCount;
+    public int abstractionLevelCount;
+    public string netlistPath;
+    public string netlistName;
+    public bool success;
+} 

@@ -201,7 +201,7 @@ vector<string> ParseOutputNames(char** a, int length)
     return stringVector;
 }
 
-extern "C" __declspec(dllexport) void CreateCircuit(char* filePath, char* fileName, char** inputNames, int inputs, char** outputNames, int outputs, int compCount, char** ttIndices, int* arityArray, char** connectionArray,  int* invArray) {
+extern "C" __declspec(dllexport) int CreateCircuit(char* filePath, char* fileName, char** inputNames, int inputs, char** outputNames, int outputs, int compCount, char** ttIndices, int* arityArray, char** connectionArray,  int* invArray) {
 
     //STEP 1: assign parameters with some conversion due to c# to c++ (we can refactor this as some of the fucntions use the same code)
     connections = ParseConnectionIntoVectorStructure(connectionArray, compCount);
@@ -300,5 +300,7 @@ extern "C" __declspec(dllexport) void CreateCircuit(char* filePath, char* fileNa
 
     myfile << "\n\n.ends\n\n";
     myfile.close();
+
+    return inverterCount;
 }
 

@@ -13,7 +13,7 @@ public class LineManager : MonoBehaviour
     GameObject _tempLine;
     BtnInput _tempStartTerminal;
     public GameObject LinePrefab;
-    public static float OffsetX = 10;
+    public static float OffsetX = 16;
     int connectionId = 0; //this is increasing with every connection and never decreasing.
 
     public int GetNewConnectionId()

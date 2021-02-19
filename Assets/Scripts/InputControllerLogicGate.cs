@@ -221,7 +221,8 @@ public class InputControllerLogicGate : MonoBehaviour
                     //determine if logic gate or output 
                     if (c.connection.endTerminal.tag.Equals("Output"))
                     {
-                        c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixTarget, _output);
+                        var val = c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixTarget, _output);
+                        c.connection.endTerminal.GetComponentInChildren<LEDtoggle>().SetLedColor(val);
                     }
                     else
                     {
