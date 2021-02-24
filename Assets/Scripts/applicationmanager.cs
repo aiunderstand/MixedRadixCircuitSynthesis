@@ -54,16 +54,16 @@ public class applicationmanager : MonoBehaviour
             }
         }
 
-        //if(abstractionLevelChanged)
-        //{
-        //    //get all logic gates (we can optimize this by registering this call to a manager instead of searching for this every event)
-        //    var components =GameObject.FindGameObjectsWithTag("DnDComponent");
-        //    foreach (var c in components)
-        //    {
-        //        if (c.name.Contains("LogicGate"))
-        //            c.GetComponent<DragDrop>().SetAbstractionLevelTo(abstractionLevel);
-        //    }
+        if (abstractionLevelChanged)
+        {
+            ////get all logic gates (we can optimize this by registering this call to a manager instead of searching for this every event)
+            //var components = GameObject.FindGameObjectsWithTag("DnDComponent");
+            //foreach (var c in components)
+            //{
+            //    if (c.name.Contains("LogicGate"))
+            //        c.GetComponent<DragDrop>().SetAbstractionLevelTo(abstractionLevel);
+            //}
 
-        //}
+        }
     }
 }

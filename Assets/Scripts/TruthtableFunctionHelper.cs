@@ -91,7 +91,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
     }
 
     [DllImport("CircuitGenerator", EntryPoint = "CreateCircuit")]
-    public static extern int CreateCircuit(string filePath, string fileName, string[] inputNames, int inputs, string[] outputNames, int outputs, int compCount, string[] ttIndices, int[] arityArray, string[] connectionArray, int[] invArray);
+    public static extern int CreateCircuit(string filePath, string fileName, string[] inputNames, int inputs, string[] outputNames, int outputs, int compCount, string[] ttIndices, int[] arityArray, string[] connectionArray, int[] invArray, string[] positionArray);
 
     [DllImport("CircuitGenerator", EntryPoint = "GetOptimzedTT")]
     public static extern IntPtr GetOptimzedTT();

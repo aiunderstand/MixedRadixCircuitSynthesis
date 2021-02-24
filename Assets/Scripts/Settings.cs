@@ -9,7 +9,7 @@ public class Settings : MonoBehaviour
 {
     public static bool loadingDone = false;
     public static string settingsPath;
-    public static Hashtable savedComponents;
+    public static Hashtable savedComponents = new Hashtable();
 
     [HideInInspector]
     public SaveCircuit saveCircuit;
@@ -30,19 +30,16 @@ public class Settings : MonoBehaviour
         if (!FileExist)
         { 
             loadingDone = true;
-            savedComponents = new Hashtable();
         }
         else
         {
-            savedComponents = LoadSavedComponents();
+            LoadSavedComponents();
             loadingDone = true;
         }
     }
 
-    private Hashtable LoadSavedComponents()
+    private void LoadSavedComponents()
     {
-        Hashtable t = new Hashtable();
-
         string line;
         using (StreamReader reader = new StreamReader(settingsPath))
         {
@@ -81,14 +78,20 @@ public class Settings : MonoBehaviour
                     outputLabels.Add(parts[index++]);
                 }
 
+                Stats stats = new Stats();
+                stats.transistorCount = int.Parse(parts[index++]);
+                stats.totalLogicGateCount = int.Parse(parts[index++]);
+                stats.uniqueLogicGateCount = int.Parse(parts[index++]);
+                stats.abstractionLevelCount = int.Parse(parts[index++]);
+
+
                 SavedComponent component = new SavedComponent(inputs, inputLabels, outputs, outputLabels);
                 component.ComponentName = name;
                 component.ComponentNetlistPath = netlistPath;
-                t.Add(name, component);
+                component.Stats = stats;
                 saveCircuit.GenerateListItem(component);
+                savedComponents.Add(component.ComponentName, component);
             }
-
-            return t;
         }
     }
 
@@ -130,6 +133,12 @@ public class Settings : MonoBehaviour
                 line += (c.OutputLabels.Count + ";");
                 foreach (var i in c.OutputLabels)
                     line += i + ";";
+
+                //stats
+                line+= c.Stats.transistorCount + ";";
+                line += c.Stats.totalLogicGateCount + ";";
+                line += c.Stats.uniqueLogicGateCount + ";";
+                line += c.Stats.abstractionLevelCount + ";";
 
                 writer.WriteLine(line);
             }

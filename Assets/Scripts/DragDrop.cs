@@ -19,6 +19,7 @@ public class DragDrop : MonoBehaviour,
     public GameObject FullVersion; //view 1 
     public GameObject TextVersion; //view 2
     public GameObject SymbolVersion; //view 3
+    public Stats Stats;
     Color panelColorDefault;
     Color panelColorActive = new Color(255/255,82/255,45/255);
     public Image panelBg;

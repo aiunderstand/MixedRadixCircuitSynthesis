@@ -12,6 +12,7 @@ public class ComponentGenerator : MonoBehaviour
     public GameObject terminalOutputPrefab; //we can refactor and merge this with input to "terminal"
     public TextMeshProUGUI title;
     public RectTransform body;
+    public GameObject infoBtn;
     public int Size;
     Color _colorTernary = new Color(255, 0, 211); //we should define it in 1 place instead of 2, see btninput
     Color _colorBinary = new Color(0, 214, 255);//we should define it in 1 place instead of 2, see btninput
@@ -24,7 +25,12 @@ public class ComponentGenerator : MonoBehaviour
 
         body.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Size);
         title.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Size+10);
-       
+
+        if (level == AbstractionLevel.ComponentView)
+        {
+            infoBtn.transform.localPosition = new Vector3(0, Size / 2);
+        }
+
         for (int i = 0; i < inputs.Count ; i++)
         {
             var input = GameObject.Instantiate(terminalInputPrefab);

@@ -21,11 +21,6 @@ public class DeleteZone : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         EventParam eventParam = new EventParam();
         eventParam.IsDeleteDropZone = true;
 
-        //if (eventData.pointerClick != null)
-        //    eventParam.Id = eventData.pointerClick.GetComponentInChildren<InputControllerLogicGate>().GetInstanceID();
-        //else
-        //    eventParam.Id = eventData.lastPress.GetComponentInChildren<InputControllerLogicGate>().GetInstanceID();
-       
         EventManager.TriggerEvent("IsDeleteDropZone", eventParam);
     }
         
@@ -34,14 +29,9 @@ public class DeleteZone : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         //highlight panel
         panelColor.color = panelColorDefault;
 
-        //let drag control know this is a delete drop zone
         EventParam eventParam = new EventParam();
         eventParam.IsDeleteDropZone = false;
-        //if (eventData.pointerClick != null)
-        //    eventParam.Id = eventData.pointerClick.GetComponentInChildren<InputControllerLogicGate>().GetInstanceID();
-        //else
-        //    eventParam.Id = eventData.lastPress.GetComponentInChildren<InputControllerLogicGate>().GetInstanceID();
-
+      
         EventManager.TriggerEvent("IsDeleteDropZone", eventParam);
     }
 }

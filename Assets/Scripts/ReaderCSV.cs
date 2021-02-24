@@ -23,7 +23,6 @@ public static class ReaderCSV
         int limit = 1000;
         var lineCount = 0;
         string line;
-        string[] fields = null;
         int id =0;
         int n = 0;
         string testResult="";
@@ -126,7 +125,6 @@ public static class ReaderCSV
         {
             //we first need to find the correct input
             Test test = Tests[t];
-            GameObject inputGO;
             
             string status ="pass";
             for (int i = 0; i < test.N; i++)

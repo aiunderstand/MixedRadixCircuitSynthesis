@@ -13,7 +13,8 @@ public class LineManager : MonoBehaviour
     GameObject _tempLine;
     BtnInput _tempStartTerminal;
     public GameObject LinePrefab;
-    public static float OffsetX = 16;
+    public static float OffsetXY = 16;
+    public static float OffsetX = 50;
     int connectionId = 0; //this is increasing with every connection and never decreasing.
 
     public int GetNewConnectionId()
@@ -62,8 +63,17 @@ public class LineManager : MonoBehaviour
 
             var positionObject = _tempStartTerminal.transform.position;
             lr.SetPosition(0, positionObject);
-            lr.SetPosition(1, new Vector3(positionObject.x + OffsetX, positionObject.y, 0));
-            lr.SetPosition(2, new Vector3(positionObject.x + OffsetX, positionObject.y, 0));
+
+            if (_tempStartTerminal.isOutput)
+            {
+                lr.SetPosition(1, new Vector3(positionObject.x + OffsetXY, positionObject.y, 0));
+                lr.SetPosition(2, new Vector3(positionObject.x + OffsetXY, positionObject.y, 0));
+            }
+            else
+            {
+                lr.SetPosition(1, new Vector3(positionObject.x + OffsetX + OffsetXY, positionObject.y, 0));
+                lr.SetPosition(2, new Vector3(positionObject.x + OffsetX + OffsetXY, positionObject.y, 0));
+            }
         }
         else
         {
@@ -77,7 +87,7 @@ public class LineManager : MonoBehaviour
                         var lr = _tempLine.GetComponent<LineRenderer>();
                         lr.positionCount = 4;
                         var positionObject = eventParam.ConnectionData.ConnectionTerminal.transform.position;
-                        lr.SetPosition(2, new Vector3(positionObject.x - OffsetX, positionObject.y, 0));
+                        lr.SetPosition(2, new Vector3(positionObject.x - OffsetXY, positionObject.y, 0));
                         lr.SetPosition(3, new Vector3(positionObject.x, positionObject.y, 0));
                         lr.endColor = lr.startColor;
 

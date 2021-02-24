@@ -1,29 +1,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI.Extensions;
+using static BtnInput;
 
 public class CircuitGenerator : MonoBehaviour
 {
-    public void OnClick()
-    {
-        var stats = GenerateCircuit("Temp/", "circuit");
-
-        //show statistics
-        var sc = GameObject.FindObjectOfType<SaveCircuit>();
-        sc.StatisticsScreen.SetActive(true);
-        var ss = sc.StatisticsScreen.GetComponent<Statistics>();
-        ss.transistorCount.text = stats.transistorCount.ToString();
-        ss.uniqueLogicGateCount.text = stats.uniqueLogicGateCount.ToString();
-        ss.totalLogicGateCount.text = stats.totalLogicGateCount.ToString();
-        ss.abstractionLevelCount.text = stats.abstractionLevelCount.ToString();
-        ss.NetlistPath = Application.persistentDataPath + "/User/Generated/Temp/";
-        ss.NetlistName = "Circuit";
-    }
-
     private Stats GenerateCircuit(string filePath, string fileName)
     {
         int uid = 0;
@@ -34,7 +20,9 @@ public class CircuitGenerator : MonoBehaviour
         List<string> connectionArray = new List<string>();
         List<string> inputNames = new List<string>();
         List<string> outputNames = new List<string>();
-
+        List<string> positionArray = new List<string>();
+        List<string> inputRadix = new List<string>();
+        List<string> outputRadix = new List<string>();
         string path = Application.persistentDataPath + "/User/Generated/" + filePath;
 
         bool exists = System.IO.Directory.Exists(path);
@@ -79,7 +67,7 @@ public class CircuitGenerator : MonoBehaviour
 
                                 if (parts[5].Contains("Output"))
                                 {
-                                    outputCounter++;
+                                    outputCounter++;                                    
                                 }
                             }
 
@@ -91,6 +79,7 @@ public class CircuitGenerator : MonoBehaviour
                                 inputNames.Add(portLabel + "_" + uid); //refactor to only use inputLOT, build the tree and then convert the inputlot to input names
                                 inputLOT.Add(portIndex + "_" + id, portLabel + "_" + uid);
                                 uid++;
+                                inputRadix.Add(bi.DropdownLabel.text);
                             }
                         }
                     }
@@ -117,12 +106,13 @@ public class CircuitGenerator : MonoBehaviour
                             int portIndex = bi._portIndex;
                             string portLabel = b.GetComponentInChildren<TMP_InputField>().text;
                             outputLOT.Add(portIndex + "_" + id, portLabel);
+                            outputRadix.Add(bi.DropdownLabel.text);
                         }
                     }
                 }
             }
 
-            //PASS 3: logic gate generate TT netlist and LOT with semantic names 
+            //PASS 3a: logic gate generate TT netlist and LOT with semantic names 
             Hashtable logicgateLOT = new Hashtable();
             Hashtable logicgateIndicesLOT = new Hashtable();
             foreach (var c in components)
@@ -155,8 +145,46 @@ public class CircuitGenerator : MonoBehaviour
                         invArray.Add(tempInvArray[i]);
                     }
 
+                    //get positions
+                    Vector2 pos = c.GetComponentInParent<DragDrop>().gameObject.transform.position;
+                    positionArray.Add(pos.x.ToString());
+                    positionArray.Add(pos.y.ToString());
                 }
             }
+
+            //PASS 3b: saved gate dont generate TT netlist but do add to LOT with semantic names 
+            //foreach (var c in components)
+            //{
+            //    if (c.name.Contains("SavedLogicGate"))
+            //    {
+            //        compCount++;
+
+            //        //we should just create a c++ data structure and marshall this. Now it is important that we first call create netlist!
+                    
+            //        stats.transistorCount += TruthtableFunctionHelper.CreateNetlist(path, tt, arity); //from unoptimized tt
+            //        int[] optimizedTT = TruthtableFunctionHelper.GetOptimizedTT(arity);
+            //        string optimizedTTindex = TruthtableFunctionHelper.ConvertTTtoHeptEncoding(optimizedTT);
+            //        ttIndices.Add(optimizedTTindex);
+            //        logicgateIndicesLOT.Add(controller.GetInstanceID().ToString(), optimizedTTindex);
+            //        //controller.DropDownFunctionLabel.text = optimizedTTindex;
+
+            //        var functionDropDown = controller.GetComponentInChildren<AutoCompleteComboBox>();
+            //        functionDropDown._mainInput.text = optimizedTTindex;
+            //        //functionDropDown.ToggleDropdownPanel();
+
+            //        int[] tempInvArray = TruthtableFunctionHelper.GetAndConvertInvArrayFormat(arity);
+
+            //        for (int i = 0; i < 9; i++) //always 9
+            //        {
+            //            invArray.Add(tempInvArray[i]);
+            //        }
+
+            //        //get positions
+            //        Vector2 pos = c.GetComponentInParent<DragDrop>().gameObject.transform.position;
+            //        positionArray.Add(pos.x.ToString());
+            //        positionArray.Add(pos.y.ToString());
+            //    }
+            //}
 
             //PASS 4: connections with output (backwards pass with only nodes thats are connected to output)
             foreach (var c in components)
@@ -335,12 +363,58 @@ public class CircuitGenerator : MonoBehaviour
 
             if (!fail)
             {
-                var inverterCount = TruthtableFunctionHelper.CreateCircuit(path, fileName, inputNames.ToArray(), inputNames.Count, outputNames.ToArray(), outputNames.Count, compCount, ttIndices.ToArray(), arityArray.ToArray(), connectionArray.ToArray(), invArray.ToArray());
+                var inverterCount = TruthtableFunctionHelper.CreateCircuit(path, fileName, inputNames.ToArray(), inputNames.Count, outputNames.ToArray(), outputNames.Count, compCount, ttIndices.ToArray(), arityArray.ToArray(), connectionArray.ToArray(), invArray.ToArray(), positionArray.ToArray());
                 stats.transistorCount += inverterCount;
                 stats.totalLogicGateCount = ttIndices.Count;
                 stats.uniqueLogicGateCount = ttIndices.Distinct().Count();
                 stats.abstractionLevelCount = 1;
                 stats.success = true;
+
+                //add stats to main circuit file, we should refactor this to search in file for specific headers and replace content in them
+                string fPath = path + fileName + ".sp";
+                List<string> lines = new List<string>();
+                using (StreamReader reader = new StreamReader(fPath))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        lines.Add(line);
+                    }
+                }
+
+                using (StreamWriter writer = new StreamWriter(fPath, false))
+                {
+                    writer.WriteLine(lines[0]);
+                    writer.WriteLine("*** @tcount "  + stats.transistorCount.ToString());
+                    writer.WriteLine("*** @gcount " + stats.totalLogicGateCount.ToString());
+                    writer.WriteLine("*** @ugcount " + stats.uniqueLogicGateCount.ToString());
+                    writer.WriteLine("*** @abslvl " + stats.abstractionLevelCount.ToString());
+                    writer.WriteLine(lines[5]);
+                    writer.WriteLine(lines[6]);
+
+                    string inputR = "";
+                    for (int i = 0; i < inputRadix.Count; i++)
+                    {
+                        inputR += inputRadix[i] + " ";
+                    }
+                    writer.WriteLine("*** @inputs " + inputR.TrimEnd(' '));
+
+                    writer.WriteLine(lines[8]);
+                    
+                    string outputR = "";
+                    for (int i = 0; i < outputRadix.Count; i++)
+                    {
+                        outputR += outputRadix[i] + " ";
+                    }
+                    writer.WriteLine("*** @outputs " + outputR.TrimEnd(' '));
+                    
+                    writer.WriteLine(lines[10]);
+
+                    for (int i = 11; i < lines.Count; i++)
+                    {
+                        writer.WriteLine(lines[i]);
+                    }
+                }
             }
             else
             {

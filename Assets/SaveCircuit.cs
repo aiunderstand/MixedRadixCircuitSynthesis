@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using static BtnInput;
 using System;
 using UnityEngine.UI;
+using System.Linq;
 
 public class SaveCircuit : MonoBehaviour
 {
@@ -27,7 +28,9 @@ public class SaveCircuit : MonoBehaviour
     public GameObject DragDropArea;
     public GameObject deleteBtnPrefab;
     SavedComponent tempComponentStructure;
-    public GameObject StatisticsScreen;
+    public StatisticsUI StatisticsScreen;
+    public Toggle SaveAsLibraryComponent;
+
     
     [HideInInspector]
     public GameObject tempComponent;
@@ -41,36 +44,35 @@ public class SaveCircuit : MonoBehaviour
         if (fulfillsSaveConditions)
         {
             //filter symbols and spaces from name
-            var pattern = @"[^0-9a-zA-Z_]+";
+            var pattern = @"[^0-9a-zA-Z_-]+";
             var filteredName = Regex.Replace(Name.text, pattern, "");
-            Stats stats = cGen.SaveComponent(filteredName);
+            Stats stats = cGen.SaveComponent(filteredName); //generate netlist
 
             if (stats.success)
             {
-                tempComponent.transform.SetParent(ContentContainer.transform);
-                tempComponent.transform.localScale = new Vector3(MenuScale, MenuScale, MenuScale);
-                UpdateName(Name.text);
-                tempComponent.name = ";" + Name.text + ";" + tempComponent.gameObject.GetInstanceID();
+                if (SaveAsLibraryComponent.isOn)
+                {
+                  
+                    tempComponent.transform.SetParent(ContentContainer.transform);
+                    tempComponent.transform.localScale = new Vector3(MenuScale, MenuScale, MenuScale);
+                    UpdateName(Name.text);
+                    tempComponent.name = Name.text;
 
-                tempComponent.GetComponent<DragDrop>().FullVersion.SetActive(false);
-                tempComponent.GetComponent<DragDrop>().MenuVersion.SetActive(true);
-                tempComponent.GetComponent<DragDrop>().FullVersion.AddComponent<SavedComponentController>();
-
-                //save to settings file
-                tempComponentStructure.ComponentName = Name.text;
-                tempComponentStructure.ComponentNetlistPath = Application.persistentDataPath + "/User/Generated/" + filteredName + "/" + filteredName + ".sp";
-                Settings.Save(tempComponentStructure);
+                    tempComponent.GetComponent<DragDrop>().FullVersion.SetActive(false);
+                    tempComponent.GetComponent<DragDrop>().MenuVersion.SetActive(true);
+                    tempComponent.GetComponent<DragDrop>().FullVersion.AddComponent<SavedComponentController>();
+                    tempComponent.GetComponent<DragDrop>().Stats = stats;
+                    tempComponent.GetComponent<DragDrop>().FullVersion.GetComponent<ComponentGenerator>().infoBtn.SetActive(true);
+                    //save to settings file
+                    tempComponentStructure.Stats = stats;
+                    tempComponentStructure.ComponentName = Name.text;
+                    tempComponentStructure.ComponentNetlistPath = Application.persistentDataPath + "/User/Generated/" + filteredName + "/" + filteredName + ".sp";
+                    Settings.Save(tempComponentStructure);
+                }
 
                 //show statistics
-                StatisticsScreen.SetActive(true);
-                var ss = StatisticsScreen.GetComponent<Statistics>();
-                ss.transistorCount.text = stats.transistorCount.ToString();
-                ss.uniqueLogicGateCount.text = stats.uniqueLogicGateCount.ToString();
-                ss.totalLogicGateCount.text = stats.totalLogicGateCount.ToString();
-                ss.abstractionLevelCount.text = stats.abstractionLevelCount.ToString();
-                ss.NetlistPath = Application.persistentDataPath + "/User/Generated/" + filteredName + "/";
-                ss.NetlistName = Name.text;
-
+                StatisticsScreen.Show(stats);
+               
                 //clear canvas and input
                 tempComponent = null;
                 Name.text = "";
@@ -87,7 +89,8 @@ public class SaveCircuit : MonoBehaviour
         List<RadixOptions> outputs = new List<RadixOptions>();
         List<string> inputLabels = new List<string>();
         List<string> outputLabels = new List<string>();
-
+        Dictionary<int, float> inputOrder = new Dictionary<int, float>(); //needed for ordering the labels from low to high (using transform.position.y)
+        Dictionary<int, float> outputOrder = new Dictionary<int, float>();
         foreach (var c in components)
         {
             if (c.name.Contains("Input"))
@@ -95,13 +98,13 @@ public class SaveCircuit : MonoBehaviour
                 var inputControler = c.GetComponentInChildren<InputController>();
                 string id = inputControler.GetInstanceID().ToString();
 
-                foreach (var b in inputControler.Buttons)
+                for (int i = 0; i <inputControler.Buttons.Count ; i++)
                 {
-                    //double check if button is connected to something
-                    var bi = b.GetComponent<BtnInput>();
+                    var bi = inputControler.Buttons[i].GetComponent<BtnInput>();
 
                     if (bi.Connections.Count > 0)
                     {
+                        inputOrder.Add(inputs.Count, bi.transform.position.y);
                         RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), bi.DropdownLabel.text, true);
                         inputs.Add(radixSource);
                         inputLabels.Add(bi.transform.GetChild(3).GetComponent<TMP_InputField>().text);
@@ -114,13 +117,13 @@ public class SaveCircuit : MonoBehaviour
                 var inputControler = c.GetComponentInChildren<InputController>();
                 string id = inputControler.GetInstanceID().ToString();
 
-                foreach (var b in inputControler.Buttons)
+                for (int i = 0; i < inputControler.Buttons.Count; i++)
                 {
-                    //double check if button is connected to something
-                    var bi = b.GetComponent<BtnInput>();
+                    var bi = inputControler.Buttons[i].GetComponent<BtnInput>();
 
                     if (bi.Connections.Count > 0)
                     {
+                        outputOrder.Add(outputs.Count, bi.transform.position.y);
                         RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), bi.DropdownLabel.text, true);
                         outputs.Add(radixSource);
                         outputLabels.Add(bi.transform.GetComponentInChildren<TMP_InputField>().text);
@@ -128,6 +131,40 @@ public class SaveCircuit : MonoBehaviour
                 }
             }
         }
+
+
+        //reorder the labels
+        List<string> tempLabels = new List<string>();
+        List<RadixOptions> tempRadixSource = new List<RadixOptions>();
+
+        //sort inputOrder
+        var sorted = inputOrder.OrderBy(key => key.Value);
+
+        //assign tempLabels in correct order
+        foreach (var item in sorted)
+        {
+            tempLabels.Add(inputLabels[item.Key]);
+            tempRadixSource.Add(inputs[item.Key]);
+        }
+        
+        inputLabels = tempLabels;
+        inputs = tempRadixSource;
+
+        List<string> tempLabels1 = new List<string>();
+        List<RadixOptions> tempRadixSource1 = new List<RadixOptions>();
+
+        //do the same for outputLabels
+        sorted = outputOrder.OrderBy(key => key.Value);
+
+        //assign tempLabels in correct order
+        foreach (var item in sorted)
+        {
+            tempLabels1.Add(outputLabels[item.Key]);
+            tempRadixSource1.Add(outputs[item.Key]);
+        }
+        
+        outputLabels = tempLabels1;
+        outputs = tempRadixSource1;
 
         tempComponent = new GameObject();
         tempComponent.AddComponent<RectTransform>();
@@ -251,10 +288,14 @@ public class SaveCircuit : MonoBehaviour
 
         tempComponent.GetComponent<DragDrop>().FullVersion.SetActive(false);
         tempComponent.GetComponent<DragDrop>().MenuVersion.SetActive(true);
+        tempComponent.GetComponent<DragDrop>().Stats = c.Stats;
 
         //responsible for the name and interaction, needs to be last due to awake funtion
         tempComponent.GetComponent<DragDrop>().FullVersion.AddComponent<SavedComponentController>();
 
+
+        //generate the logic level circuit hierarchy
+        //GenerateLogicLevelVersion();
     }
 }
 
@@ -266,6 +307,9 @@ public class SavedComponent
     public List<string> OutputLabels;
     public string ComponentName;
     public string ComponentNetlistPath;
+    public Stats Stats;
+
+    public SavedComponent() { }
 
     public SavedComponent(List<RadixOptions> inputs, List<string> inputLabels, List<RadixOptions> outputs, List<string> outputLabels)
     {
