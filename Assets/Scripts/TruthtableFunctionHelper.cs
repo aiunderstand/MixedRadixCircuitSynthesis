@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.UI.Extensions;
 using ExtensionMethods;
 using static BtnInput;
+using System.Collections.Specialized;
 
 //see this presentation about marshalling data from c++ to C# and inverse
 //https://www.slideshare.net/unity3d/adding-love-to-an-api-or-how-to-expose-c-in-unity
@@ -91,7 +92,27 @@ public class TruthtableFunctionHelper : MonoBehaviour
     }
 
     [DllImport("CircuitGenerator", EntryPoint = "CreateCircuit")]
-    public static extern int CreateCircuit(string filePath, string fileName, string[] inputNames, int inputs, string[] outputNames, int outputs, int compCount, string[] ttIndices, int[] arityArray, string[] connectionArray, int[] invArray, string[] positionArray);
+    public static extern int CreateCircuit(
+        string filePath, 
+        string fileName,
+        int inputs,
+        string[] inputNames,
+        int outputs,
+        string[] outputNames, 
+        int ttIndicesCount, 
+        string[] ttIndices,
+        int arityCount,
+        int[] arityArray,
+        int connectionCount,
+        string[] connectionArray,
+        int invCount,
+        int[] invArray, 
+        int positionCount,
+        string[] positionArray, 
+        int savedCircuitCount, 
+        string[] savedCircuitNamesArray,
+        int connectionIndexCount,
+        int[] connectionIndexArray);
 
     [DllImport("CircuitGenerator", EntryPoint = "GetOptimzedTT")]
     public static extern IntPtr GetOptimzedTT();
@@ -885,7 +906,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
         //Each hepcode in this function must contain exactly 3 symbols. If an hepcode has eg 9 symbols (arity 3) it needs to be parsed before called.
         //each symbol has 3 ternary values, representing 3 tt cell values.
         //In this function we want to convert from 3 ternary values to a digit by concating them and converting to base 10 (decimal)
-        Hashtable heptiventimalAlphabet = new Hashtable();
+        OrderedDictionary heptiventimalAlphabet = new OrderedDictionary();
         heptiventimalAlphabet.Add("0", "000");
         heptiventimalAlphabet.Add("1", "001");
         heptiventimalAlphabet.Add("2", "002");
@@ -937,7 +958,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
     public static string ConvertTTtoHeptEncoding(int[] tt)
     {
-        Hashtable heptiventimalAlphabet = new Hashtable();
+        OrderedDictionary heptiventimalAlphabet = new OrderedDictionary();
         heptiventimalAlphabet.Add("000", "0");
         heptiventimalAlphabet.Add("001", "1");
         heptiventimalAlphabet.Add("002", "2");

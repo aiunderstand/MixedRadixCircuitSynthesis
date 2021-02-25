@@ -73,12 +73,14 @@ vector<int> arity = { 2,2,2,2,2 };
 vector<string> parsedInputNames;
 vector<string> parsedOutputNames;
 vector<string> parsedPositions;
+vector<string> savedCircuitNames;
+vector<int> connectionIndices;
 
 ///////////////////////////////// DATA
 vector<Subcircuit> netlists;
 
-void enterData() {
-    for (int i = 0; i < connections.size(); i++) {
+void enterData(int compCount) {
+    for (int i = 0; i < compCount; i++) {
 
         netlists[i].setIndex(index[i]);
         netlists[i].setArity(arity[i]);
@@ -95,8 +97,8 @@ void enterData() {
 }
 
 
-void printData() {
-    for (int i = 0; i < connections.size(); i++) {
+void printData(int compCount) {
+    for (int i = 0; i < compCount; i++) {
 
 
         cout << "\nobject nr " << i << endl;
@@ -123,9 +125,9 @@ vector<vector<string>> ParseConnectionIntoVectorStructure(char** a, int rows)
         vector<string> tempVector;
 
         //create a row of vectors, with fixed length 4 (due to arity 3, arity 2 will not use third spot)
-        for (size_t j = 0; j < 4; j++)
+        for (size_t j = 0; j < connectionIndices[i]; j++)
         {
-            tempVector.push_back(a[i*4 + j]);
+            tempVector.push_back(a[i* connectionIndices[i] + j]);
         }
 
         connVector.push_back(tempVector);
@@ -178,28 +180,51 @@ vector<string> ParseCharArrayIntoStringVector(char** a, int length)
     return v;
 }
 
-extern "C" __declspec(dllexport) int CreateCircuit(char* filePath, char* fileName, char** inputNames, int inputs, char** outputNames, int outputs, int compCount, char** ttIndices, int* arityArray, char** connectionArray,  int* invArray, char** positionArray) {
+extern "C" __declspec(dllexport) int CreateCircuit(
+    char* filePath, 
+    char* fileName, 
+    int inputs,
+    char** inputNames, 
+    int outputs,
+    char** outputNames, 
+    int ttIndicesCount, 
+    char** ttIndices,
+    int arityCount,
+    int* arityArray,
+    int connecionCount,
+    char** connectionArray,
+    int invCount,
+    int* invArray,
+    int positionCount,
+    char** positionArray,
+    int savedCircuitCount, 
+    char** savedCircuitNamesArray,
+    int connectionIndexCount,
+    int* connectionIndexArray) {
 
     //STEP 1: assign parameters with some conversion due to c# to c++ (we can refactor this as some of the fucntions use the same code)
-    connections = ParseConnectionIntoVectorStructure(connectionArray, compCount);
-    inv = ParseInverterIntoBoolStructure(invArray, compCount);
-    index = ParseCharArrayIntoStringVector(ttIndices, compCount);
-    arity = ParseIntArrayIntoIntVector(arityArray, compCount);
+    connectionIndices = ParseIntArrayIntoIntVector(connectionIndexArray, connectionIndexCount);
+    connections = ParseConnectionIntoVectorStructure(connectionArray, connectionIndexCount);
+    inv = ParseInverterIntoBoolStructure(invArray, ttIndicesCount);
+    index = ParseCharArrayIntoStringVector(ttIndices, ttIndicesCount);
+    arity = ParseIntArrayIntoIntVector(arityArray, ttIndicesCount);
     parsedInputNames = ParseCharArrayIntoStringVector(inputNames, inputs);
     parsedOutputNames = ParseCharArrayIntoStringVector(outputNames, outputs);
-    parsedPositions = ParseCharArrayIntoStringVector(positionArray, compCount*2); //2 coordinates -- x,y -- per component
-
+    parsedPositions = ParseCharArrayIntoStringVector(positionArray, positionCount); //2 coordinates -- x,y -- per component
+    savedCircuitNames = ParseCharArrayIntoStringVector(savedCircuitNamesArray, savedCircuitCount);
+   
     //STEP 2: INIT
     IO input;
     input.setNr(inputs);
     IO output;
     output.setNr(outputs);
 
+  
     netlists.clear();
-    netlists.resize(connections.size());
+    netlists.resize(ttIndicesCount);
         
-    enterData();
-    //printData();
+    enterData(ttIndicesCount);
+    //printData(ttIndicesCount);
 
     //STEP 3: generate file
     ofstream myfile;
@@ -231,7 +256,7 @@ extern "C" __declspec(dllexport) int CreateCircuit(char* filePath, char* fileNam
     }
     myfile << "*** @outputlbl " + outputlbls << endl;
 
-    myfile << ".subckt " << fileName;
+    myfile << "\n.subckt " << fileName;
     for (int i = 0; i < input.getNr(); i++) {
         myfile << " " << parsedInputNames[i];
     }
@@ -251,6 +276,15 @@ extern "C" __declspec(dllexport) int CreateCircuit(char* filePath, char* fileNam
         }
 
     }
+
+    for (int i = 0; i < savedCircuitCount; i++) {
+        if (find(includedIndex.begin(), includedIndex.end(), savedCircuitNames[i]) == includedIndex.end()) {
+
+            myfile << ".include \"subckt " << savedCircuitNames[i] << ".sp\"" << endl;
+            includedIndex.push_back(savedCircuitNames[i]);
+        }
+    }
+
     myfile << ".include \"nti.sp\" \n.include \"pti.sp\"\n\n";
 
     vector<string> usedInverters;
@@ -260,7 +294,18 @@ extern "C" __declspec(dllexport) int CreateCircuit(char* filePath, char* fileNam
         myfile << "*** @f " + netlists[i].getIndex() << endl;
         myfile << "*** @arity " + to_string(netlists[i].getArity()) << endl;
         myfile << "*** @pos2d " + parsedPositions[i * 2] + " " + parsedPositions[(i * 2) + 1] << endl;
-        myfile << "*** @conn " + connections[i][0] + " " + connections[i][1] + " " + connections[i][2] + " " + connections[i][3] << endl;
+        string  connString = "";
+        for (size_t a = 0; a < 4; a++)
+        {
+            if (connections[i][a] != "")
+            {
+                connString += connections[i][a];
+
+                if (a < 3)
+                    connString += " ";
+            }
+        }
+        myfile << "*** @conn " + connString << endl;
 
         for (int j = 0; j < (netlists[i].getArity() * 3); j++) {
             if (netlists[i].getInverter(j)) {
@@ -303,6 +348,31 @@ extern "C" __declspec(dllexport) int CreateCircuit(char* filePath, char* fileNam
         }
 
         myfile << connections[i][3] << " vdd " << "f_" << netlists[i].getIndex() << "\n\n";
+
+    }
+
+    int j = netlists.size();
+    for (int i = 0; i < savedCircuitCount; i++) {
+
+        myfile << "*** @s " + savedCircuitNames[i] << endl;
+        myfile << "*** @pos2d " + parsedPositions[(j + i) * 2] + " " + parsedPositions[((j + i) * 2) + 1] << endl;
+        string  connString ="";
+        for (size_t a = 0; a < connections[j+i].size(); a++)
+        {
+            connString += connections[j+i][a];
+                    
+            if (a < (connections[j + i].size() -1))
+                connString += " ";
+        }
+        myfile << "*** @conn " + connString << endl;
+
+        myfile << "\nxckt" << j+i << " ";
+
+        for (int a = 0; a < connections[j + i].size(); a++) {
+                myfile << connections[j+i][a] << " ";
+        }
+
+        myfile << "vdd " << savedCircuitNames[i] << "\n\n";
 
     }
 

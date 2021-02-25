@@ -9,6 +9,6 @@ public class SavedComponentController : MonoBehaviour
 {
     private void Awake()
     {
-        GetComponentInParent<DragDrop>().name = ";SavedComponent;" + GetInstanceID().ToString();        
+        GetComponentInParent<DragDrop>().name = ";SavedGate;" + GetInstanceID().ToString();        
     }
 }

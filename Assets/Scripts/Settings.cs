@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using UnityEngine;
 using static BtnInput;
@@ -9,7 +10,7 @@ public class Settings : MonoBehaviour
 {
     public static bool loadingDone = false;
     public static string settingsPath;
-    public static Hashtable savedComponents = new Hashtable();
+    public static OrderedDictionary savedComponents = new OrderedDictionary();
 
     [HideInInspector]
     public SaveCircuit saveCircuit;
