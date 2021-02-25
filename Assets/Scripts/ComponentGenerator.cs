@@ -13,7 +13,7 @@ public class ComponentGenerator : MonoBehaviour
     public TextMeshProUGUI title;
     public RectTransform body;
     public GameObject infoBtn;
-    public int Size;
+    public int Size; //actually height 
     Color _colorTernary = new Color(255, 0, 211); //we should define it in 1 place instead of 2, see btninput
     Color _colorBinary = new Color(0, 214, 255);//we should define it in 1 place instead of 2, see btninput
     public void Generate(string name, List<RadixOptions> inputs, List<string> inputLabels, List<RadixOptions> outputs, List<string> outputLabels, AbstractionLevel level)

@@ -30,8 +30,8 @@ public class SaveCircuit : MonoBehaviour
     SavedComponent tempComponentStructure;
     public StatisticsUI StatisticsScreen;
     public Toggle SaveAsLibraryComponent;
+    public Color SelectionColor = Color.black;
 
-    
     [HideInInspector]
     public GameObject tempComponent;
     private void Awake()
@@ -65,7 +65,7 @@ public class SaveCircuit : MonoBehaviour
                     //save to settings file
                     tempComponentStructure.Stats = stats;
                     tempComponentStructure.ComponentName = Name.text;
-                    tempComponentStructure.ComponentNetlistPath = Application.persistentDataPath + "/User/Generated/" + filteredName + "/" + filteredName + ".sp";
+                    tempComponentStructure.ComponentNetlistPath = Application.persistentDataPath + "/User/Generated/" + filteredName + "/" + "c_" + filteredName + ".sp";
                     tempComponent.GetComponent<DragDrop>().FullVersion.GetComponent<SavedComponentController>().savedComponent = tempComponentStructure;
 
                     Settings.Save(tempComponentStructure);
@@ -187,15 +187,27 @@ public class SaveCircuit : MonoBehaviour
         componentView.transform.SetParent(tempComponent.transform);
         componentView.transform.localPosition = new Vector3(0, 0);
         componentView.transform.localScale = new Vector3(1, 1);
-       
+
+        GameObject selectionBox = GameObject.Instantiate(componentView.GetComponent<ComponentGenerator>().body.gameObject);
+        selectionBox.transform.SetParent(tempComponent.transform);
+        selectionBox.transform.localPosition = new Vector3(0, 0);
+        selectionBox.transform.localScale = new Vector3(1, 1);
+        selectionBox.transform.SetAsFirstSibling();
+        selectionBox.GetComponent<Image>().color = SelectionColor;
+        selectionBox.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 156); //6 pixels wider then body
+        selectionBox.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, menuView.GetComponent<ComponentGenerator>().Size + 6); //6 pixels heigher then body
+        selectionBox.SetActive(false);
+     
         float size = menuView.GetComponent<ComponentGenerator>().Size * MenuScale;
         tempComponent.AddComponent<LayoutElement>().minHeight = (size +5); //offset between menu items
         var dd = tempComponent.AddComponent<DragDrop>();
         dd.DragDropArea = DragDropArea;
         dd.FullVersion = componentView;
         dd.MenuVersion = menuView;
+        dd.SelectionBox = selectionBox;
         dd.panelBg = componentView.transform.GetChild(0).GetComponent<Image>(); //first child is body. Hardcoded so not ideal
 
+     
         if (inputs.Count == 0 || outputs.Count == 0)
             fulfillsSaveConditions = false;
         else
@@ -212,6 +224,8 @@ public class SaveCircuit : MonoBehaviour
         tempComponent.GetComponent<DragDrop>().MenuVersion.SetActive(false);
         //create a temp saved component;
         tempComponentStructure = new SavedComponent(inputs, inputLabels, outputs, outputLabels);
+
+        
     }
 
     public void UpdateName(string componentName)
@@ -260,13 +274,25 @@ public class SaveCircuit : MonoBehaviour
         componentView.transform.SetParent(tempComponent.transform);
         componentView.transform.localPosition = new Vector3(0, 0);
         componentView.transform.localScale = new Vector3(1, 1);
-       
+
+        GameObject selectionBox = GameObject.Instantiate(componentView.GetComponent<ComponentGenerator>().body.gameObject);
+        selectionBox.transform.SetParent(tempComponent.transform);
+        selectionBox.transform.localPosition = new Vector3(0, 0);
+        selectionBox.transform.localScale = new Vector3(1, 1);
+        selectionBox.transform.SetAsFirstSibling();
+        selectionBox.GetComponent<Image>().color = SelectionColor;
+        selectionBox.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 156); //6 pixels wider then body
+        selectionBox.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, menuView.GetComponent<ComponentGenerator>().Size + 6); //6 pixels heigher then body
+        selectionBox.SetActive(false);
+     
         float size = menuView.GetComponent<ComponentGenerator>().Size * MenuScale;
         tempComponent.AddComponent<LayoutElement>().minHeight = (size + 5); //offset between menu items
         var dd = tempComponent.AddComponent<DragDrop>();
         dd.DragDropArea = DragDropArea;
         dd.FullVersion = componentView;
         dd.MenuVersion = menuView;
+        dd.SelectionBox = selectionBox;
+        
         dd.panelBg = componentView.transform.GetChild(0).GetComponent<Image>(); //first child is body. Hardcoded so not ideal
 
         UpdateName(c.ComponentName);
@@ -294,8 +320,6 @@ public class SaveCircuit : MonoBehaviour
         tempComponent.GetComponent<DragDrop>().FullVersion.AddComponent<SavedComponentController>();
         tempComponent.GetComponent<DragDrop>().FullVersion.GetComponent<SavedComponentController>().savedComponent = c;
 
-        //generate the logic level circuit hierarchy
-        //GenerateLogicLevelVersion();
     }
 }
 

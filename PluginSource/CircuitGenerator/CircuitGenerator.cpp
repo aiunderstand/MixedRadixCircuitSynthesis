@@ -280,7 +280,7 @@ extern "C" __declspec(dllexport) int CreateCircuit(
     for (int i = 0; i < savedCircuitCount; i++) {
         if (find(includedIndex.begin(), includedIndex.end(), savedCircuitNames[i]) == includedIndex.end()) {
 
-            myfile << ".include \"subckt " << savedCircuitNames[i] << ".sp\"" << endl;
+            myfile << ".include \"" << savedCircuitNames[i] << ".sp\"" << endl;
             includedIndex.push_back(savedCircuitNames[i]);
         }
     }

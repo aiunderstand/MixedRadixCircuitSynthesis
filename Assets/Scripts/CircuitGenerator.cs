@@ -187,7 +187,7 @@ public class CircuitGenerator : MonoBehaviour
                     if (controller.savedComponent.Stats.abstractionLevelCount > stats.abstractionLevelCount)
                         stats.abstractionLevelCount = controller.savedComponent.Stats.abstractionLevelCount;
 
-                    savedCircuitNames.Add(controller.savedComponent.ComponentName);
+                    savedCircuitNames.Add("c_" + controller.savedComponent.ComponentName);
                     logicgateIndicesLOT.Add(controller.GetInstanceID().ToString(), controller.savedComponent.ComponentName);
 
                     //get positions
@@ -661,7 +661,7 @@ public class CircuitGenerator : MonoBehaviour
 
     public Stats SaveComponent(string name)
     {
-        Stats stats = GenerateCircuit(name +"/", name);
+        Stats stats = GenerateCircuit(name +"/", "c_" + name);
 
         return stats;
     }

@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System;
+
 public class applicationmanager : MonoBehaviour
 {
     public bool useBigEndianForLogicGates = true;
@@ -14,6 +16,23 @@ public class applicationmanager : MonoBehaviour
     {
         var m = GameObject.FindObjectOfType<applicationmanager>();
         return m.useBigEndianForLogicGates;
+    }
+
+    public static void UpdateSelectedComponent(GameObject newSelecteComponent)
+    {
+        if (curSelectedComponent == newSelecteComponent) //deselect
+        {
+            curSelectedComponent.GetComponent<DragDrop>().DeSelect();
+            curSelectedComponent = null;
+        }
+        else
+        {
+            if (curSelectedComponent != null)
+                curSelectedComponent.GetComponent<DragDrop>().DeSelect();
+            
+            curSelectedComponent = newSelecteComponent;
+            curSelectedComponent.GetComponent<DragDrop>().Select();
+        }
     }
 
     public static void ClearCanvas()

@@ -15,6 +15,7 @@ public class DragDrop : MonoBehaviour,
     Vector2 _limits = Vector2.zero;
     bool _isDeleteDropZone = false;
     Action<EventParam> _DeleteDropZoneListener;
+    public GameObject SelectionBox;
     public GameObject MenuVersion; //view 0
     public GameObject FullVersion; //view 1 
     public GameObject TextVersion; //view 2
@@ -131,6 +132,16 @@ public class DragDrop : MonoBehaviour,
         }
     }
 
+    public void Select()
+    {
+        SelectionBox.SetActive(true);
+    }
+
+    public void DeSelect()
+    {
+        SelectionBox.SetActive(false );
+    }
+
     public IEnumerator LoadSave ()
     {
         yield return WaitFor.Frames(1); // wait for 1 frames since various components need to init. Otherwise race condition
@@ -183,6 +194,12 @@ public class DragDrop : MonoBehaviour,
         if (!_isFullVersion)
         {
             _isFullVersion = true;
+
+            //if it is a saved component add selection behavior
+            if (this.FullVersion.GetComponent<ComponentGenerator>() != null)
+            {
+                this.gameObject.AddComponent<SelectionBehavior>();
+            }
         }
 
         if (IsDeleteDropZone(transform.position))
