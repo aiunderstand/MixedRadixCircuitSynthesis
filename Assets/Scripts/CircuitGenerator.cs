@@ -36,7 +36,7 @@ public class CircuitGenerator : MonoBehaviour
         stats.totalLogicGateCount = 0;
         stats.uniqueLogicGateCount = 0;
         stats.netlistName = "";
-        if (!exists || filePath.Equals("Temp/"))
+        if (!exists)
         {
             System.IO.Directory.CreateDirectory(path);
 
@@ -182,14 +182,34 @@ public class CircuitGenerator : MonoBehaviour
                 {
                     var controller = c.GetComponentInChildren<SavedComponentController>();
 
-                    //stats = ReadStatsFromCircuit.sp(stats); //updat transcount, abstrlvl, (u)gatecount 
-                    savedCircuitNames.Add("TFA");
-                    logicgateIndicesLOT.Add(controller.GetInstanceID().ToString(), "TFA");
+                    stats.transistorCount += controller.savedComponent.Stats.transistorCount;
+                    stats.totalLogicGateCount += controller.savedComponent.Stats.totalLogicGateCount;
+                    if (controller.savedComponent.Stats.abstractionLevelCount > stats.abstractionLevelCount)
+                        stats.abstractionLevelCount = controller.savedComponent.Stats.abstractionLevelCount;
+
+                    savedCircuitNames.Add(controller.savedComponent.ComponentName);
+                    logicgateIndicesLOT.Add(controller.GetInstanceID().ToString(), controller.savedComponent.ComponentName);
 
                     //get positions
                     Vector2 pos = c.GetComponentInParent<DragDrop>().gameObject.transform.position;
                     positionArray.Add(pos.x.ToString());
                     positionArray.Add(pos.y.ToString());
+
+                    //move all .sp files to path, remove/overwrite existing f_* files
+                    var fpath = Path.GetDirectoryName(controller.savedComponent.ComponentNetlistPath);
+                    var files = System.IO.Directory.GetFiles(fpath, "*.sp", SearchOption.TopDirectoryOnly);
+                    for (int i = 0; i < files.Length; i++)
+                    {
+                        var filenameWithExtension = new DirectoryInfo(System.IO.Path.GetFileName(files[i]));
+                        var targetFilePath = path + filenameWithExtension;
+                        //first, delete target file if exists, as File.Move() does not support overwrite
+                        if (File.Exists(targetFilePath))
+                        {
+                            File.Delete(targetFilePath);
+                        }
+
+                        System.IO.File.Copy(files[i], targetFilePath);
+                    }
                 }
             }
 
@@ -437,8 +457,8 @@ public class CircuitGenerator : MonoBehaviour
                 if (c.name.Contains("SavedGate"))
                 {
                     var controller = c.GetComponentInChildren<SavedComponentController>();
-                    int indexIn = 3; //controller.IndexIn;
-                    int indexOut = 2; // controller.IndexOut;
+                    int indexIn = controller.savedComponent.Inputs.Count;
+                    int indexOut = controller.savedComponent.Outputs.Count;
 
                     string[] tempConnArray = new string[indexIn+indexOut];
 
@@ -569,10 +589,12 @@ public class CircuitGenerator : MonoBehaviour
                     connectionIndexArray.Count, 
                     connectionIndexArray.ToArray());
 
+
                 stats.transistorCount += inverterCount;
-                stats.totalLogicGateCount = ttIndices.Count;
-                stats.uniqueLogicGateCount = ttIndices.Distinct().Count();
-                stats.abstractionLevelCount = 1;
+                stats.totalLogicGateCount += ttIndices.Count; //from logic gates, the saved gates are already stored
+                var files = System.IO.Directory.GetFiles(path, "f_*", SearchOption.TopDirectoryOnly);
+                stats.uniqueLogicGateCount = files.Length ; //count the total f_ files in the directory
+                stats.abstractionLevelCount += 1;
                 stats.success = true;
 
                 //add stats to main circuit file, we should refactor this to search in file for specific headers and replace content in them

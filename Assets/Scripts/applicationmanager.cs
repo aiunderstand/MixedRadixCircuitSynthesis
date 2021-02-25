@@ -5,9 +5,10 @@ using TMPro;
 public class applicationmanager : MonoBehaviour
 {
     public bool useBigEndianForLogicGates = true;
-    public static int abstractionLevel = 1;
-    int minLevel = 1;
-    int maxLevel = 3;
+    public static int abstractionLevel = 0;
+    int minLevel = 0;
+    int maxLevel = 0;
+    public static GameObject curSelectedComponent;
 
     public static bool UseBigEndianForLogicGates()
     {

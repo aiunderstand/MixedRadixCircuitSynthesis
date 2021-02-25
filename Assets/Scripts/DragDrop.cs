@@ -75,7 +75,14 @@ public class DragDrop : MonoBehaviour,
             go.transform.SetParent(this.transform.parent, false);
             go.name = this.name; //isnt this overwritten?
             go.transform.SetSiblingIndex(this.transform.GetSiblingIndex());
+            go.GetComponent<DragDrop>().Stats = this.Stats;
 
+            //enable info button and copy properties on saved components
+            if (this.FullVersion.GetComponent<ComponentGenerator>() != null)
+            {
+                this.FullVersion.GetComponent<ComponentGenerator>().infoBtn.SetActive(true);
+                go.GetComponent<DragDrop>().FullVersion.GetComponent<SavedComponentController>().savedComponent = this.FullVersion.GetComponent<SavedComponentController>().savedComponent;
+            }
             //update current drag drop component 
             this.transform.SetParent(DragDropArea.transform);
             this.transform.tag = "DnDComponent";

@@ -62,11 +62,12 @@ public class SaveCircuit : MonoBehaviour
                     tempComponent.GetComponent<DragDrop>().MenuVersion.SetActive(true);
                     tempComponent.GetComponent<DragDrop>().FullVersion.AddComponent<SavedComponentController>();
                     tempComponent.GetComponent<DragDrop>().Stats = stats;
-                    tempComponent.GetComponent<DragDrop>().FullVersion.GetComponent<ComponentGenerator>().infoBtn.SetActive(true);
                     //save to settings file
                     tempComponentStructure.Stats = stats;
                     tempComponentStructure.ComponentName = Name.text;
                     tempComponentStructure.ComponentNetlistPath = Application.persistentDataPath + "/User/Generated/" + filteredName + "/" + filteredName + ".sp";
+                    tempComponent.GetComponent<DragDrop>().FullVersion.GetComponent<SavedComponentController>().savedComponent = tempComponentStructure;
+
                     Settings.Save(tempComponentStructure);
                 }
 
@@ -209,7 +210,6 @@ public class SaveCircuit : MonoBehaviour
         deleteBtn.transform.localScale = new Vector3(1, 1);
 
         tempComponent.GetComponent<DragDrop>().MenuVersion.SetActive(false);
-
         //create a temp saved component;
         tempComponentStructure = new SavedComponent(inputs, inputLabels, outputs, outputLabels);
     }
@@ -292,7 +292,7 @@ public class SaveCircuit : MonoBehaviour
 
         //responsible for the name and interaction, needs to be last due to awake funtion
         tempComponent.GetComponent<DragDrop>().FullVersion.AddComponent<SavedComponentController>();
-
+        tempComponent.GetComponent<DragDrop>().FullVersion.GetComponent<SavedComponentController>().savedComponent = c;
 
         //generate the logic level circuit hierarchy
         //GenerateLogicLevelVersion();

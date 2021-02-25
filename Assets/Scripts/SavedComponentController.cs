@@ -7,6 +7,7 @@ using UnityEngine.UI;
 
 public class SavedComponentController : MonoBehaviour
 {
+    public SavedComponent savedComponent;
     private void Awake()
     {
         GetComponentInParent<DragDrop>().name = ";SavedGate;" + GetInstanceID().ToString();        
