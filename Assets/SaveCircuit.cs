@@ -7,15 +7,18 @@ using static BtnInput;
 using System;
 using UnityEngine.UI;
 using System.Linq;
+using static SaveCircuit;
 
 public class SaveCircuit : MonoBehaviour
 {
-    public enum AbstractionLevel
+    public enum Views
         {
             MenuView = -1,
             LogicGateView = 0,
             ComponentView = 1
         }
+
+   
 
     CircuitGenerator cGen;
     public TMP_InputField Name;
@@ -52,21 +55,16 @@ public class SaveCircuit : MonoBehaviour
             {
                 if (SaveAsLibraryComponent.isOn)
                 {
-                  
-                    tempComponent.transform.SetParent(ContentContainer.transform);
-                    tempComponent.transform.localScale = new Vector3(MenuScale, MenuScale, MenuScale);
-                    UpdateName(Name.text);
-                    tempComponent.name = Name.text;
-
-                    tempComponent.GetComponent<DragDrop>().FullVersion.SetActive(false);
-                    tempComponent.GetComponent<DragDrop>().MenuVersion.SetActive(true);
-                    tempComponent.GetComponent<DragDrop>().FullVersion.AddComponent<SavedComponentController>();
-                    tempComponent.GetComponent<DragDrop>().Stats = stats;
+                    //we need to regenerate the component because it has children now
                     //save to settings file
                     tempComponentStructure.Stats = stats;
                     tempComponentStructure.ComponentName = Name.text;
                     tempComponentStructure.ComponentNetlistPath = Application.persistentDataPath + "/User/Generated/" + filteredName + "/" + "c_" + filteredName + ".sp";
-                    tempComponent.GetComponent<DragDrop>().FullVersion.GetComponent<SavedComponentController>().savedComponent = tempComponentStructure;
+                  
+                    var go = GenerateListItem(tempComponentStructure, ContentContainer.transform, false);
+                    go.GetComponent<DragDrop>().MenuVersion.SetActive(true);
+                    go.GetComponent<DragDrop>().FullVersion.SetActive(false);
+                    go.name = Name.text;
 
                     Settings.Save(tempComponentStructure);
                 }
@@ -74,16 +72,25 @@ public class SaveCircuit : MonoBehaviour
                 //show statistics
                 StatisticsScreen.Show(stats);
                
-                //clear canvas and input
-                tempComponent = null;
+                //clear canvas, we clear the preview with a call in the unity btn handler
+                applicationmanager.ClearCanvas();
                 Name.text = "";
-                applicationmanager.ClearCanvas();               
             }
         }
+       
+    }
+
+
+    public void DestroyPreview()
+    {
+        Destroy(tempComponent);
+        tempComponent = null;        
+        applicationmanager.scrollEnabled = true;
     }
 
     public void GeneratePreview()
     {
+        applicationmanager.scrollEnabled = false;
         var components = GameObject.FindGameObjectsWithTag("DnDComponent");
 
         List<RadixOptions> inputs = new List<RadixOptions>();
@@ -167,73 +174,23 @@ public class SaveCircuit : MonoBehaviour
         outputLabels = tempLabels1;
         outputs = tempRadixSource1;
 
-        tempComponent = new GameObject();
-        tempComponent.AddComponent<RectTransform>();
-        tempComponent.name = "SavedLogicGate";
-        tempComponent.transform.SetParent(SaveCanvas.transform);
-        tempComponent.transform.localScale = new Vector3(1, 1, 1);
-        tempComponent.transform.localPosition = new Vector3(0, 120);
-        
-        GameObject menuView = GameObject.Instantiate(previewPrefab);
-        menuView.name = AbstractionLevel.MenuView.ToString();
-        menuView.GetComponent<ComponentGenerator>().Generate("", inputs, inputLabels, outputs, outputLabels, AbstractionLevel.MenuView);
-        menuView.transform.SetParent(tempComponent.transform);
-        menuView.transform.localPosition = new Vector3(0, 0);
-        menuView.transform.localScale = new Vector3(1, 1);
+        //create a temp saved component for preview/save screen
+        tempComponentStructure = new SavedComponent(inputs, inputLabels, outputs, outputLabels);
+        tempComponentStructure.Stats = new Stats();
+        tempComponent = GenerateListItem(tempComponentStructure, SaveCanvas.transform, false);
+        tempComponent.GetComponent<DragDrop>().FullVersion.SetActive(true);
+        tempComponent.GetComponent<DragDrop>().FullVersion.GetComponent<ComponentGenerator>().infoBtn.SetActive(false);
 
-        GameObject componentView = GameObject.Instantiate(previewPrefab);
-        componentView.name = AbstractionLevel.ComponentView.ToString();
-        componentView.GetComponent<ComponentGenerator>().Generate("", inputs, inputLabels, outputs, outputLabels, AbstractionLevel.ComponentView);
-        componentView.transform.SetParent(tempComponent.transform);
-        componentView.transform.localPosition = new Vector3(0, 0);
-        componentView.transform.localScale = new Vector3(1, 1);
-
-        GameObject selectionBox = GameObject.Instantiate(componentView.GetComponent<ComponentGenerator>().body.gameObject);
-        selectionBox.transform.SetParent(tempComponent.transform);
-        selectionBox.transform.localPosition = new Vector3(0, 0);
-        selectionBox.transform.localScale = new Vector3(1, 1);
-        selectionBox.transform.SetAsFirstSibling();
-        selectionBox.GetComponent<Image>().color = SelectionColor;
-        selectionBox.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 156); //6 pixels wider then body
-        selectionBox.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, menuView.GetComponent<ComponentGenerator>().Size + 6); //6 pixels heigher then body
-        selectionBox.SetActive(false);
-     
-        float size = menuView.GetComponent<ComponentGenerator>().Size * MenuScale;
-        tempComponent.AddComponent<LayoutElement>().minHeight = (size +5); //offset between menu items
-        var dd = tempComponent.AddComponent<DragDrop>();
-        dd.DragDropArea = DragDropArea;
-        dd.FullVersion = componentView;
-        dd.MenuVersion = menuView;
-        dd.SelectionBox = selectionBox;
-        dd.panelBg = componentView.transform.GetChild(0).GetComponent<Image>(); //first child is body. Hardcoded so not ideal
-
-     
         if (inputs.Count == 0 || outputs.Count == 0)
             fulfillsSaveConditions = false;
         else
             fulfillsSaveConditions = true;
-
-        UpdateName(Name.text);
-
-        //add a delete btn
-        GameObject deleteBtn = GameObject.Instantiate(deleteBtnPrefab);
-        deleteBtn.transform.SetParent(menuView.transform);
-        deleteBtn.transform.localPosition = new Vector3(-83.7f, 0);
-        deleteBtn.transform.localScale = new Vector3(1, 1);
-
-        tempComponent.GetComponent<DragDrop>().MenuVersion.SetActive(false);
-        //create a temp saved component;
-        tempComponentStructure = new SavedComponent(inputs, inputLabels, outputs, outputLabels);
-
-        
     }
 
-    public void UpdateName(string componentName)
+    public void UpdateName(string componentName) //event triggered by input text box from save screen
     {
          if (tempComponent != null)
         {
-            tempComponent.GetComponent<DragDrop>().MenuVersion.SetActive(true);
-
             var cgs = tempComponent.GetComponentsInChildren<ComponentGenerator>();
             foreach (var item in cgs)
             {
@@ -241,9 +198,7 @@ public class SaveCircuit : MonoBehaviour
             }
 
             tempComponent.name = componentName;
-            tempComponent.GetComponent<DragDrop>().MenuVersion.SetActive(false);
         }
-
     }
 
     public void DeletePreview()
@@ -252,33 +207,35 @@ public class SaveCircuit : MonoBehaviour
         tempComponent = null;
     }
 
-    public void GenerateListItem(SavedComponent c)
+    //this is aweful.This method does the same thing as preview only slightly different.We need to make time to do serious refactoring here
+    public GameObject GenerateListItem(SavedComponent c, Transform parent, bool isDropped)
     {
-        tempComponent = new GameObject();
-        tempComponent.AddComponent<RectTransform>();
-        tempComponent.name = "SavedLogicGate";
-        tempComponent.transform.SetParent(SaveCanvas.transform);
-        tempComponent.transform.localScale = new Vector3(1, 1, 1);
-        tempComponent.transform.localPosition = new Vector3(0, 120);
+        var ListItemObject = new GameObject();
+        ListItemObject.AddComponent<RectTransform>();
+        ListItemObject.transform.SetParent(parent);
+        ListItemObject.transform.localScale = new Vector3(1, 1, 1);
+        ListItemObject.transform.localPosition = new Vector3(0, 120);
+        var dd = ListItemObject.AddComponent<DragDrop>();
 
         GameObject menuView = GameObject.Instantiate(previewPrefab);
-        menuView.name = AbstractionLevel.MenuView.ToString();
-        menuView.GetComponent<ComponentGenerator>().Generate("", c.Inputs, c.InputLabels, c.Outputs, c.OutputLabels, AbstractionLevel.MenuView);
-        menuView.transform.SetParent(tempComponent.transform);
+        menuView.name = Views.MenuView.ToString();
+        menuView.GetComponent<ComponentGenerator>().Generate(c, Views.MenuView);
+        menuView.transform.SetParent(ListItemObject.transform);
         menuView.transform.localPosition = new Vector3(0, 0);
-        menuView.transform.localScale = new Vector3(1, 1);
+        menuView.transform.localScale = new Vector3(MenuScale, MenuScale);
 
         GameObject componentView = GameObject.Instantiate(previewPrefab);
-        componentView.name = AbstractionLevel.ComponentView.ToString();
-        componentView.GetComponent<ComponentGenerator>().Generate("", c.Inputs, c.InputLabels, c.Outputs, c.OutputLabels, AbstractionLevel.ComponentView);
-        componentView.transform.SetParent(tempComponent.transform);
+        componentView.transform.SetParent(ListItemObject.transform);
+        componentView.name = "Level: " + c.Stats.abstractionLevelCount;
+        componentView.GetComponent<ComponentGenerator>().Generate(c, Views.ComponentView);
         componentView.transform.localPosition = new Vector3(0, 0);
-        componentView.transform.localScale = new Vector3(1, 1);
+        componentView.transform.localScale = new Vector3(FullScale, FullScale);
+        componentView.SetActive(false);
 
         GameObject selectionBox = GameObject.Instantiate(componentView.GetComponent<ComponentGenerator>().body.gameObject);
-        selectionBox.transform.SetParent(tempComponent.transform);
+        selectionBox.transform.SetParent(componentView.transform);
         selectionBox.transform.localPosition = new Vector3(0, 0);
-        selectionBox.transform.localScale = new Vector3(1, 1);
+        selectionBox.transform.localScale = new Vector3(FullScale, FullScale);
         selectionBox.transform.SetAsFirstSibling();
         selectionBox.GetComponent<Image>().color = SelectionColor;
         selectionBox.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 156); //6 pixels wider then body
@@ -286,16 +243,18 @@ public class SaveCircuit : MonoBehaviour
         selectionBox.SetActive(false);
      
         float size = menuView.GetComponent<ComponentGenerator>().Size * MenuScale;
-        tempComponent.AddComponent<LayoutElement>().minHeight = (size + 5); //offset between menu items
-        var dd = tempComponent.AddComponent<DragDrop>();
+        ListItemObject.AddComponent<LayoutElement>().minHeight = (size + 5); //offset between menu items
+       
         dd.DragDropArea = DragDropArea;
         dd.FullVersion = componentView;
         dd.MenuVersion = menuView;
         dd.SelectionBox = selectionBox;
         
-        dd.panelBg = componentView.transform.GetChild(0).GetComponent<Image>(); //first child is body. Hardcoded so not ideal
+        dd.panelBg = componentView.GetComponent<ComponentGenerator>().body.gameObject.GetComponent<Image>(); //first child is body. Hardcoded so not ideal
 
-        UpdateName(c.ComponentName);
+        dd.MenuVersion.GetComponent<ComponentGenerator>().title.text = c.ComponentName;
+        dd.FullVersion.GetComponent<ComponentGenerator>().title.text = c.ComponentName;
+        menuView.SetActive(false);
 
         //add a delete btn
         GameObject deleteBtn = GameObject.Instantiate(deleteBtnPrefab);
@@ -303,24 +262,21 @@ public class SaveCircuit : MonoBehaviour
         deleteBtn.transform.localPosition = new Vector3(-83.7f, 0);
         deleteBtn.transform.localScale = new Vector3(1, 1);
 
-        tempComponent.GetComponent<DragDrop>().MenuVersion.SetActive(false);
-
-        //create a temp saved component;
-        tempComponentStructure = c;
-
-        tempComponent.transform.SetParent(ContentContainer.transform);
-        tempComponent.transform.localScale = new Vector3(MenuScale, MenuScale, MenuScale);
-        //tempComponent.name = c.ComponentName;
-
-        tempComponent.GetComponent<DragDrop>().FullVersion.SetActive(false);
-        tempComponent.GetComponent<DragDrop>().MenuVersion.SetActive(true);
-        tempComponent.GetComponent<DragDrop>().Stats = c.Stats;
-
         //responsible for the name and interaction, needs to be last due to awake funtion
-        tempComponent.GetComponent<DragDrop>().FullVersion.AddComponent<SavedComponentController>();
-        tempComponent.GetComponent<DragDrop>().FullVersion.GetComponent<SavedComponentController>().savedComponent = c;
+        ListItemObject.GetComponent<DragDrop>().Stats = c.Stats;
+        ListItemObject.GetComponent<DragDrop>().FullVersion.AddComponent<SavedComponentController>();
+        ListItemObject.GetComponent<DragDrop>().FullVersion.GetComponent<SavedComponentController>().savedComponent = c;
 
+        if (isDropped)
+        {
+            ListItemObject.GetComponent<DragDrop>().SetVersion(true); //mimic it being already dropped
+            ListItemObject.AddComponent<SelectionBehavior>();
+        }
+        return ListItemObject;
     }
+
+  
+
 }
 
 public class SavedComponent

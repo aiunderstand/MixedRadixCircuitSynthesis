@@ -90,7 +90,10 @@ public class Settings : MonoBehaviour
                 component.ComponentName = name;
                 component.ComponentNetlistPath = netlistPath;
                 component.Stats = stats;
-                saveCircuit.GenerateListItem(component);
+                var go = saveCircuit.GenerateListItem(component, saveCircuit.ContentContainer.transform, false);
+                go.GetComponent<DragDrop>().MenuVersion.SetActive(true);
+                go.GetComponent<DragDrop>().FullVersion.SetActive(false);
+                go.name = name;
                 savedComponents.Add(component.ComponentName, component);
             }
         }
@@ -99,7 +102,10 @@ public class Settings : MonoBehaviour
     public static void Save(SavedComponent component)
     {
         //add to discitonary
-        savedComponents.Add(component.ComponentName, component);
+        if (savedComponents.Contains(component.ComponentName))
+            savedComponents[component.ComponentName] = component;
+        else
+            savedComponents.Add(component.ComponentName, component);
 
         SaveToDisk();
     }

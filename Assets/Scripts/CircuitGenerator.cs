@@ -36,8 +36,13 @@ public class CircuitGenerator : MonoBehaviour
         stats.totalLogicGateCount = 0;
         stats.uniqueLogicGateCount = 0;
         stats.netlistName = "";
-        if (!exists)
+        if (exists)
         {
+            //remove 
+            System.IO.Directory.Delete(path, true);
+            Debug.Log("Overwritten folder!");
+        }
+
             System.IO.Directory.CreateDirectory(path);
 
             //get all connections and truth tables
@@ -81,8 +86,9 @@ public class CircuitGenerator : MonoBehaviour
                                
                                 int portIndex = bi._portIndex;
                                 string portLabel = b.GetComponentInChildren<TMP_InputField>().text;
-                                inputNames.Add(portLabel + "_" + uid); //refactor to only use inputLOT, build the tree and then convert the inputlot to input names
-                                inputLOT.Add(portIndex + "_" + id, portLabel + "_" + uid);
+                                string inputValidatedName = "i_" + portLabel + "_" + uid;
+                                inputNames.Add(inputValidatedName); //refactor to only use inputLOT, build the tree and then convert the inputlot to input names
+                                inputLOT.Add(portIndex + "_" + id, inputValidatedName);
                                 uid++;
                                 inputRadix.Add(bi.DropdownLabel.text);
                             }
@@ -130,7 +136,8 @@ public class CircuitGenerator : MonoBehaviour
 
                             int portIndex = bi._portIndex;
                             string portLabel = b.GetComponentInChildren<TMP_InputField>().text;
-                            outputLOT.Add(portIndex + "_" + id, portLabel);
+                            string inputValidatedName = "o_" + portLabel;
+                            outputLOT.Add(portIndex + "_" + id, inputValidatedName);
                             outputRadix.Add(bi.DropdownLabel.text);
                         }
                     }
@@ -169,7 +176,7 @@ public class CircuitGenerator : MonoBehaviour
                     }
 
                     //get positions
-                    Vector2 pos = c.GetComponentInParent<DragDrop>().gameObject.transform.position;
+                    Vector2 pos = c.GetComponentInParent<DragDrop>().gameObject.transform.localPosition;
                     positionArray.Add(pos.x.ToString());
                     positionArray.Add(pos.y.ToString());
                 }
@@ -188,10 +195,10 @@ public class CircuitGenerator : MonoBehaviour
                         stats.abstractionLevelCount = controller.savedComponent.Stats.abstractionLevelCount;
 
                     savedCircuitNames.Add("c_" + controller.savedComponent.ComponentName);
-                    logicgateIndicesLOT.Add(controller.GetInstanceID().ToString(), controller.savedComponent.ComponentName);
+                    logicgateIndicesLOT.Add(controller.GetInstanceID().ToString(), "f_" + controller.savedComponent.ComponentName);
 
                     //get positions
-                    Vector2 pos = c.GetComponentInParent<DragDrop>().gameObject.transform.position;
+                    Vector2 pos = c.GetComponentInParent<DragDrop>().gameObject.transform.localPosition;
                     positionArray.Add(pos.x.ToString());
                     positionArray.Add(pos.y.ToString());
 
@@ -650,13 +657,7 @@ public class CircuitGenerator : MonoBehaviour
             }
 
             return stats;
-        }
-        else
-        {
-            Debug.Log("Folder Exist, choose different name");
-            stats.success = false;
-            return stats;
-        }
+            
     }
 
     public Stats SaveComponent(string name)

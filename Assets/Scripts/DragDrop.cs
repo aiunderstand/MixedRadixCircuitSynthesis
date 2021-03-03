@@ -18,9 +18,9 @@ public class DragDrop : MonoBehaviour,
     public GameObject SelectionBox;
     public GameObject MenuVersion; //view 0
     public GameObject FullVersion; //view 1 
-    public GameObject TextVersion; //view 2
-    public GameObject SymbolVersion; //view 3
+    public GameObject LowerAbstractionVersion; //view 2     
     public Stats Stats;
+    public Vector3 storedPosition;
     Color panelColorDefault;
     Color panelColorActive = new Color(255/255,82/255,45/255);
     public Image panelBg;
@@ -34,6 +34,20 @@ public class DragDrop : MonoBehaviour,
        
 
     }
+
+    public void SetVersion(bool state)
+    {
+        _isFullVersion = state;
+
+        //break principle of 1 task per method, refactor
+        if (state == true)
+        {
+            panelColorDefault = panelBg.color;
+            this.transform.tag = "DnDComponent";
+            this.FullVersion.GetComponent<ComponentGenerator>().infoBtn.SetActive(true);
+        }
+    }
+
 
     void OnEnable()
     {
@@ -61,16 +75,15 @@ public class DragDrop : MonoBehaviour,
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        _limits = DragDropArea.transform.GetComponent<RectTransform>().rect.max;
+
         if (_isFullVersion)
         {
             _dragOffset = eventData.position - (Vector2)transform.position;
-            _limits = transform.parent.GetComponent<RectTransform>().rect.max;
         }
         else
         {
             _dragOffset = eventData.position - (Vector2)transform.position;
-            _limits = transform.parent.GetComponent<RectTransform>().rect.max;
-
             //instantiate new one for menu
             var go = GameObject.Instantiate(this.gameObject);
             go.transform.SetParent(this.transform.parent, false);
@@ -78,11 +91,17 @@ public class DragDrop : MonoBehaviour,
             go.transform.SetSiblingIndex(this.transform.GetSiblingIndex());
             go.GetComponent<DragDrop>().Stats = this.Stats;
 
+           
             //enable info button and copy properties on saved components
             if (this.FullVersion.GetComponent<ComponentGenerator>() != null)
             {
                 this.FullVersion.GetComponent<ComponentGenerator>().infoBtn.SetActive(true);
                 go.GetComponent<DragDrop>().FullVersion.GetComponent<SavedComponentController>().savedComponent = this.FullVersion.GetComponent<SavedComponentController>().savedComponent;
+
+                //Unity bug where it will auto default to wrong anchor position when part of layout group (sets it to top left). Probably due to some awake script. Set it to center here.
+                this.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
+                this.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.5f);
+                this.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
             }
             //update current drag drop component 
             this.transform.SetParent(DragDropArea.transform);
@@ -93,7 +112,6 @@ public class DragDrop : MonoBehaviour,
             MenuVersion.SetActive(false);
             FullVersion.SetActive(true);
             panelColorDefault = panelBg.color;
-            _limits = transform.parent.GetComponent<RectTransform>().rect.max;
 
             //increase size if a saved component (detected by having a layout element)
             if (this.GetComponent<LayoutElement>())
@@ -103,32 +121,10 @@ public class DragDrop : MonoBehaviour,
 
 
             //check if saved state
-            if (GetComponent<DragDropSaved>() != null)
-            {
-                StartCoroutine("LoadSave");
-            }
-        }
-    }
-
-    public void SetAbstractionLevelTo(int abstractionLevel)
-    {
-        
-        MenuVersion.SetActive(false);
-        FullVersion.SetActive(false);
-        TextVersion.SetActive(false);
-        SymbolVersion.SetActive(false);
-
-        switch (abstractionLevel)
-        {
-            case 0:
-                MenuVersion.SetActive(true);
-                break;
-            case 1: FullVersion.SetActive(true);
-                break;
-            case 2: TextVersion.SetActive(true);
-                break;
-            case 3: SymbolVersion.SetActive(true);
-                break;
+            //if (GetComponent<DragDropSaved>() != null)
+            //{
+            //    StartCoroutine("LoadSave");
+            //}
         }
     }
 
@@ -200,6 +196,8 @@ public class DragDrop : MonoBehaviour,
             {
                 this.gameObject.AddComponent<SelectionBehavior>();
             }
+
+            applicationmanager.ActiveCanvasElementStack[applicationmanager.abstractionLevel].Add(gameObject);
         }
 
         if (IsDeleteDropZone(transform.position))
@@ -224,6 +222,9 @@ public class DragDrop : MonoBehaviour,
                 }
             }
 
+            //deselect if applicable
+            applicationmanager.DeleteCascade(gameObject);
+            
             Destroy(gameObject);
         }
         else

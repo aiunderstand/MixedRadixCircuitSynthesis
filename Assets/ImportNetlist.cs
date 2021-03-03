@@ -12,7 +12,7 @@ using static BtnInput;
 using System;
 
 [RequireComponent(typeof(Button))]
-public class LoadNetlists : MonoBehaviour, IPointerDownHandler
+public class ImportNetlist : MonoBehaviour, IPointerDownHandler
 {
   #if UNITY_WEBGL && !UNITY_EDITOR
     //
@@ -81,7 +81,7 @@ public class LoadNetlists : MonoBehaviour, IPointerDownHandler
             var circuitName = new DirectoryInfo(System.IO.Path.GetDirectoryName(directories[i]+"/")).Name;
 
             string unzipPath = Application.persistentDataPath + "/User/Unzipped/" + circuitName;
-            string mainNetlistPath = unzipPath + "/" + circuitName + ".sp";
+            string mainNetlistPath = unzipPath + "/" + "c_" + circuitName + ".sp";
 
             //ADD preview
             List<string> netlistAttributes = new List<string>();
@@ -95,30 +95,26 @@ public class LoadNetlists : MonoBehaviour, IPointerDownHandler
                 }
             }
 
-            SavedComponent c;
-            Stats s;
-            List<LogicGate> lgs;
-            ParseIntoSavedComponent(netlistAttributes, out c, out s, out lgs);
-            c.ComponentName = circuitName;
-            c.ComponentNetlistPath = mainNetlistPath;
-            c.Stats = s;
-
-            GameObject.FindObjectOfType<SaveCircuit>().GenerateListItem(c);
-
             //move folder to generated
             string generatedPath = Application.persistentDataPath + "/User/Generated/" + circuitName;
             Directory.Move(directories[i], generatedPath);
 
+            SavedComponent c = ParseIntoSavedComponent(netlistAttributes);
+            c.ComponentName = circuitName;
+            c.ComponentNetlistPath = generatedPath;
+            var sc = GameObject.FindObjectOfType<SaveCircuit>();
+            var go = sc.GenerateListItem(c, sc.ContentContainer.transform, false);
+            go.GetComponent<DragDrop>().MenuVersion.SetActive(true);
+            go.GetComponent<DragDrop>().FullVersion.SetActive(false);
+            go.name = circuitName;
             Settings.Save(c);
         }
     }
 
-    private void ParseIntoSavedComponent(List<string> netlistAttributes, out SavedComponent sc, out Stats s, out List<LogicGate> lgs)
+    public static SavedComponent ParseIntoSavedComponent(List<string> netlistAttributes)
     {
-        sc = new SavedComponent();
-        s = new Stats();
-        lgs = new List<LogicGate>();
-
+        SavedComponent sc = new SavedComponent();
+        sc.Stats = new Stats();
         sc.Inputs = new List<BtnInput.RadixOptions>();
         sc.InputLabels = new List<string>();
         sc.Outputs = new List<BtnInput.RadixOptions>();
@@ -131,22 +127,22 @@ public class LoadNetlists : MonoBehaviour, IPointerDownHandler
             {
                 case "@tcount":
                     {
-                        s.transistorCount = int.Parse(parts[2]);
+                        sc.Stats.transistorCount = int.Parse(parts[2]);
                     }
                     break;
                 case "@gcount":
                     {
-                        s.totalLogicGateCount = int.Parse(parts[2]);
+                        sc.Stats.totalLogicGateCount = int.Parse(parts[2]);
                     }
                     break;
                 case "@ugcount":
                     {
-                        s.uniqueLogicGateCount = int.Parse(parts[2]);
+                        sc.Stats.uniqueLogicGateCount = int.Parse(parts[2]);
                     }
                     break;
                 case "@abslvl":
                     {
-                        s.abstractionLevelCount = int.Parse(parts[2]);
+                        sc.Stats.abstractionLevelCount = int.Parse(parts[2]);
                     }
                     break;
                 case "@inputs":
@@ -185,26 +181,9 @@ public class LoadNetlists : MonoBehaviour, IPointerDownHandler
                         }
                     }
                     break;
-                case "@f":
-                    {
-                        LogicGate l = new LogicGate();
-                        l.FunctionIndex = parts[2]; //function
-                        i++;
-                        parts = netlistAttributes[i].Split(' ');
-                        l.Arity = int.Parse(parts[2]); //arity
-                        i++;
-                        parts = netlistAttributes[i].Split(' '); 
-                        l.Position2d = new Vector2(float.Parse(parts[2]), float.Parse(parts[3])); //pos2d
-                        i++;
-                        parts = netlistAttributes[i].Split(' ');
-                        l.Connections = new List<string>();
-                        for (int j = 2; j < 6; j++)
-                        {
-                            l.Connections.Add(parts[j]); //connections
-                        }
-                    }
-                    break;
             }
         }
+
+        return sc;
     }
 }
