@@ -13,7 +13,7 @@ public class InputControllerLogicGate : MonoBehaviour
     public Color panelColorDefault;
     public Color panelColorActive;
     
-    //internal values
+    //internal values used for state stabilisation (if the output does not change do not propagate)
     int portA = 0;
     int portB = 0;
     int portC = 0;
@@ -221,7 +221,7 @@ public class InputControllerLogicGate : MonoBehaviour
                     //determine if logic gate or output 
                     if (c.connection.endTerminal.tag.Equals("Output"))
                     {
-                        var val = c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixTarget, _output);
+                        var val = c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixTarget, _output, false);
                         c.connection.endTerminal.GetComponentInChildren<LEDtoggle>().SetLedColor(val);
                     }
                     else

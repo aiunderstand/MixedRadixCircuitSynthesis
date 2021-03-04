@@ -145,7 +145,7 @@ public static class ReaderCSV
 
 
                         //set input to value
-                        iGO.GetComponent<BtnInput>().SetValueWithPropagation(radix, test.Input.IoValues[i]);
+                        iGO.GetComponent<BtnInput>().SetValue(radix, test.Input.IoValues[i], true);
                     }
                 }
 

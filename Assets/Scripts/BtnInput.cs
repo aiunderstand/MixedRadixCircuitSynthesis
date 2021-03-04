@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ExtensionMethods;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -40,8 +41,9 @@ public class BtnInput : MonoBehaviour
     TMP_Dropdown _Dropdown;
     public bool isOutput = false; //duplicate because we also set this in lineController, refactor
     public List<LineFunctions> Connections; 
-    //refactors as Logic gate doesnt have any onclick events, only used for its references to value.
 
+    //refactors as Logic gate doesnt have any onclick events, only used for its references to value.
+    
     public enum RadixOptions { 
         BalancedTernary,
         UnbalancedTernary,
@@ -59,7 +61,7 @@ public class BtnInput : MonoBehaviour
             //Add listener for when the value of the Dropdown changes, to take action
             _Dropdown.onValueChanged.AddListener(delegate
             {
-                DropdownValueChanged(_Dropdown);
+                DropdownValueChanged(_Dropdown);   
             });
         }
     }
@@ -79,7 +81,7 @@ public class BtnInput : MonoBehaviour
                     {
                         c.Redraw(_colorTernary, true);
                     }
-                }
+                }                
             }
             else
             {
@@ -93,10 +95,28 @@ public class BtnInput : MonoBehaviour
                         c.Redraw(_colorBinary, true);
                     }
                 }
-            }
-            
+            }            
         }
-     }
+
+        if (tag.Equals("Output"))
+        {
+            //have a look at connection (there can be max 1 connection to it
+            if (Connections.Count > 0)
+            {
+                var start = Connections[0].connection.startTerminal;
+                RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), Connections[0].connection.startTerminal.DropdownLabel.text, true);                
+                SetValue(radixSource, start._value, false);
+            }
+            else
+            {
+                SetValue(RadixOptions.Binary, 0, false); //set everything to zero, radix source is irrelevant
+            }
+        }
+        else
+        {
+            Reset();
+        }
+    }
 
     private void OnEnable()
     {
@@ -215,10 +235,16 @@ public class BtnInput : MonoBehaviour
         label.text = _value.ToString();
     }
 
+    public void Reset()
+    {
+        SetValue(RadixOptions.Binary, 0, true); //set everything to zero, radix source is irrelevant
+    }
     public void OnClick(int amount)
     {
       
         RadixOptions radixSource = (RadixOptions) Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
+
+        //this function is not a conversion, but rather updates the value allowing cyclic behavior
         switch (radixSource)
         {
             case  RadixOptions.BalancedTernary:
@@ -254,6 +280,7 @@ public class BtnInput : MonoBehaviour
                     _minValue = 0;
                     _maxValue = 1;
 
+                    //no need to look at amount, just toggle
                     if (_value == 0)
                         _value = 1;
                     else
@@ -279,7 +306,7 @@ public class BtnInput : MonoBehaviour
                 //determine if logic gate or output 
                 if (c.connection.endTerminal.tag.Equals("Output"))
                 {
-                    var val = c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixSource, _value);
+                    var val = c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixSource, _value,false);
                     c.connection.endTerminal.GetComponentInChildren<LEDtoggle>().SetLedColor(val);
                 }
                 else
@@ -290,228 +317,43 @@ public class BtnInput : MonoBehaviour
         }
     } 
 
-    public int SetValue(RadixOptions radixSource, int value)
+    //horrible api: set, transform and then get in one
+    public int SetValue(RadixOptions radixSource, int value, bool withPropagation)
     {
         RadixOptions radixTarget = (RadixOptions)Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
-       
-        switch (radixSource)
-        {
-            case RadixOptions.Binary:
-                {
-                    switch (radixTarget)
-                    {
-                        case RadixOptions.Binary:
-                            {
-                                //no conversation needed
-                                _value = value;
-                            }
-                            break;
-                        case RadixOptions.UnbalancedTernary:
-                            {
-                                //convert binary 1 to unbalanced 2
-                                if (value == 1)
-                                    _value = 2;
-                                else
-                                    _value = value;
-                            }
-                            break;
-                        case RadixOptions.BalancedTernary:
-                            {
-                                //convert binary 0 to balanced -1
-                                if (value == 0)
-                                    _value = -1;
-                                else
-                                    _value = value;
-                            }
-                            break;
-                    }
-                }
-                break;
-            case RadixOptions.UnbalancedTernary:
-                {
-                    switch (radixTarget)
-                    {
-                        case RadixOptions.Binary:
-                            {
-                                //convert unbalanced 2 to binary 1
-                                if (value == 2)
-                                    _value = 1;
-                                else
-                                    _value = value;
-                            }
-                            break;
-                        case RadixOptions.UnbalancedTernary:
-                            {
-                                //do nothing
-                                _value = value;
-                            }
-                            break;
-                        case RadixOptions.BalancedTernary:
-                            {
-                                //shift everything with -1
-                                _value = value -1;
-                            }
-                            break;
-                    }
-                }
-                break;
-            case RadixOptions.BalancedTernary:
-                {
-                    switch (radixTarget)
-                    {
-                        case RadixOptions.Binary:
-                            {
-                                //convert balanced -1 to binary 0
-                                if (value == -1)
-                                    _value = 0;
-                                else
-                                    _value = value;
-                            }
-                            break;
-                        case RadixOptions.UnbalancedTernary:
-                            {
-                                //convert balanced -1 to unbalanced by shifting +1;
-                                _value = value+1;
-                            }
-                            break;
-                        case RadixOptions.BalancedTernary:
-                            {
-                                //do nothing
-                                _value = value;
-                            }
-                            break;
-                    }
-                }
-                break;
-        }
+
+        _value = RadixHelper.ConvertRadixFromTo(radixSource, radixTarget, value);
 
         label.text = _value.ToString();
 
         //report back to counter to recount, which is the parent of this object;
         var ic = gameObject.GetComponentInParent<InputController>();
-        ic.ComputeCounter();
-
-        return _value;
-    }
-
-    public void SetValueWithPropagation(RadixOptions radixSource, int value)
-    {
-        RadixOptions radixTarget = (RadixOptions)Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
-
-        switch (radixSource)
+        if (ic != null)
         {
-            case RadixOptions.Binary:
-                {
-                    switch (radixTarget)
-                    {
-                        case RadixOptions.Binary:
-                            {
-                                //no conversation needed
-                                _value = value;
-                            }
-                            break;
-                        case RadixOptions.UnbalancedTernary:
-                            {
-                                //convert binary 1 to unbalanced 2
-                                if (value == 1)
-                                    _value = 2;
-                                else
-                                    _value = value;
-                            }
-                            break;
-                        case RadixOptions.BalancedTernary:
-                            {
-                                //convert binary 0 to balanced -1
-                                if (value == 0)
-                                    _value = -1;
-                                else
-                                    _value = value;
-                            }
-                            break;
-                    }
-                }
-                break;
-            case RadixOptions.UnbalancedTernary:
-                {
-                    switch (radixTarget)
-                    {
-                        case RadixOptions.Binary:
-                            {
-                                //convert unbalanced 2 to binary 1
-                                if (value == 2)
-                                    _value = 1;
-                                else
-                                    _value = value;
-                            }
-                            break;
-                        case RadixOptions.UnbalancedTernary:
-                            {
-                                //do nothing
-                                _value = value;
-                            }
-                            break;
-                        case RadixOptions.BalancedTernary:
-                            {
-                                //shift everything with -1
-                                _value = value - 1;
-                            }
-                            break;
-                    }
-                }
-                break;
-            case RadixOptions.BalancedTernary:
-                {
-                    switch (radixTarget)
-                    {
-                        case RadixOptions.Binary:
-                            {
-                                //convert balanced -1 to binary 0
-                                if (value == -1)
-                                    _value = 0;
-                                else
-                                    _value = value;
-                            }
-                            break;
-                        case RadixOptions.UnbalancedTernary:
-                            {
-                                //convert balanced -1 to unbalanced by shifting +1;
-                                _value = value + 1;
-                            }
-                            break;
-                        case RadixOptions.BalancedTernary:
-                            {
-                                //do nothing
-                                _value = value;
-                            }
-                            break;
-                    }
-                }
-                break;
-        }
+            ic.ComputeCounter();
 
-        label.text = _value.ToString();
-
-        //report back to counter to recount, which is the parent of this object;
-        var ic = gameObject.GetComponentInParent<InputController>();
-        ic.ComputeCounter();
-
-        //update connect
-        //go over connections and update next component, this code is duplicated in inputcontrollerlogicgate
-        int index = int.Parse(this.name);
-        if (Connections.Count > 0)
-        {
-            foreach (var c in Connections)
+            if (withPropagation)
             {
-                //determine if logic gate or output 
-                if (c.connection.endTerminal.tag.Equals("Output"))
+                //update connect
+                //go over connections and update next component, this code is duplicated in inputcontrollerlogicgate
+                int index = int.Parse(this.name);
+                if (Connections.Count > 0)
                 {
-                    c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixSource, _value);
-                }
-                else
-                {
-                    c.connection.endTerminal.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                    foreach (var c in Connections)
+                    {
+                        //determine if logic gate or output 
+                        if (c.connection.endTerminal.tag.Equals("Output"))
+                        {
+                            c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixSource, _value, false);
+                        }
+                        else
+                        {
+                            c.connection.endTerminal.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                        }
+                    }
                 }
             }
         }
+        return _value;
     }
 }

@@ -704,10 +704,46 @@ public class TruthtableFunctionHelper : MonoBehaviour
             }
             else
             {
-                //parse into either 3 or 9 (arity 2 or 3)
-                if (function.Length == 3 || function.Length == 9)
+                //parse into either 1 or 3 or 9 (arity 1, arity 2 or 3)
+                if (function.Length == 1 || function.Length == 3 || function.Length == 9)
                 {
                     RadixOptions targetRadix = GetComponentInParent<InputControllerLogicGate>().GetRadixTarget();
+
+                    if (function.Length == 1)
+                    {
+                        //parse into table index
+                        int tIndex = ConvertHeptavintimalEncodingToArity2TableIndex(function);
+
+                        if (tIndex != -1)
+                        {
+                            //only change panel size if needed, otherwise all connections are reset
+                            if (_DETC.Arity != 1)
+                                _DETC.SetPanelSize(3, 1);
+
+                            //get all the cells
+                            BtnInputTruthTable[] cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
+
+                            int[] ttMatrix = new int[9];
+                            IntPtr srcPtr = GetTableFromIndex(tIndex); //if we use this method, we have to release the pointer later!
+                            Marshal.Copy(srcPtr, ttMatrix, 0, 9);
+
+                            //fill in the cells
+                            if (targetRadix.ToString().Contains("Binary"))
+                            {
+                                cells[0].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[6]).ToString();
+                                cells[1].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[8]).ToString();
+                            }
+                            else
+                            {
+                                cells[0].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[6]).ToString();
+                                cells[1].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[7]).ToString();
+                                cells[2].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[8]).ToString();
+                            }
+
+                            GetTableFromIndex_Release(srcPtr);
+                        }
+                    }
+
                     if (function.Length == 3)
                     {
                         //parse into table index
@@ -727,30 +763,25 @@ public class TruthtableFunctionHelper : MonoBehaviour
                             Marshal.Copy(srcPtr, ttMatrix, 0, 9);
 
                             //fill in the cells
-                            for (int i = 0; i < 9; i++)
+                            if (targetRadix.ToString().Contains("Binary"))
                             {
-                                cells[i].label.text = ConvertToCorrectRadix(ttMatrix[i], RadixOptions.UnbalancedTernary, targetRadix).ToString();
+                                cells[0].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[0]).ToString();
+                                cells[1].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[6]).ToString();
+                                cells[2].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[2]).ToString();
+                                cells[3].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[8]).ToString();
                             }
-
+                            else
+                            {
+                                for (int i = 0; i < 9; i++)
+                                {
+                                    cells[i].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[i]).ToString();
+                                }
+                            }
                             GetTableFromIndex_Release(srcPtr);
-
-
-                            //Convert to netlist file
-                            //int[] ttMatrix2 = new int[9];
-                            //IntPtr srcPtr2 = GetTableFromIndex(tIndex); //if we use this method, we have to release the pointer later!
-                            //Marshal.Copy(srcPtr2, ttMatrix, 0, 9);
-
-                            //ttMatrix2 = Convert(ttMatrix, ttMatrix.Length);
-
-                            //int sum = TestSum(ttMatrix, ttMatrix.Length); //if we use this method, we have to release the pointer later!
-                            //Debug.Log(sum);
-
-
-
-                            //int test = CreateNetlist(ttMatrix, ttMatrix.Length, 2);
                         }
                     }
-                    else
+
+                    if (function.Length == 9)
                     {
                         bool isValid = function.isValidHeptCode();
 
@@ -780,16 +811,41 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                 Marshal.Copy(srcPtr, ttMatrix, 0, 9);
 
                                 //fill in the cells
-                                cells[i].label.text = ConvertToCorrectRadix(ttMatrix[0], RadixOptions.UnbalancedTernary, targetRadix).ToString();
-                                cells[i + 3].label.text = ConvertToCorrectRadix(ttMatrix[1], RadixOptions.UnbalancedTernary, targetRadix).ToString();
-                                cells[i + 6].label.text = ConvertToCorrectRadix(ttMatrix[2], RadixOptions.UnbalancedTernary, targetRadix).ToString();
-                                cells[i + 9].label.text = ConvertToCorrectRadix(ttMatrix[3], RadixOptions.UnbalancedTernary, targetRadix).ToString();
-                                cells[i + 12].label.text = ConvertToCorrectRadix(ttMatrix[4], RadixOptions.UnbalancedTernary, targetRadix).ToString();
-                                cells[i + 15].label.text = ConvertToCorrectRadix(ttMatrix[5], RadixOptions.UnbalancedTernary, targetRadix).ToString();
-                                cells[i + 18].label.text = ConvertToCorrectRadix(ttMatrix[6], RadixOptions.UnbalancedTernary, targetRadix).ToString();
-                                cells[i + 21].label.text = ConvertToCorrectRadix(ttMatrix[7], RadixOptions.UnbalancedTernary, targetRadix).ToString();
-                                cells[i + 24].label.text = ConvertToCorrectRadix(ttMatrix[8], RadixOptions.UnbalancedTernary, targetRadix).ToString();
+                                if (targetRadix.ToString().Contains("Binary"))
+                                {
+                                    if (i == 0)
+                                    {
+                                        //0 is top left, 1 is bottom left, 2 is top right, 3 is bottom rig+ht
+                                        cells[0].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[0]).ToString();
+                                        cells[1].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[6]).ToString();
+                                        cells[2].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[2]).ToString();
+                                        cells[3].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[8]).ToString();
+                                    }
 
+
+                                    //we skip the middle matrix with zeros in case of binary
+
+                                    if (i == 2)
+                                    {
+                                        //0 is top left, 1 is bottom left, 2 is top right, 3 is bottom rig+ht
+                                        cells[4].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[0]).ToString();
+                                        cells[5].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[6]).ToString();
+                                        cells[6].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[2]).ToString();
+                                        cells[7].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[8]).ToString();
+                                    }
+                                }
+                                else
+                                {
+                                    cells[i].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[0]).ToString();
+                                    cells[i + 3].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[1]).ToString();
+                                    cells[i + 6].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[2]).ToString();
+                                    cells[i + 9].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[3]).ToString();
+                                    cells[i + 12].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[4]).ToString();
+                                    cells[i + 15].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[5]).ToString();
+                                    cells[i + 18].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[6]).ToString();
+                                    cells[i + 21].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[7]).ToString();
+                                    cells[i + 24].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[8]).ToString();
+                                }
                                 GetTableFromIndex_Release(srcPtr);
 
                             }
@@ -802,98 +858,6 @@ public class TruthtableFunctionHelper : MonoBehaviour
                 }
             }
         }
-    }
-
-    public int ConvertToCorrectRadix(int _value, RadixOptions radixSource, RadixOptions radixTarget)
-    {
-        int outputValue = 0;
-        switch (radixSource)
-        {
-            case RadixOptions.BalancedTernary: 
-                {
-                    switch (radixTarget)
-                    {
-                        case RadixOptions.Binary:
-                            {
-                                if (_value < 1)
-                                    outputValue = 0;
-                                else
-                                    outputValue = 1;
-                            }
-                            break;
-                        case RadixOptions.UnbalancedTernary:
-                            {
-                                outputValue = _value + 1;
-                            }
-                            break;
-                        case RadixOptions.BalancedTernary:
-                            {
-                                outputValue = _value;
-                            }
-                            break;
-
-                    }
-
-                }
-                break;
-            case RadixOptions.UnbalancedTernary: 
-                {
-                    switch (radixTarget)
-                    {
-                        case RadixOptions.Binary:
-                            {
-                                if (_value < 2)
-                                    outputValue = 0;
-                                else
-                                    outputValue = 1;
-                            }
-                            break;
-                        case RadixOptions.UnbalancedTernary:
-                            {
-                                outputValue = _value;
-                            }
-                            break;
-                        case RadixOptions.BalancedTernary:
-                            {
-                                outputValue = _value -1;
-                            }
-                            break;
-
-                    }
-
-                }
-                break;
-            case RadixOptions.Binary:
-                {
-                    switch (radixTarget)
-                    {
-                        case RadixOptions.Binary:
-                            {
-                                outputValue = _value;
-                            }
-                            break;
-                        case RadixOptions.UnbalancedTernary:
-                            {
-                                if (_value == 0)
-                                    outputValue = -1;
-                                else
-                                    outputValue = 1;
-                            }
-                            break;
-                        case RadixOptions.BalancedTernary:
-                            {
-                                if (_value == 0)
-                                    outputValue = 0;
-                                else
-                                    outputValue = 2;
-                            }
-                            break;
-                    }
-                }
-                break;
-        }
-
-        return outputValue;
     }
 
     public int ConvertHeptavintimalEncodingToArity2TableIndex(string hepCode)
