@@ -26,8 +26,7 @@ public class DragDrop : MonoBehaviour,
     Color panelColorActive = new Color(255/255,82/255,45/255);
     public Image panelBg;
     bool _isFullVersion = false;
-    public List<LineFunctions> LowerAbstractionConnections = new List<LineFunctions>();
-
+ 
 
     void Awake()
     {
@@ -87,27 +86,51 @@ public class DragDrop : MonoBehaviour,
         else
         {
             _dragOffset = eventData.position - (Vector2)transform.position;
-            //instantiate new one for menu
-            var go = GameObject.Instantiate(this.gameObject);
-            go.transform.SetParent(this.transform.parent, false);
-            go.name = this.name; //isnt this overwritten?
-            go.transform.SetSiblingIndex(this.transform.GetSiblingIndex());
-            go.GetComponent<DragDrop>().Stats = this.Stats;
-           
 
-
-            //enable info button and copy properties on saved components
-            if (this.FullVersion.GetComponent<ComponentGenerator>() != null)
+            //instantiate for the dnd menu either a new standard component (without component generator) or with
+            if (this.FullVersion.GetComponent<ComponentGenerator>() == null)
             {
-                this.FullVersion.GetComponent<ComponentGenerator>().infoBtn.SetActive(true);
-                go.GetComponent<DragDrop>().FullVersion.GetComponent<InputController>().savedComponent = this.FullVersion.GetComponent<InputController>().savedComponent;
+               GameObject go = null;
+               switch (this.name)
+                {
+                    case "Input":
+                        go = GameObject.Instantiate(CircuitGenerator.InputPrefab);
+                        break;
+                    case "Output":
+                        go = GameObject.Instantiate(CircuitGenerator.OutputPrefab);
+                        break;
+                    case "LogicGate":
+                        go = GameObject.Instantiate(CircuitGenerator.LogicGatePrefab);
+                        break;
+                }
+
+                go.transform.SetParent(this.transform.parent, false);
+                go.name = this.name;
+                go.transform.SetSiblingIndex(this.transform.GetSiblingIndex()); //place it on top
+                //    go.GetComponent<DragDrop>().Stats = this.Stats;
+            }
+            else
+            {
+                var saveCircuit = GameObject.FindObjectOfType<SaveCircuit>();
+                var component = this.FullVersion.GetComponent<InputController>().savedComponent;
+                var go = saveCircuit.GenerateListItem(component, saveCircuit.ContentContainer.transform, false);
+                go.GetComponent<DragDrop>().MenuVersion.SetActive(true);
+                go.GetComponent<DragDrop>().FullVersion.SetActive(false);
+                go.name = component.ComponentName;
+                go.GetComponent<DragDrop>().FullVersion.GetComponent<InputController>().savedComponent = component;
+                
 
                 //Unity bug where it will auto default to wrong anchor position when part of layout group (sets it to top left). Probably due to some awake script. Set it to center here.
                 this.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
                 this.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.5f);
                 this.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+
+                //addtional stuff for correct UI
+                this.FullVersion.GetComponent<ComponentGenerator>().infoBtn.SetActive(true);
+                this.transform.localScale = new Vector3(SaveCircuit.FullScale, SaveCircuit.FullScale, SaveCircuit.FullScale);
             }
-           
+            
+          
             //update current drag drop component 
             this.transform.SetParent(SaveCircuit.DragDropArea.transform);
             this.transform.tag = "DnDComponent";
@@ -117,19 +140,6 @@ public class DragDrop : MonoBehaviour,
             MenuVersion.SetActive(false);
             FullVersion.SetActive(true);
             panelColorDefault = panelBg.color;
-
-            //increase size if a saved component (detected by having a layout element)
-            if (this.GetComponent<LayoutElement>())
-            {
-                this.transform.localScale = new Vector3 (SaveCircuit.FullScale, SaveCircuit.FullScale, SaveCircuit.FullScale);
-            }
-
-
-            //check if saved state
-            //if (GetComponent<DragDropSaved>() != null)
-            //{
-            //    StartCoroutine("LoadSave");
-            //}
         }
     }
 

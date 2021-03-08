@@ -273,7 +273,7 @@ public class ComponentGenerator : MonoBehaviour
             InputController output = componentList[outputId];
             BtnInput startTerminal = input.Buttons[inputPort].GetComponent<BtnInput>();
             BtnInput endTerminal = output.Buttons[outputPort].GetComponent<BtnInput>();
-            lm.NewConnection(startTerminal, endTerminal);
+            lm.NewConnection(startTerminal, endTerminal, root.transform);
         }
     }
 

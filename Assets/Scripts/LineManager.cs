@@ -61,7 +61,7 @@ public class LineManager : MonoBehaviour
 
             lr.startColor = _tempStartTerminal.wireColor.color;
 
-            var positionObject = _tempStartTerminal.transform.localPosition;
+            var positionObject = _tempStartTerminal.transform.position;
             lr.SetPosition(0, positionObject);
 
             if (_tempStartTerminal.isOutput)
@@ -86,7 +86,7 @@ public class LineManager : MonoBehaviour
                     {
                         var lr = _tempLine.GetComponent<LineRenderer>();
                         lr.positionCount = 4;
-                        var positionObject = eventParam.ConnectionData.ConnectionTerminal.transform.localPosition;
+                        var positionObject = eventParam.ConnectionData.ConnectionTerminal.transform.position;
                         lr.SetPosition(2, new Vector3(positionObject.x - OffsetXY, positionObject.y, 0));
                         lr.SetPosition(3, new Vector3(positionObject.x, positionObject.y, 0));
                         lr.endColor = lr.startColor;
@@ -135,7 +135,7 @@ public class LineManager : MonoBehaviour
         }
     }
 
-    public void NewConnection(BtnInput startTerminal, BtnInput endTerminal)
+    public void NewConnection(BtnInput startTerminal, BtnInput endTerminal, Transform root)
     {
         //try finalize line renderer
         if (!endTerminal.isOutput) //check that the 2nd ports is input, since the first port is output and no input input connections are allowed)
@@ -146,23 +146,22 @@ public class LineManager : MonoBehaviour
                 {
                     _tempLine = Instantiate(LinePrefab);
                     
-
-                    //***IMPORTANT
-                    _tempLine.tag = "Untagged"; //change this with new save system where circuit hierarchies are saved after changes to it, currenlty only save non generated ones (so top level)
-                    //***IMPORTANT
-
                     //we do this parent.parent thing because we cant use lookin parent since the object is disabled
                     string startName = "";
                     if (startTerminal.transform.parent.parent.parent.gameObject.GetComponent<DragDrop>() != null)
-                        startName = startTerminal.transform.parent.parent.parent.gameObject.GetComponent<DragDrop>().name;
+                    {
+                        startName = startTerminal.transform.parent.parent.parent.gameObject.GetComponent<DragDrop>().name;                   
+                    }
                     else
-                        startName = startTerminal.transform.parent.parent.parent.parent.gameObject.GetComponent<DragDrop>().name;
+                    {
+                        startName = startTerminal.transform.parent.parent.parent.parent.gameObject.GetComponent<DragDrop>().name;                        
+                    }
 
                     _tempLine.name =  startName + ";" +
                                      startTerminal._portIndex +
                                      "; --> ";
 
-                    _tempLine.transform.SetParent(this.transform, false);
+                    _tempLine.transform.SetParent(root, false);
                     _tempLine.transform.localScale = new Vector3(1, 1, 1);
                     _tempLine.GetComponent<RectTransform>().anchoredPosition = new Vector3(0, 0, 0);
 
@@ -213,9 +212,7 @@ public class LineManager : MonoBehaviour
                     //add connection to start and end terminals (ports)
                     conn.startTerminal.Connections.Add(_tempLine.GetComponent<LineFunctions>());
                     conn.endTerminal.Connections.Add(_tempLine.GetComponent<LineFunctions>());
-                    startTerminal.GetComponentInParent<DragDrop>().LowerAbstractionConnections.Add(_tempLine.GetComponent<LineFunctions>());
-                    _tempLine.SetActive(false);
-                    
+                    _tempLine.gameObject.SetActive(false);
                 }
             }
         }

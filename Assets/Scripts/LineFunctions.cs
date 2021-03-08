@@ -7,7 +7,7 @@ using UnityEngine.UI;
 public class LineFunctions : MonoBehaviour
 {
     public Connection connection; //should probably rename this because now we have connection.connection which is weird
-
+    public Transform _savedParent;
     public void DestroyConnection()
     {
         connection.startTerminal.RemoveConnection(connection.id);
@@ -88,6 +88,12 @@ public class LineFunctions : MonoBehaviour
         {
             DrawButtonSegment(i, Color.black, false); //color is ignored
         }
+    }
+
+    internal void RestoreLocationInHierarchy()
+    {
+        this.gameObject.SetActive(false);
+        this.gameObject.transform.SetParent(_savedParent);
     }
 }
 
