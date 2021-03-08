@@ -15,7 +15,7 @@ public class Settings : MonoBehaviour
     [HideInInspector]
     public SaveCircuit saveCircuit;
 
-    public void Awake()
+    public void Start()
     {
         saveCircuit = GameObject.FindObjectOfType<SaveCircuit>();
 

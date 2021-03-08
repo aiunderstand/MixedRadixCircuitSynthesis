@@ -8,37 +8,22 @@ public class Matrix : MonoBehaviour
 {
     public BtnInputTruthTable[,,] Truthtable;
     public TextMeshProUGUI DropdownLabel;
-    int _radix = 0;
-   
+
     private void Awake()
     {
-        ComputeEmptyTruthTable(2); //default arity is 2
+        //get values from logicgate controller
+
+        var arity = GetComponent<InputControllerLogicGate>().GetArity();
+
+        var radix = 3;
+        if (DropdownLabel.text.Contains("Binary"))
+            radix = 2;
+        
+        ComputeEmptyTruthTable(arity, radix); //default arity is 2, radix 3
     }
 
-    public void ComputeEmptyTruthTable(int arity)
+    public void ComputeEmptyTruthTable(int arity, int radix)
     {
-        //fill truthtable
-        switch (DropdownLabel.text)
-        {
-            case "BalancedTernary":
-                {
-                    _radix = 3;
-                }
-                break;
-            case "UnbalancedTernary":
-                {
-                    _radix = 3;
-                }
-                break;
-            case "Binary":
-                {
-                    _radix = 2;
-                }
-                break;
-            default:
-                break;
-        }
-
         //Unity requires cells to be setActive to be found. So lets request current index, activate other indices, and after init, return to index;
         BtnInputTruthTableDropdown bittd;
         int currentIndex = 0;
@@ -56,17 +41,17 @@ public class Matrix : MonoBehaviour
         {
             case 1: //radix,1-ary (r^1)
                 {
-                    CreateMatrix1ary(_radix, cells);
+                    CreateMatrix1ary(radix, cells);
                 }
                 break;
             case 2: //radix,2-ary (r^2)
                 {
-                    CreateMatrix2ary(_radix, cells);
+                    CreateMatrix2ary(radix, cells);
                 }
                 break;
             case 3: //radix,3-ary (r^3)
                 {
-                    CreateMatrix3ary(_radix, cells);
+                    CreateMatrix3ary(radix, cells);
                 }
                 break;
             default:

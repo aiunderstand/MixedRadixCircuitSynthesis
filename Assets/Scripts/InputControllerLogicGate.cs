@@ -12,7 +12,8 @@ public class InputControllerLogicGate : MonoBehaviour
     TextMeshProUGUI _radixTarget; //or source if it is linked to a output
     public Color panelColorDefault;
     public Color panelColorActive;
-    
+    public string _optimizedFunction; //field is filled after a save
+
     //internal values used for state stabilisation (if the output does not change do not propagate)
     int portA = 0;
     int portB = 0;
@@ -27,6 +28,15 @@ public class InputControllerLogicGate : MonoBehaviour
             GetComponentInParent<DragDrop>().name = ";LogicGate;" + GetInstanceID().ToString();
         }
     }
+
+    private void Start()
+    {
+        if (_optimizedFunction != null)
+        {
+            DropDownFunctionLabel.text = _optimizedFunction;
+        }
+    }
+
 
     public int GetArity()
     {

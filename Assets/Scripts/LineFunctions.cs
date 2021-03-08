@@ -66,6 +66,29 @@ public class LineFunctions : MonoBehaviour
             DrawButtonSegment(i, color, updateColor);
         }
     }
+
+    public void Redraw()
+    {
+        var lr = GetComponent<LineRenderer>();
+
+        var positionObject = connection.startTerminal.transform.position;
+        lr.SetPosition(0, positionObject);
+
+        if (connection.startTerminal.isOutput)
+            lr.SetPosition(1, new Vector3(positionObject.x + LineManager.OffsetXY, positionObject.y, 0));
+        else
+            lr.SetPosition(1, new Vector3(positionObject.x + LineManager.OffsetX + LineManager.OffsetXY, positionObject.y, 0));
+
+
+        positionObject = connection.endTerminal.transform.position;
+        lr.SetPosition(2, new Vector3(positionObject.x - LineManager.OffsetXY, positionObject.y, 0));
+        lr.SetPosition(3, new Vector3(positionObject.x, positionObject.y, 0));
+
+        for (int i = 0; i < 3; i++)
+        {
+            DrawButtonSegment(i, Color.black, false); //color is ignored
+        }
+    }
 }
 
 

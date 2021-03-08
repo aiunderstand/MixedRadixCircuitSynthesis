@@ -124,10 +124,13 @@ namespace UnityEngine.UI.Extensions
 		public SelectionValidityChangedEvent OnSelectionValidityChanged;
 		// fires in both cases
 		public SelectionChangedEvent OnSelectionChanged;
-
+        bool isInitialized = false;
         public void Awake()
         {
-            Initialize();
+            if (!isInitialized)
+            {
+                Initialize();
+            }
         }
 		public void Start()
 		{
@@ -137,7 +140,7 @@ namespace UnityEngine.UI.Extensions
 			}
 		}
 
-        private bool Initialize()
+        public bool Initialize()
         {
             bool success = true;
             try
@@ -183,6 +186,7 @@ namespace UnityEngine.UI.Extensions
 
             RebuildPanel();
             //RedrawPanel(); - causes an initialisation failure in U5
+            isInitialized = true;
             return success;
         }
 
@@ -230,53 +234,57 @@ namespace UnityEngine.UI.Extensions
         {
             if (_isPanelActive) ToggleDropdownPanel();
 
-            //panel starts with all options
-            _panelItems.Clear();
-            _prunedPanelItems.Clear();
-            panelObjects.Clear();
-
-            //clear Autocomplete children in scene
-            foreach (Transform child in _itemsPanelRT.transform)
+            
+            if (_panelItems != null) //this if is a hack because panel items are loaded later. Should refactor
             {
-                Destroy(child.gameObject);
-            }
+                //panel starts with all options
+                _panelItems.Clear();
+                _prunedPanelItems.Clear();
+                panelObjects.Clear();
 
-            foreach (string option in AvailableOptions)
-            {
-                _panelItems.Add(option.ToLower());
-            }
-
-            List<GameObject> itemObjs = new List<GameObject>(panelObjects.Values);
-
-            int indx = 0;
-            while (itemObjs.Count < AvailableOptions.Count)
-            {
-                GameObject newItem = Instantiate(itemTemplate) as GameObject;
-                newItem.name = "Item " + indx;
-                newItem.transform.SetParent(_itemsPanelRT, false);
-                itemObjs.Add(newItem);
-                indx++;
-            }
-
-            for (int i = 0; i < itemObjs.Count; i++)
-            {
-                itemObjs[i].SetActive(i <= AvailableOptions.Count);
-                if (i < AvailableOptions.Count)
+                //clear Autocomplete children in scene
+                foreach (Transform child in _itemsPanelRT.transform)
                 {
-                    itemObjs[i].name = "Item " + i + " " + _panelItems[i];
-                    itemObjs[i].transform.Find("Text").GetComponent<Text>().text = _panelItems[i]; //set the text value
-
-                    Button itemBtn = itemObjs[i].GetComponent<Button>();
-                    itemBtn.onClick.RemoveAllListeners();
-                    string textOfItem = _panelItems[i]; //has to be copied for anonymous function or it gets garbage collected away
-                    itemBtn.onClick.AddListener(() =>
-                    {
-                        OnItemClicked(textOfItem);
-                    });
-                    panelObjects[_panelItems[i]] = itemObjs[i];
+                    Destroy(child.gameObject);
                 }
+
+                foreach (string option in AvailableOptions)
+                {
+                    _panelItems.Add(option.ToLower());
+                }
+
+                List<GameObject> itemObjs = new List<GameObject>(panelObjects.Values);
+
+                int indx = 0;
+                while (itemObjs.Count < AvailableOptions.Count)
+                {
+                    GameObject newItem = Instantiate(itemTemplate) as GameObject;
+                    newItem.name = "Item " + indx;
+                    newItem.transform.SetParent(_itemsPanelRT, false);
+                    itemObjs.Add(newItem);
+                    indx++;
+                }
+
+                for (int i = 0; i < itemObjs.Count; i++)
+                {
+                    itemObjs[i].SetActive(i <= AvailableOptions.Count);
+                    if (i < AvailableOptions.Count)
+                    {
+                        itemObjs[i].name = "Item " + i + " " + _panelItems[i];
+                        itemObjs[i].transform.Find("Text").GetComponent<Text>().text = _panelItems[i]; //set the text value
+
+                        Button itemBtn = itemObjs[i].GetComponent<Button>();
+                        itemBtn.onClick.RemoveAllListeners();
+                        string textOfItem = _panelItems[i]; //has to be copied for anonymous function or it gets garbage collected away
+                        itemBtn.onClick.AddListener(() =>
+                        {
+                            OnItemClicked(textOfItem);
+                        });
+                        panelObjects[_panelItems[i]] = itemObjs[i];
+                    }
+                }
+                SetInputTextColor();
             }
-			SetInputTextColor ();
         }
 
         /// <summary>

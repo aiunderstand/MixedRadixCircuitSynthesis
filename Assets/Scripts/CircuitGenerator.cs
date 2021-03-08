@@ -11,6 +11,22 @@ using static BtnInput;
 
 public class CircuitGenerator : MonoBehaviour
 {
+    //start: we should use a singleton pattern for this, refactor! :(
+    public static GameObject LogicGatePrefab;
+    public GameObject _logicGatePrefab;
+    public static GameObject InputPrefab;
+    public GameObject _inputPrefab;
+    public static GameObject OutputPrefab;
+    public GameObject _outputPrefab;
+    
+    private void Awake()
+    {
+        LogicGatePrefab = _logicGatePrefab;
+        InputPrefab = _inputPrefab;
+        OutputPrefab = _outputPrefab;
+    }
+    //end
+
     private Stats GenerateCircuit(string filePath, string fileName)
     {
         int uid = 0;
@@ -25,6 +41,14 @@ public class CircuitGenerator : MonoBehaviour
         List<string> outputRadix = new List<string>();
         List<string> savedCircuitNames = new List<string>();
         List<int> connectionIndexArray = new List<int>();
+        List<string> idArray = new List<string>();
+        int inputComponents = 0;
+        int outputComponents = 0;
+        List<string> ioPositionArray = new List<string>(); 
+        List<string> functionRadixTypeArray = new List<string>();
+        List<string> ioRadixTypeArray = new List<string>(); 
+        List<int> inputOutputSizeArray = new List<int>();
+        List<string> connectionPairArray = new List<string>();
         string path = Application.persistentDataPath + "/User/Generated/" + filePath;
 
         bool exists = System.IO.Directory.Exists(path);
@@ -51,51 +75,74 @@ public class CircuitGenerator : MonoBehaviour
 
             OrderedDictionary inputLOT = new OrderedDictionary();
 
+            //PASS 0: collect connectionData
+            foreach (var conn in connections)
+            {
+                var parsedName = conn.name.Split(';');
+                //0 =; input ; id; port; -->; output; id; port
+                connectionPairArray.Add(parsedName[2] + " " + parsedName[3] + " " + parsedName[6] + " " + parsedName[7]);
+            }
+
+
             //PASS 1: input names with semantic names
             Dictionary<int, float> inputOrder = new Dictionary<int, float>(); //needed for ordering the labels from low to high (using transform.position.y)
-            foreach (var c in components)
+        foreach (var c in components)
+        {
+            int validButtons = 0;
+            if (c.name.Contains("Input"))
             {
-                if (c.name.Contains("Input"))
+                var inputControler = c.GetComponentInChildren<InputController>();
+                string id = inputControler.GetInstanceID().ToString();
+
+                foreach (var b in inputControler.Buttons)
                 {
-                    var inputControler = c.GetComponentInChildren<InputController>();
-                    string id = inputControler.GetInstanceID().ToString();
+                    //double check if button is connected to something
+                    var bi = b.GetComponent<BtnInput>();
 
-                    foreach (var b in inputControler.Buttons)
+                    if (bi.Connections.Count > 0)
                     {
-                        //double check if button is connected to something
-                        var bi = b.GetComponent<BtnInput>();
 
-                        if (bi.Connections.Count > 0)
+                        //check if connection is directly to output, since then it should not be added
+                        int outputCounter = 0;
+                        foreach (var conn in bi.Connections)
                         {
-                            //check if connection is directly to output, since then it should not be added
-                            int outputCounter = 0;
-                            foreach (var conn in bi.Connections)
-                            {
-                                var parts = conn.name.Split(';');
+                            var parts = conn.name.Split(';');
 
-                                if (parts[5].Contains("Output"))
-                                {
-                                    outputCounter++;                                    
-                                }
-                            }
-
-                            //only add input if there is at least one connection to a logicgate
-                            if (outputCounter != bi.Connections.Count)
+                            if (parts[5].Contains("Output"))
                             {
-                                inputOrder.Add(inputRadix.Count, bi.transform.position.y);
-                               
-                                int portIndex = bi._portIndex;
-                                string portLabel = b.GetComponentInChildren<TMP_InputField>().text;
-                                string inputValidatedName = "i_" + portLabel + "_" + uid;
-                                inputNames.Add(inputValidatedName); //refactor to only use inputLOT, build the tree and then convert the inputlot to input names
-                                inputLOT.Add(portIndex + "_" + id, inputValidatedName);
-                                uid++;
-                                inputRadix.Add(bi.DropdownLabel.text);
+                                outputCounter++;
                             }
+                        }
+
+                        //only add input if there is at least one connection to a logicgate
+                        if (outputCounter != bi.Connections.Count)
+                        {
+                            validButtons++;
+                            inputOrder.Add(inputRadix.Count, bi.transform.position.y);
+
+                            int portIndex = bi._portIndex;
+                            string portLabel = b.GetComponentInChildren<TMP_InputField>().text;
+                            string inputValidatedName = "i_" + portLabel + "_" + uid;
+                            inputNames.Add(inputValidatedName); //refactor to only use inputLOT, build the tree and then convert the inputlot to input names
+                            inputLOT.Add(portIndex + "_" + id, inputValidatedName);
+                            uid++;
+                            inputRadix.Add(bi.DropdownLabel.text);
                         }
                     }
                 }
+
+                if (validButtons > 0)
+                {
+                    inputComponents++;
+                    Vector2 pos2d = c.GetComponentInParent<DragDrop>().transform.localPosition;
+                    ioPositionArray.Add(pos2d.x.ToString());
+                    ioPositionArray.Add(pos2d.y.ToString());
+                    ioRadixTypeArray.Add(inputControler.DropdownLabel.text);
+                    inputOutputSizeArray.Add(validButtons);
+                    idArray.Add(id);
+                }
             }
+        }
 
             //reorder the input labels to get correct interface order
             List<string> tempinputNames = new List<string>();
@@ -113,36 +160,50 @@ public class CircuitGenerator : MonoBehaviour
 
             inputNames = tempinputNames;
             inputRadix = tempInputRadix;
+           
 
             //PASS 2: output names with semantic names
             OrderedDictionary outputLOT = new OrderedDictionary();
             //create output names OrderedDictionary/hashtable, this code section is solely for adding the output label to an logic gate terminal, refactor?
             Dictionary<int, float> outputOrder = new Dictionary<int, float>();
-            foreach (var c in components)
+        foreach (var c in components)
+        {
+            int validButtons = 0;
+            if (c.name.Contains("Output"))
             {
-                if (c.name.Contains("Output"))
+                var inputControler = c.GetComponentInChildren<InputController>();
+                string id = inputControler.GetInstanceID().ToString();
+
+                foreach (var b in inputControler.Buttons)
                 {
-                    var inputControler = c.GetComponentInChildren<InputController>();
-                    string id = inputControler.GetInstanceID().ToString();
+                    //double check if button is connected to something
+                    var bi = b.GetComponent<BtnInput>();
 
-                    foreach (var b in inputControler.Buttons)
+                    if (bi.Connections.Count > 0)
                     {
-                        //double check if button is connected to something
-                        var bi = b.GetComponent<BtnInput>();
+                        outputOrder.Add(outputRadix.Count, bi.transform.position.y);
+                        validButtons++;
+                        int portIndex = bi._portIndex;
+                        string portLabel = b.GetComponentInChildren<TMP_InputField>().text;
+                        string inputValidatedName = "o_" + portLabel;
+                        outputLOT.Add(portIndex + "_" + id, inputValidatedName);
+                        outputRadix.Add(bi.DropdownLabel.text);
 
-                        if (bi.Connections.Count > 0)
-                        {
-                            outputOrder.Add(outputRadix.Count, bi.transform.position.y);
-
-                            int portIndex = bi._portIndex;
-                            string portLabel = b.GetComponentInChildren<TMP_InputField>().text;
-                            string inputValidatedName = "o_" + portLabel;
-                            outputLOT.Add(portIndex + "_" + id, inputValidatedName);
-                            outputRadix.Add(bi.DropdownLabel.text);
-                        }
                     }
                 }
+
+                if (validButtons > 0)
+                {
+                    outputComponents++;
+                    Vector2 pos2d = c.GetComponentInParent<DragDrop>().transform.localPosition;
+                    ioPositionArray.Add(pos2d.x.ToString());
+                    ioPositionArray.Add(pos2d.y.ToString());
+                    ioRadixTypeArray.Add(inputControler.DropdownLabel.text);
+                    inputOutputSizeArray.Add(validButtons);
+                    idArray.Add(id);
+                }
             }
+        }
 
             //PASS 3a: logic gate generate TT netlist and LOT with semantic names 
             OrderedDictionary logicgateLOT = new OrderedDictionary();
@@ -162,11 +223,8 @@ public class CircuitGenerator : MonoBehaviour
                     string optimizedTTindex = TruthtableFunctionHelper.ConvertTTtoHeptEncoding(optimizedTT);
                     ttIndices.Add(optimizedTTindex);
                     logicgateIndicesLOT.Add(controller.GetInstanceID().ToString(), optimizedTTindex);
-                    //controller.DropDownFunctionLabel.text = optimizedTTindex;
+                  
 
-                    var functionDropDown = controller.GetComponentInChildren<AutoCompleteComboBox>();
-                    functionDropDown._mainInput.text = optimizedTTindex;
-                    //functionDropDown.ToggleDropdownPanel();
 
                     int[] tempInvArray = TruthtableFunctionHelper.GetAndConvertInvArrayFormat(arity);
 
@@ -179,7 +237,27 @@ public class CircuitGenerator : MonoBehaviour
                     Vector2 pos = c.GetComponentInParent<DragDrop>().gameObject.transform.localPosition;
                     positionArray.Add(pos.x.ToString());
                     positionArray.Add(pos.y.ToString());
-                }
+
+                    //add radixtype
+                     var radixDropdown = controller.transform.GetComponentInChildren<TMP_Dropdown>();
+                     functionRadixTypeArray.Add(radixDropdown.options[radixDropdown.value].text);
+
+                    //add to id list if not existing (could do this faster with a hashtable/dictionary)
+                    var id = controller.GetInstanceID().ToString();
+                    bool found = false;
+
+                    foreach (var item in idArray)
+                    {
+                        if (item == id)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found)
+                        idArray.Add(id);
+            }
             }
 
             //PASS 3b: saved gate dont generate TT netlist but do add to LOT with semantic names 
@@ -187,7 +265,23 @@ public class CircuitGenerator : MonoBehaviour
             {
                 if (c.name.Contains("SavedGate"))
                 {
-                    var controller = c.GetComponentInChildren<SavedComponentController>();
+                    var controller = c.GetComponentInChildren<InputController>();
+
+                    //add to id list if not existing (could do this faster with a hashtable/dictionary)
+                    var id = controller.GetInstanceID().ToString();
+                    bool found = false;
+
+                    foreach (var item in idArray)
+                    {
+                        if (item == id)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found)
+                        idArray.Add(id);
 
                     stats.transistorCount += controller.savedComponent.Stats.transistorCount;
                     stats.totalLogicGateCount += controller.savedComponent.Stats.totalLogicGateCount;
@@ -278,7 +372,7 @@ public class CircuitGenerator : MonoBehaviour
             {
                 if (c.name.Contains("SavedGate"))
                 {
-                    var controller = c.GetComponentInChildren<SavedComponentController>();
+                    var controller = c.GetComponentInChildren<InputController>();
 
                     foreach (var conn in connections)
                     {
@@ -463,7 +557,7 @@ public class CircuitGenerator : MonoBehaviour
             {
                 if (c.name.Contains("SavedGate"))
                 {
-                    var controller = c.GetComponentInChildren<SavedComponentController>();
+                    var controller = c.GetComponentInChildren<InputController>();
                     int indexIn = controller.savedComponent.Inputs.Count;
                     int indexOut = controller.savedComponent.Outputs.Count;
 
@@ -485,7 +579,7 @@ public class CircuitGenerator : MonoBehaviour
                                     {
                                         if ((string)id.Key == (parts[3] + "_" + parts[2])) //match identifier of component
                                         {
-                                            tempConnArray[indexIn + index] = (string)logicgateLOT[id.Key];
+                                            tempConnArray[index] = (string)logicgateLOT[id.Key];
                                         }
                                     }
                                 }
@@ -497,7 +591,7 @@ public class CircuitGenerator : MonoBehaviour
                                         if ((string)id.Key == (parts[3] + "_" + parts[2])) //match identifier of component
                                         {
                                             isFound = true;
-                                            tempConnArray[indexIn+ index] = (string)logicgateLOT[id.Key];
+                                            tempConnArray[index] = (string)logicgateLOT[id.Key];
                                         }
                                     }
 
@@ -508,7 +602,7 @@ public class CircuitGenerator : MonoBehaviour
                                         uid++;
 
                                         logicgateLOT.Add((parts[3] + "_" + parts[2]), id);
-                                        tempConnArray[indexIn + index] = id;
+                                        tempConnArray[index] = id;
                                     }
                                 }
                             }
@@ -565,14 +659,48 @@ public class CircuitGenerator : MonoBehaviour
 
             //doube check if everything is there before submitting to memory sensitive c++ land
             bool fail = false;
-            //bool fail = true; 
-            foreach (var conn in connectionArray)
+        //bool fail = true; 
+        foreach (var conn in connectionArray)
+        {
+            if (conn == null)
             {
-                if (conn == null)
-                    fail = true;
+                fail = true;
+                Debug.Log("Connections error, check if everything is connected");
             }
+        }
 
-            if (!fail)
+        //extra unit-like checks
+            if ((inputComponents + outputComponents) != ioRadixTypeArray.Count)
+        {
+            fail = true;
+            Debug.Log("ioRadixGTypeArray: " + ioRadixTypeArray.Count + " i: " + inputComponents + " o: " + outputComponents);            
+        }
+
+        if ((inputComponents + outputComponents) != inputOutputSizeArray.Count)
+        {
+            fail = true;
+            Debug.Log("inputOutputSizeArray: " + inputOutputSizeArray.Count + " i: " + inputComponents + " o: " + outputComponents);            
+        }
+
+        if (((inputComponents + outputComponents) * 2) != ioPositionArray.Count)
+        {
+            fail = true;
+            Debug.Log("ioPositionArray: " + ioPositionArray.Count + " i: " + inputComponents + " o: " + outputComponents + " * 2 vector pos");            
+        }
+
+        if (connectionPairArray.Count ==  0)
+        {
+            fail = true;
+            Debug.Log("connectionPairArray: " + connectionPairArray.Count);
+        }
+
+        if ((inputComponents + outputComponents + logicgateIndicesLOT.Count) != idArray.Count)
+        {
+            fail = true;
+            Debug.Log("idArray: " + idArray.Count + " i: " + inputComponents + " o: " + outputComponents + " gates: " + logicgateIndicesLOT.Count);
+        }
+
+        if (!fail)
             {
                 var inverterCount = TruthtableFunctionHelper.CreateCircuit(
                     path, 
@@ -594,8 +722,22 @@ public class CircuitGenerator : MonoBehaviour
                     savedCircuitNames.Count, 
                     savedCircuitNames.ToArray(),
                     connectionIndexArray.Count, 
-                    connectionIndexArray.ToArray());
-
+                    connectionIndexArray.ToArray(),
+                    functionRadixTypeArray.ToArray(),
+                    functionRadixTypeArray.Count,
+                    inputComponents,
+                    outputComponents,
+                    ioRadixTypeArray.ToArray(),
+                    ioRadixTypeArray.Count,
+                    inputOutputSizeArray.ToArray(),
+                    inputOutputSizeArray.Count,
+                    ioPositionArray.ToArray(),
+                    ioPositionArray.Count,
+                    connectionPairArray.ToArray(),
+                    connectionPairArray.Count,
+                    idArray.ToArray(),
+                    idArray.Count
+                    );
 
                 stats.transistorCount += inverterCount;
                 stats.totalLogicGateCount += ttIndices.Count; //from logic gates, the saved gates are already stored
@@ -604,7 +746,7 @@ public class CircuitGenerator : MonoBehaviour
                 stats.abstractionLevelCount += 1;
                 stats.success = true;
 
-                //add stats to main circuit file, we should refactor this to search in file for specific headers and replace content in them
+                //add/update stats to main circuit file, we should refactor this to search in file for specific headers and replace content in them. Currently it is alwasy at the top 5 lines
                 string fPath = path + fileName + ".sp";
                 List<string> lines = new List<string>();
                 using (StreamReader reader = new StreamReader(fPath))
@@ -616,6 +758,7 @@ public class CircuitGenerator : MonoBehaviour
                     }
                 }
 
+                //update the statistics part of the .sp file
                 using (StreamWriter writer = new StreamWriter(fPath, false))
                 {
                     writer.WriteLine(lines[0]);
@@ -623,28 +766,8 @@ public class CircuitGenerator : MonoBehaviour
                     writer.WriteLine("*** @gcount " + stats.totalLogicGateCount.ToString());
                     writer.WriteLine("*** @ugcount " + stats.uniqueLogicGateCount.ToString());
                     writer.WriteLine("*** @abslvl " + stats.abstractionLevelCount.ToString());
-                    writer.WriteLine(lines[5]);
-                    writer.WriteLine(lines[6]);
-
-                    string inputR = "";
-                    for (int i = 0; i < inputRadix.Count; i++)
-                    {
-                        inputR += inputRadix[i] + " ";
-                    }
-                    writer.WriteLine("*** @inputs " + inputR.TrimEnd(' '));
-
-                    writer.WriteLine(lines[8]);
                     
-                    string outputR = "";
-                    for (int i = 0; i < outputRadix.Count; i++)
-                    {
-                        outputR += outputRadix[i] + " ";
-                    }
-                    writer.WriteLine("*** @outputs " + outputR.TrimEnd(' '));
-                    
-                    writer.WriteLine(lines[10]);
-
-                    for (int i = 11; i < lines.Count; i++)
+                    for (int i = 5; i < lines.Count; i++)
                     {
                         writer.WriteLine(lines[i]);
                     }
@@ -652,7 +775,6 @@ public class CircuitGenerator : MonoBehaviour
             }
             else
             {
-                Debug.Log("Connections error, check if everything is connected");
                 stats.success = false;
             }
 

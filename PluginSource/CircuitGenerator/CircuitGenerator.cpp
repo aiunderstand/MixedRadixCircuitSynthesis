@@ -75,7 +75,12 @@ vector<string> parsedOutputNames;
 vector<string> parsedPositions;
 vector<string> savedCircuitNames;
 vector<int> connectionIndices;
-
+vector<string> parsedIORadixTypes;
+vector<int> inputoutputSizes;
+vector<string> parsedIoPositions;
+vector<string> parsedFunctionRadixTypes;
+vector<string> connectionPairs;
+vector<string> idList;
 ///////////////////////////////// DATA
 vector<Subcircuit> netlists;
 
@@ -200,7 +205,22 @@ extern "C" __declspec(dllexport) int CreateCircuit(
     int savedCircuitCount, 
     char** savedCircuitNamesArray,
     int connectionIndexCount,
-    int* connectionIndexArray) {
+    int* connectionIndexArray,
+    char** functionRadixTypeArray,
+    int functionRadixTypeCount,
+    int  inputComponents,
+    int  outputComponents,
+    char** ioRadixTypeArray,
+    int ioRadixTypeCount,
+    int* inputOutputSizeArray,
+    int inputOutputSizeCount,
+    char** ioPositionArray,
+    int ioPositionCount,
+    char** connectionPairArray,
+    int connectionPairCount,
+    char** idArray,
+    int idArrayCount
+    ) {
 
     //STEP 1: assign parameters with some conversion due to c# to c++ (we can refactor this as some of the fucntions use the same code)
     connectionIndices = ParseIntArrayIntoIntVector(connectionIndexArray, connectionIndexCount);
@@ -212,7 +232,13 @@ extern "C" __declspec(dllexport) int CreateCircuit(
     parsedOutputNames = ParseCharArrayIntoStringVector(outputNames, outputs);
     parsedPositions = ParseCharArrayIntoStringVector(positionArray, positionCount); //2 coordinates -- x,y -- per component
     savedCircuitNames = ParseCharArrayIntoStringVector(savedCircuitNamesArray, savedCircuitCount);
-   
+    parsedIORadixTypes = ParseCharArrayIntoStringVector(ioRadixTypeArray, ioRadixTypeCount);
+    inputoutputSizes = ParseIntArrayIntoIntVector(inputOutputSizeArray, inputOutputSizeCount) ;
+    parsedIoPositions = ParseCharArrayIntoStringVector(ioPositionArray, ioPositionCount); //2 coordinates -- x,y -- per component;
+    parsedFunctionRadixTypes = ParseCharArrayIntoStringVector(functionRadixTypeArray, functionRadixTypeCount);
+    connectionPairs = ParseCharArrayIntoStringVector(connectionPairArray, connectionPairCount);
+    idList = ParseCharArrayIntoStringVector(idArray, idArrayCount);
+
     //STEP 2: INIT
     IO input;
     input.setNr(inputs);
@@ -233,28 +259,49 @@ extern "C" __declspec(dllexport) int CreateCircuit(
     path += ".sp";
     myfile.open(path);
 
+    //generate placeholder statistics to filled in later
     myfile << "*** STATS" << endl;
     myfile << "*** @tcount 0" << endl;
     myfile << "*** @gcount 0" << endl;
     myfile << "*** @ugcount 0" << endl;
     myfile << "*** @abslvl 0" << endl;
-
-    myfile << "\n*** SEMANTIC INTERFACE" << endl;
-    myfile << "*** @inputs 0"  << endl;
-
-    string inputlbls = "";
-    for (int i = 0; i < input.getNr(); i++) {
-        inputlbls += parsedInputNames[i] + " ";
-    }
-    myfile << "*** @inputlbl " + inputlbls << endl;
-
-    myfile << "*** @outputs 0" << endl;
     
-    string outputlbls = "";
-    for (int i = 0; i < output.getNr(); i++) {
-        outputlbls += parsedOutputNames[i] + " ";
+    myfile << "\n*** SEMANTIC INTERFACE" << endl;
+    //generate the inputs first
+    for (size_t i = 0; i < inputComponents; i++)
+    {
+        myfile << "*** @i " + parsedIORadixTypes[i] << endl;
+        myfile << "*** @id " + idList[i] << endl;
+        myfile << "*** @size " + to_string(inputoutputSizes[i]) << endl;
+      
+        string inputlbls = "";
+        for (int i = 0; i < input.getNr(); i++) {
+            inputlbls += parsedInputNames[i] + " ";
+        }
+        myfile << "*** @iolbl " + inputlbls << endl;
+        myfile << "*** @pos2d " + parsedIoPositions[i * 2] + " " + parsedIoPositions[(i * 2) + 1] << endl;
     }
-    myfile << "*** @outputlbl " + outputlbls << endl;
+
+    //generate the outputs
+    for (size_t i = 0; i < outputComponents; i++)
+    {
+        myfile << "\n*** @o " + parsedIORadixTypes[inputComponents+i] << endl;
+        myfile << "*** @id " + idList[inputComponents + i] << endl;
+        myfile << "*** @size " + to_string(inputoutputSizes[inputComponents+i]) << endl;
+
+        string outputlbls = "";
+        for (int i = 0; i < output.getNr(); i++) {
+            outputlbls += parsedOutputNames[i] + " ";
+        }
+        myfile << "*** @iolbl " + outputlbls << endl;
+        myfile << "*** @pos2d " + parsedIoPositions[(inputComponents+i) * 2] + " " + parsedIoPositions[((inputComponents+i) * 2) + 1] << endl;
+    }
+
+    myfile << "\n*** CONNECTION DATA" << endl;
+    for (size_t i = 0; i < connectionPairCount; i++)
+    {
+        myfile << "*** @conn " + connectionPairs[i] << endl;
+    }
 
     myfile << "\n.subckt " << fileName;
     for (int i = 0; i < input.getNr(); i++) {
@@ -292,21 +339,11 @@ extern "C" __declspec(dllexport) int CreateCircuit(
     for (int i = 0; i < netlists.size(); i++) {
         
         myfile << "*** @f " + netlists[i].getIndex() << endl;
+        myfile << "*** @id " + idList[inputComponents + outputComponents + i] << endl;
+        myfile << "*** @radixType " + parsedFunctionRadixTypes[i] << endl;
         myfile << "*** @arity " + to_string(netlists[i].getArity()) << endl;
         myfile << "*** @pos2d " + parsedPositions[i * 2] + " " + parsedPositions[(i * 2) + 1] << endl;
-        string  connString = "";
-        for (size_t a = 0; a < 4; a++)
-        {
-            if (connections[i][a] != "")
-            {
-                connString += connections[i][a];
-
-                if (a < 3)
-                    connString += " ";
-            }
-        }
-        myfile << "*** @conn " + connString << endl;
-
+  
         for (int j = 0; j < (netlists[i].getArity() * 3); j++) {
             if (netlists[i].getInverter(j)) {
                 if (j % 3 == 1) {
@@ -355,17 +392,9 @@ extern "C" __declspec(dllexport) int CreateCircuit(
     for (int i = 0; i < savedCircuitCount; i++) {
 
         myfile << "*** @s " + savedCircuitNames[i] << endl;
+        myfile << "*** @id " + idList[inputComponents + outputComponents + j +i] << endl;
         myfile << "*** @pos2d " + parsedPositions[(j + i) * 2] + " " + parsedPositions[((j + i) * 2) + 1] << endl;
-        string  connString ="";
-        for (size_t a = 0; a < connections[j+i].size(); a++)
-        {
-            connString += connections[j+i][a];
-                    
-            if (a < (connections[j + i].size() -1))
-                connString += " ";
-        }
-        myfile << "*** @conn " + connString << endl;
-
+       
         myfile << "\nxckt" << j+i << " ";
 
         for (int a = 0; a < connections[j + i].size(); a++) {

@@ -11,11 +11,12 @@ public class applicationmanager : MonoBehaviour
     public static Dictionary<int, List<GameObject>> ActiveCanvasElementStack = new Dictionary<int, List<GameObject>>();
     public static bool scrollEnabled = true;
     public static GameObject curSelectedComponent;
- 
+   
 
     public void Awake()
     {
-        ActiveCanvasElementStack.Add(applicationmanager.ActiveCanvasElementStack.Count, new List<GameObject>());    
+        ActiveCanvasElementStack.Add(applicationmanager.ActiveCanvasElementStack.Count, new List<GameObject>());
+   
     }
 
     public static bool UseBigEndianForLogicGates()
@@ -73,11 +74,11 @@ public class applicationmanager : MonoBehaviour
         var lav = curSelectedComponent.GetComponent<DragDrop>().LowerAbstractionVersion;
 
         applicationmanager.ActiveCanvasElementStack.Add(applicationmanager.ActiveCanvasElementStack.Count, new List<GameObject>());
+        
         for (int i = 0; i < lav.transform.childCount; i++)
         {
             applicationmanager.ActiveCanvasElementStack[applicationmanager.abstractionLevel+1].Add(lav.transform.GetChild(i).gameObject);
         }
-
     }
 
     private static void TryRemoveOfAbstractionStack()
@@ -94,7 +95,7 @@ public class applicationmanager : MonoBehaviour
         var connections = GameObject.FindGameObjectsWithTag("Wire");
         var components = GameObject.FindGameObjectsWithTag("DnDComponent");
 
-        var dragdropArea = GameObject.FindObjectOfType<SaveCircuit>().DragDropArea;
+        var dragdropArea = SaveCircuit.DragDropArea;
 
         for (int i = 0; i < connections.Length; i++)
         {
@@ -130,14 +131,35 @@ public class applicationmanager : MonoBehaviour
                     //reset position for the coordinate system to work
                     curSelectedComponent.GetComponent<DragDrop>().storedPosition = curSelectedComponent.transform.localPosition;
                     curSelectedComponent.transform.localPosition = Vector3.zero;
+
                     //remove selection
                     curSelectedComponent.GetComponent<DragDrop>().DeSelect();
                     curSelectedComponent = null;
 
+                    
                     //disable current elements
                     for (int i = 0; i < ActiveCanvasElementStack[abstractionLevel].Count; i++)
                     {
-                        ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().FullVersion.SetActive(false);
+                        if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>() == null)
+                        {
+                            ActiveCanvasElementStack[abstractionLevel][i].gameObject.SetActive(false); //it is a connection
+                        }
+                        else
+                        {
+                            ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().FullVersion.SetActive(false); //it is a component
+
+
+                            if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion != null)
+                            {
+                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion.SetActive(true);
+                                for (int j = 0; j < ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionConnections.Count; j++)
+                                {
+                                    ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionConnections[j].gameObject.SetActive(true);
+                                    ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionConnections[j].Redraw();
+                                }
+
+                            }
+                        }
                     }
 
                     //increase abstraction level index
@@ -147,8 +169,19 @@ public class applicationmanager : MonoBehaviour
                     for (int i = 0; i < ActiveCanvasElementStack[abstractionLevel].Count; i++)
                     {
                         ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().FullVersion.SetActive(true);
+
+                        if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion != null)
+                        {
+                            ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion.SetActive(false);
+                            for (int j = 0; j < ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionConnections.Count; j++)
+                            {
+                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionConnections[j].gameObject.SetActive(false);
+                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionConnections[j].Redraw();
+                            }
+                        }
                     }
                 }
+               
             }
 
             if (scrollDelta < 0)
@@ -167,6 +200,16 @@ public class applicationmanager : MonoBehaviour
                     for (int i = 0; i < ActiveCanvasElementStack[abstractionLevel].Count; i++)
                     {
                         ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().FullVersion.SetActive(false);
+
+                        if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion != null)
+                        {
+                            ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion.SetActive(true);
+                            for (int j = 0; j < ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionConnections.Count; j++)
+                            {
+                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionConnections[j].gameObject.SetActive(true);
+                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionConnections[j].Redraw();
+                            }
+                        }
                     }
 
                     //remove elements from stack
@@ -178,13 +221,30 @@ public class applicationmanager : MonoBehaviour
                     //enable new elements
                     for (int i = 0; i < ActiveCanvasElementStack[abstractionLevel].Count; i++)
                     {
-                        ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().FullVersion.SetActive(true);
+                        if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>() == null)
+                        {
+                            ActiveCanvasElementStack[abstractionLevel][i].gameObject.SetActive(true); //it is a connection
+                        }
+                        else
+                        {
+                            ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().FullVersion.SetActive(true);
 
-                        if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().transform.localPosition == Vector3.zero)
-                            ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().transform.localPosition =
-                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().storedPosition;
+                            if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion != null)
+                            {
+                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion.SetActive(false);
+                                for (int j = 0; j < ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionConnections.Count; j++)
+                                {
+                                    ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionConnections[j].gameObject.SetActive(false);
+                                    ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionConnections[j].Redraw();
+                                }
+                            }
+
+                            if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().transform.localPosition == Vector3.zero)
+                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().transform.localPosition = ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().storedPosition;
+                        }
                     }
                 }
+               
             }
         }
     }

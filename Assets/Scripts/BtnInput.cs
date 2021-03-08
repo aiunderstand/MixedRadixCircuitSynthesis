@@ -11,6 +11,7 @@ using static InputController;
 public class BtnInput : MonoBehaviour
 {
     int _value = 0;
+    public string _radix = "";
     public TextMeshProUGUI DropdownLabel; //redundant as we also have a dropdown
 
     public void RemoveConnection(int id)
@@ -32,15 +33,15 @@ public class BtnInput : MonoBehaviour
     }
 
     public Image wireColor; 
-    Color _colorTernary = new Color(255,0,211); 
-    Color _colorBinary = new Color(0, 214, 255);
+    public static Color _colorTernary = new Color(255,0,211); 
+    public static Color _colorBinary = new Color(0, 214, 255);
     int _minValue = 0;
     int _maxValue = 0;
     public TextMeshProUGUI label;
     public int _portIndex = 0;
-    TMP_Dropdown _Dropdown;
+    public TMP_Dropdown _Dropdown;
     public bool isOutput = false; //duplicate because we also set this in lineController, refactor
-    public List<LineFunctions> Connections; 
+    public List<LineFunctions> Connections = new List<LineFunctions>(); 
 
     //refactors as Logic gate doesnt have any onclick events, only used for its references to value.
     
@@ -52,8 +53,11 @@ public class BtnInput : MonoBehaviour
 
     public void Start()
     {
-        Connections = new List<LineFunctions>();
-        
+        Init();
+    }
+
+    public void Init()
+    {
         if (DropdownLabel != null)
         {
             //Fetch the Dropdown GameObject
@@ -61,8 +65,10 @@ public class BtnInput : MonoBehaviour
             //Add listener for when the value of the Dropdown changes, to take action
             _Dropdown.onValueChanged.AddListener(delegate
             {
-                DropdownValueChanged(_Dropdown);   
+                DropdownValueChanged(_Dropdown);
             });
+
+            SetWireColor();
         }
     }
 
@@ -73,7 +79,8 @@ public class BtnInput : MonoBehaviour
             if (change.options[change.value].text.Contains("Ter"))
             {
                 wireColor.color = _colorTernary;
-
+                _radix = change.options[change.value].text;
+                
                 //only change line color if not output
                 if (!tag.Equals("Output"))
                 {
@@ -86,6 +93,7 @@ public class BtnInput : MonoBehaviour
             else
             {
                 wireColor.color = _colorBinary;
+                _radix = _radix = change.options[change.value].text;
 
                 //only change line color if not output
                 if (!tag.Equals("Output"))
@@ -104,7 +112,7 @@ public class BtnInput : MonoBehaviour
             if (Connections.Count > 0)
             {
                 var start = Connections[0].connection.startTerminal;
-                RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), Connections[0].connection.startTerminal.DropdownLabel.text, true);                
+                RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), start._radix, true);                
                 SetValue(radixSource, start._value, false);
             }
             else
@@ -122,7 +130,6 @@ public class BtnInput : MonoBehaviour
     {
         SetWireColor();
     }
-
 
     public void SetWireColor()
     {
@@ -311,7 +318,14 @@ public class BtnInput : MonoBehaviour
                 }
                 else
                 {
-                    c.connection.endTerminal.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                    if (c.connection.endTerminal.name.Contains("_saved"))
+                    {
+                        c.connection.endTerminal.GetComponentInParent<InputController>().ComputeSavedComponentOutput();
+                    }
+                    else
+                    {
+                        c.connection.endTerminal.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                    }
                 }
             }
         }
@@ -348,7 +362,14 @@ public class BtnInput : MonoBehaviour
                         }
                         else
                         {
-                            c.connection.endTerminal.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                            if (c.connection.endTerminal.name.Contains("_saved"))
+                            {
+                                c.connection.endTerminal.GetComponentInParent<InputController>().ComputeSavedComponentOutput();
+                            }
+                            else
+                            {
+                                c.connection.endTerminal.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                            }
                         }
                     }
                 }

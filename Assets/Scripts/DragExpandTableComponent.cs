@@ -203,6 +203,6 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
             }
         }
 
-        this.transform.parent.transform.parent.GetComponentInChildren<Matrix>().ComputeEmptyTruthTable(Arity);
+        this.transform.parent.transform.parent.GetComponentInChildren<Matrix>().ComputeEmptyTruthTable(Arity, radix);
     }
 }

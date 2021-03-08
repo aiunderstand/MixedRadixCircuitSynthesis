@@ -28,18 +28,20 @@ public class SaveCircuit : MonoBehaviour
     public GameObject SaveCanvas;
     public static float MenuScale = 0.66f;
     public static float FullScale = 1f;
-    public GameObject DragDropArea;
+    public GameObject _DragDropArea;
     public GameObject deleteBtnPrefab;
     SavedComponent tempComponentStructure;
     public StatisticsUI StatisticsScreen;
     public Toggle SaveAsLibraryComponent;
     public Color SelectionColor = Color.black;
+    public static GameObject DragDropArea;
 
     [HideInInspector]
     public GameObject tempComponent;
     private void Awake()
     {
-        cGen = FindObjectOfType<CircuitGenerator>();    
+        cGen = FindObjectOfType<CircuitGenerator>();
+        DragDropArea = _DragDropArea;
     }
 
     public void SaveComponentAs()
@@ -219,17 +221,19 @@ public class SaveCircuit : MonoBehaviour
 
         GameObject menuView = GameObject.Instantiate(previewPrefab);
         menuView.name = Views.MenuView.ToString();
-        menuView.GetComponent<ComponentGenerator>().Generate(c, Views.MenuView);
         menuView.transform.SetParent(ListItemObject.transform);
         menuView.transform.localPosition = new Vector3(0, 0);
         menuView.transform.localScale = new Vector3(MenuScale, MenuScale);
-
+        dd.MenuVersion = menuView;
+        menuView.GetComponent<ComponentGenerator>().Generate(c, Views.MenuView);
+       
         GameObject componentView = GameObject.Instantiate(previewPrefab);
         componentView.transform.SetParent(ListItemObject.transform);
-        componentView.name = "Level: " + c.Stats.abstractionLevelCount;
-        componentView.GetComponent<ComponentGenerator>().Generate(c, Views.ComponentView);
         componentView.transform.localPosition = new Vector3(0, 0);
         componentView.transform.localScale = new Vector3(FullScale, FullScale);
+        componentView.name = "Level: " + c.Stats.abstractionLevelCount;
+        dd.FullVersion = componentView;
+        var buttons = componentView.GetComponent<ComponentGenerator>().Generate(c, Views.ComponentView);
         componentView.SetActive(false);
 
         GameObject selectionBox = GameObject.Instantiate(componentView.GetComponent<ComponentGenerator>().body.gameObject);
@@ -241,17 +245,11 @@ public class SaveCircuit : MonoBehaviour
         selectionBox.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 156); //6 pixels wider then body
         selectionBox.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, menuView.GetComponent<ComponentGenerator>().Size + 6); //6 pixels heigher then body
         selectionBox.SetActive(false);
-     
-        float size = menuView.GetComponent<ComponentGenerator>().Size * MenuScale;
-        ListItemObject.AddComponent<LayoutElement>().minHeight = (size + 5); //offset between menu items
-       
-        dd.DragDropArea = DragDropArea;
-        dd.FullVersion = componentView;
-        dd.MenuVersion = menuView;
         dd.SelectionBox = selectionBox;
-        
-        dd.panelBg = componentView.GetComponent<ComponentGenerator>().body.gameObject.GetComponent<Image>(); //first child is body. Hardcoded so not ideal
 
+        float size = menuView.GetComponent<ComponentGenerator>().Size * MenuScale;
+        ListItemObject.AddComponent<LayoutElement>().minHeight = (size + 5); //offset between menu items        
+        dd.panelBg = componentView.GetComponent<ComponentGenerator>().body.gameObject.GetComponent<Image>(); //first child is body. Hardcoded so not ideal
         dd.MenuVersion.GetComponent<ComponentGenerator>().title.text = c.ComponentName;
         dd.FullVersion.GetComponent<ComponentGenerator>().title.text = c.ComponentName;
         menuView.SetActive(false);
@@ -264,8 +262,8 @@ public class SaveCircuit : MonoBehaviour
 
         //responsible for the name and interaction, needs to be last due to awake funtion
         ListItemObject.GetComponent<DragDrop>().Stats = c.Stats;
-        ListItemObject.GetComponent<DragDrop>().FullVersion.AddComponent<SavedComponentController>();
-        ListItemObject.GetComponent<DragDrop>().FullVersion.GetComponent<SavedComponentController>().savedComponent = c;
+        ListItemObject.GetComponent<DragDrop>().FullVersion.AddComponent<InputController>().Buttons = buttons;
+        ListItemObject.GetComponent<DragDrop>().FullVersion.GetComponent<InputController>().savedComponent = c;
 
         if (isDropped)
         {

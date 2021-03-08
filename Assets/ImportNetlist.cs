@@ -145,42 +145,8 @@ public class ImportNetlist : MonoBehaviour, IPointerDownHandler
                         sc.Stats.abstractionLevelCount = int.Parse(parts[2]);
                     }
                     break;
-                case "@inputs":
-                    {
-                        for (int j = 2; j < parts.Length; j++)
-                        {
-                            var x = (RadixOptions)Enum.Parse(typeof(RadixOptions), parts[j]);
-                            sc.Inputs.Add(x);
-                        }                        
-                    }
-                    break;
-                case "@inputlbl":
-                    {
-                        for (int j = 2; j < parts.Length; j++)
-                        {
-                            var parsedNames = parts[j].Split('_');
-                            sc.InputLabels.Add(parsedNames[0]);
-                        }
-                    }
-                    break;
-                case "@outputs":
-                    {
-                        for (int j = 2; j < parts.Length; j++)
-                        {
-                            var x = (RadixOptions)Enum.Parse(typeof(RadixOptions), parts[j]);
-                            sc.Outputs.Add(x);
-                        }
-                    }
-                    break;
-                case "@outputlbl":
-                    {
-                        for (int j = 2; j < parts.Length; j++)
-                        {
-                            var parsedNames = parts[j].Split('_');
-                            sc.OutputLabels.Add(parsedNames[0]);
-                        }
-                    }
-                    break;
+
+                
             }
         }
 

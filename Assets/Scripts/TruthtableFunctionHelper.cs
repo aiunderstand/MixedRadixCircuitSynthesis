@@ -112,7 +112,22 @@ public class TruthtableFunctionHelper : MonoBehaviour
         int savedCircuitCount, 
         string[] savedCircuitNamesArray,
         int connectionIndexCount,
-        int[] connectionIndexArray);
+        int[] connectionIndexArray,
+        string[] functionRadixTypeArray,
+        int functionRadixTypeCount,
+        int inputComponents,
+        int outputComponents,
+        string[] ioRadixTypeArray,
+        int ioRadixTypeCount,
+        int[] inputOutputSizeArray,
+        int inputOutputSizeCount,
+        string[] ioPositionArray,
+        int ioPositionCount,
+        string[] connectionPairArray,
+        int connectionPairCount,
+        string[] idArray,
+        int idArrayCount
+        );
 
     [DllImport("CircuitGenerator", EntryPoint = "GetOptimzedTT")]
     public static extern IntPtr GetOptimzedTT();
@@ -125,9 +140,18 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
     [DllImport("CircuitGenerator", EntryPoint = "GetInvArray_Release")]
     public static extern void GetInvArray_Release(IntPtr ptr);
-    
 
-    public void Start()
+    bool isInitialized = false;
+
+    public void Awake() //must init after autocompletebox hence at second possition in hierarchy
+    {
+        if (!isInitialized) //for manual init
+        {
+            Initialize(); 
+        }
+    }
+
+    public void Initialize()
     {
         //Fetch the Dropdown GameObject
         _Dropdown = GetComponent<AutoCompleteComboBox>();
@@ -153,9 +177,10 @@ public class TruthtableFunctionHelper : MonoBehaviour
         {
             options.Add(item.ToString());
         }
-        
+
         _Dropdown.SetAvailableOptions(options);
 
+        isInitialized = true;
     }
 
     void DropdownValueChanged(AutoCompleteComboBox change)
@@ -708,6 +733,9 @@ public class TruthtableFunctionHelper : MonoBehaviour
                 if (function.Length == 1 || function.Length == 3 || function.Length == 9)
                 {
                     RadixOptions targetRadix = GetComponentInParent<InputControllerLogicGate>().GetRadixTarget();
+                    int radix = 3;
+                    if (targetRadix.ToString().Contains("Binary"))
+                        radix = 2;
 
                     if (function.Length == 1)
                     {
@@ -718,7 +746,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                         {
                             //only change panel size if needed, otherwise all connections are reset
                             if (_DETC.Arity != 1)
-                                _DETC.SetPanelSize(3, 1);
+                                _DETC.SetPanelSize(radix, 1);
 
                             //get all the cells
                             BtnInputTruthTable[] cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
@@ -753,7 +781,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                         {
                             //only change panel size if needed, otherwise all connections are reset
                             if (_DETC.Arity != 2)
-                                _DETC.SetPanelSize(3, 2);
+                                _DETC.SetPanelSize(radix, 2);
 
                             //get all the cells
                             BtnInputTruthTable[] cells = transform.parent.GetComponentsInChildren<BtnInputTruthTable>();
@@ -789,7 +817,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                         {
                             //only change panel size if needed, otherwise all connections are reset
                             if (_DETC.Arity != 3)
-                                _DETC.SetPanelSize(3, 3);
+                                _DETC.SetPanelSize(radix, 3);
 
                             //get all the cells
                             BtnInputTruthTableDropdown bittd = transform.parent.GetComponentInChildren<BtnInputTruthTableDropdown>();

@@ -1,6 +1,7 @@
 ﻿using ExtensionMethods;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -25,8 +26,8 @@ public class DragDrop : MonoBehaviour,
     Color panelColorActive = new Color(255/255,82/255,45/255);
     public Image panelBg;
     bool _isFullVersion = false;
+    public List<LineFunctions> LowerAbstractionConnections = new List<LineFunctions>();
 
-    public GameObject DragDropArea; //ugly, refactor so this is unneeded
 
     void Awake()
     {
@@ -44,7 +45,9 @@ public class DragDrop : MonoBehaviour,
         {
             panelColorDefault = panelBg.color;
             this.transform.tag = "DnDComponent";
-            this.FullVersion.GetComponent<ComponentGenerator>().infoBtn.SetActive(true);
+
+            if (this.FullVersion.GetComponent<ComponentGenerator>() != null)
+                this.FullVersion.GetComponent<ComponentGenerator>().infoBtn.SetActive(true);
         }
     }
 
@@ -75,7 +78,7 @@ public class DragDrop : MonoBehaviour,
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        _limits = DragDropArea.transform.GetComponent<RectTransform>().rect.max;
+        _limits = SaveCircuit.DragDropArea.transform.GetComponent<RectTransform>().rect.max;
 
         if (_isFullVersion)
         {
@@ -90,21 +93,23 @@ public class DragDrop : MonoBehaviour,
             go.name = this.name; //isnt this overwritten?
             go.transform.SetSiblingIndex(this.transform.GetSiblingIndex());
             go.GetComponent<DragDrop>().Stats = this.Stats;
-
            
+
+
             //enable info button and copy properties on saved components
             if (this.FullVersion.GetComponent<ComponentGenerator>() != null)
             {
                 this.FullVersion.GetComponent<ComponentGenerator>().infoBtn.SetActive(true);
-                go.GetComponent<DragDrop>().FullVersion.GetComponent<SavedComponentController>().savedComponent = this.FullVersion.GetComponent<SavedComponentController>().savedComponent;
+                go.GetComponent<DragDrop>().FullVersion.GetComponent<InputController>().savedComponent = this.FullVersion.GetComponent<InputController>().savedComponent;
 
                 //Unity bug where it will auto default to wrong anchor position when part of layout group (sets it to top left). Probably due to some awake script. Set it to center here.
                 this.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
                 this.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.5f);
                 this.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
             }
+           
             //update current drag drop component 
-            this.transform.SetParent(DragDropArea.transform);
+            this.transform.SetParent(SaveCircuit.DragDropArea.transform);
             this.transform.tag = "DnDComponent";
             this.transform.SetAsLastSibling();
            
