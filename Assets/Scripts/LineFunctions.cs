@@ -12,6 +12,7 @@ public class LineFunctions : MonoBehaviour
     {
         connection.startTerminal.RemoveConnection(connection.id);
         connection.endTerminal.RemoveConnection(connection.id);
+        applicationmanager.ActiveCanvasElementStack[applicationmanager.abstractionLevel].Remove(this.gameObject);
         Destroy(this.gameObject);
     }
 

@@ -91,6 +91,9 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
 
     public void SetPanelSize(int radix, int arity)
     {
+        InputControllerLogicGate iclg = transform.parent.parent.GetComponent<InputControllerLogicGate>();
+
+
         //remove all possibl existing connections to it
         var allTerminals = transform.parent.transform.parent.GetComponentsInChildren<BtnInput>();
 
@@ -120,6 +123,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
                             tt.SetActive(false);
 
                         BinaryTruthtables[0].SetActive(true);
+                        iclg.UpdateInputController(BinaryTruthtables[0].GetComponent<InputController>());
                         Arity = 1;
                     }
                     break;
@@ -134,6 +138,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
                             tt.SetActive(false);
 
                         BinaryTruthtables[1].SetActive(true);
+                        iclg.UpdateInputController(BinaryTruthtables[1].GetComponent<InputController>());
                         Arity = 2;
                     }
                     break;
@@ -148,6 +153,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
                             tt.SetActive(false);
 
                         BinaryTruthtables[2].SetActive(true);
+                        iclg.UpdateInputController(BinaryTruthtables[2].GetComponent<InputController>());
                         Arity = 3;
                     }
                     break;
@@ -169,6 +175,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
                             tt.SetActive(false);
 
                         TernaryTruthtables[0].SetActive(true);
+                        iclg.UpdateInputController(TernaryTruthtables[0].GetComponent<InputController>());
                         Arity = 1;
                     }
                     break;
@@ -183,6 +190,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
                             tt.SetActive(false);
 
                         TernaryTruthtables[1].SetActive(true);
+                        iclg.UpdateInputController(TernaryTruthtables[1].GetComponent<InputController>());
                         Arity = 2;
                     }
                     break;
@@ -197,6 +205,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
                             tt.SetActive(false);
 
                         TernaryTruthtables[2].SetActive(true);
+                        iclg.UpdateInputController(TernaryTruthtables[2].GetComponent<InputController>());
                         Arity = 3;
                     }
                     break;

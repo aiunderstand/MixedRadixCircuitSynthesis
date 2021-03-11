@@ -539,6 +539,7 @@ GameObject:
   - component: {fileID: 123420753389386788}
   - component: {fileID: 2547115072562241506}
   - component: {fileID: 8535563834826514143}
+  - component: {fileID: 6007916048927165035}
   m_Layer: 5
   m_Name: InputField (TMP)
   m_TagString: Untagged
@@ -683,7 +684,19 @@ MonoBehaviour:
       m_Calls: []
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 6007916048927165035}
+        m_TargetAssemblyTypeName: InputValidator, Assembly-CSharp
+        m_MethodName: CheckIOLabel
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_OnTouchScreenKeyboardStatusChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -702,6 +715,18 @@ MonoBehaviour:
   m_isRichTextEditingAllowed: 0
   m_LineLimit: 0
   m_InputValidator: {fileID: 0}
+--- !u!114 &6007916048927165035
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4096595699471084799}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f25d57d82cbcd64d91163b3e0eb46c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7022865963332975888
 GameObject:
   m_ObjectHideFlags: 0
@@ -1023,11 +1048,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9aa825b5ce1ac8c45acac84a0c100b59, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _value: 0
+  _radix: 
   DropdownLabel: {fileID: 0}
   wireColor: {fileID: 0}
   label: {fileID: 6899992171363151695}
   _portIndex: 0
+  _Dropdown: {fileID: 0}
   isOutput: 0
+  hasDownwardsLink: {fileID: 0}
+  hasUpwardsLink: {fileID: 0}
   Connections: []
 --- !u!1 &8959619427656379645
 GameObject:

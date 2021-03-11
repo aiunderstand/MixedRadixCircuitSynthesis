@@ -13,7 +13,8 @@ public class InputController : MonoBehaviour
         binary
     }
 
-    public List<GameObject> Buttons = new List<GameObject>();
+    public List<GameObject> Buttons = new List<GameObject>(); //buttons found in the Full Version View
+    
     public TextMeshProUGUI CounterLabel;
     public TextMeshProUGUI DropdownLabel;
     public SavedComponent savedComponent; //only needed for saved components
@@ -30,15 +31,20 @@ public class InputController : MonoBehaviour
         if (!isInit)
         {
             if (this.name.Equals("Trit-Input"))
-                transform.GetComponentInParent<DragDrop>().name = ";Input;" + GetInstanceID().ToString();
+                transform.parent.parent.GetComponent<DragDrop>().name = ";Input;" + GetInstanceID().ToString();
 
             if (this.name.Equals("Trit-Output"))
-                transform.GetComponentInParent<DragDrop>().name = ";Output;" + GetInstanceID().ToString();
+                transform.parent.parent.GetComponent<DragDrop>().name = ";Output;" + GetInstanceID().ToString();
 
             if (this.name.Contains("Level"))
-                transform.GetComponentInParent<DragDrop>().name = ";SavedGate;" + GetInstanceID().ToString();
+                transform.parent.GetComponent<DragDrop>().name = ";SavedGate;" + GetInstanceID().ToString();
 
             isInit = true;
+
+            foreach (var b in Buttons)
+            {
+                b.GetComponent<BtnInput>().Init();
+            }
         }
     }
 
@@ -78,43 +84,6 @@ public class InputController : MonoBehaviour
         }
     }
 
-    public void ComputeSavedComponentOutput()
-    {
-        bool stateChanged = false;
-
-        bool allConnected = true;
-        var ports = GetComponentsInChildren<BtnInput>();
-
-        foreach (var p in ports)
-        {
-            if (p.Connections.Count == 0) //if one or more connections are connected, return false
-                allConnected = false;
-        }
-
-        if (allConnected)
-        {
-
-
-            //Step 5: Propagate output to its connections
-            //if ((outputPort != null) && (outputPort.Connections.Count > 0))
-            //{
-            //    foreach (var c in outputPort.Connections)
-            //    {
-            //        //determine if logic gate or output 
-            //        if (c.connection.endTerminal.tag.Equals("Output"))
-            //        {
-            //            var val = c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixTarget, _output, false);
-            //            c.connection.endTerminal.GetComponentInChildren<LEDtoggle>().SetLedColor(val);
-            //        }
-            //        else
-            //        {
-            //            //only propagate when states have changed
-            //            if (stateChanged)
-            //                c.connection.endTerminal.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
-            //        }
-            //    }
-            //}
-        }
-    }
+   
 }
 

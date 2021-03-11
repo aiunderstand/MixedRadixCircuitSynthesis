@@ -1,5 +1,5 @@
 ﻿  CircuitGenerator.cpp
-C:\Users\maxde\Documents\git-repos\MixedRadixCircuitSynthesis\PluginSource\CircuitGenerator\CircuitGenerator.cpp(391,28): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\maxde\Documents\git-repos\MixedRadixCircuitSynthesis\PluginSource\CircuitGenerator\CircuitGenerator.cpp(397,28): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   FunctionGenerator.cpp
   NetlistGenerator.cpp
 C:\Users\maxde\Documents\git-repos\MixedRadixCircuitSynthesis\PluginSource\CircuitGenerator\NetlistGenerator.cpp(162,22): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data

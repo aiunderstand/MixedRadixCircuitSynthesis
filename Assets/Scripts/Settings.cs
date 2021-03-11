@@ -34,8 +34,11 @@ public class Settings : MonoBehaviour
         }
         else
         {
+            applicationmanager.InitHack = new List<GameObject>();
             LoadSavedComponents();
             loadingDone = true;
+            applicationmanager.clearInitHack = true;
+
         }
     }
 
@@ -90,10 +93,12 @@ public class Settings : MonoBehaviour
                 component.ComponentName = name;
                 component.ComponentNetlistPath = netlistPath;
                 component.Stats = stats;
+
                 var go = saveCircuit.GenerateListItem(component, saveCircuit.ContentContainer.transform, false);
+                
                 go.GetComponent<DragDrop>().MenuVersion.SetActive(true);
-                go.GetComponent<DragDrop>().FullVersion.SetActive(false);
-                go.name = name;
+                //go.GetComponent<DragDrop>().FullVersion.SetActive(false);
+                //go.name = name;
                 savedComponents.Add(component.ComponentName, component);
             }
         }

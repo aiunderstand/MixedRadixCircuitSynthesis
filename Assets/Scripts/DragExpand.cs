@@ -69,6 +69,15 @@ public class DragExpand : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
                 _AmountOfInputs++;
                 go.name = (_AmountOfInputs - 1).ToString(); //reuse name for index, refactor this is bad practise
                 go.GetComponent<BtnInput>()._portIndex = _AmountOfInputs - 1;
+                go.GetComponent<BtnInput>().Connections.Clear();
+                go.GetComponent<BtnInput>().hasDownwardsLink = null;
+                go.GetComponent<BtnInput>().hasUpwardsLink = null;
+
+                if (InputController.name.Contains("Input"))
+                    go.GetComponent<BtnInput>().isOutput = false;
+                else
+                    go.GetComponent<BtnInput>().isOutput = true;
+
                 InputController.Buttons.Add(go);
                 InputController.ComputeCounter();
             }
@@ -79,9 +88,13 @@ public class DragExpand : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
                     _computedHeight = _btnInputMinPos + ((_AmountOfInputs - 2) * _btnInputSpacing);
                     _panel.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _computedHeight);
                     var go = InputController.Buttons[_AmountOfInputs - 1];
-                    go.GetComponent<BtnInput>().RemoveAllConnections();
+                    if (go.GetComponent<BtnInput>().Connections.Count > 0)
+                    {
+                        go.GetComponent<BtnInput>().RemoveAllConnections();
+                    }
+
                     InputController.Buttons.Remove(go);
-                    Destroy(go);
+                    DestroyImmediate(go);
                     _AmountOfInputs--;
                     InputController.ComputeCounter();
                 }

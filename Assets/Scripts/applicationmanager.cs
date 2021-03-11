@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using System;
+using ExtensionMethods;
 
 public class applicationmanager : MonoBehaviour
 {
@@ -12,6 +13,20 @@ public class applicationmanager : MonoBehaviour
     public static bool scrollEnabled = true;
     public static GameObject curSelectedComponent;
     LineManager lm;
+    public static List<GameObject> InitHack; //we need to fix this in a much nicer way. When dragging a saved component onto canvas we instantiate it with all being active to initialize properly (so we can use getcomponentinchildren/parent. If we remove these with fixed paths, which are all known, we dont need this ugly hack
+    public static bool clearInitHack = false;
+    public IEnumerator CompleteInitHack()
+    {
+        yield return StartCoroutine(WaitFor.Frames(1)); // wait for 1 frame
+
+        //restore tree by disabling the ones that are not top abstraction layer
+        for (int i = 0; i < applicationmanager.InitHack.Count; i++)
+        {
+            applicationmanager.InitHack[i].SetActive(false);
+        }
+
+        InitHack.Clear();
+    }
 
     public void Awake()
     {
@@ -120,6 +135,12 @@ public class applicationmanager : MonoBehaviour
 
     public void Update()
     {
+        if (clearInitHack)
+        {
+            clearInitHack = false;
+            StartCoroutine(CompleteInitHack());
+        }  
+       
         if (scrollEnabled)
         {
             float scrollDelta = Input.mouseScrollDelta.y;

@@ -21,7 +21,7 @@ public class SaveCircuit : MonoBehaviour
    
 
     CircuitGenerator cGen;
-    public TMP_InputField Name;
+    public TMP_InputField Label;
     public GameObject previewPrefab;
     bool fulfillsSaveConditions;
     public GameObject ContentContainer;
@@ -48,10 +48,7 @@ public class SaveCircuit : MonoBehaviour
     {
         if (fulfillsSaveConditions)
         {
-            //filter symbols and spaces from name
-            var pattern = @"[^0-9a-zA-Z_-]+";
-            var filteredName = Regex.Replace(Name.text, pattern, "");
-            Stats stats = cGen.SaveComponent(filteredName); //generate netlist
+            Stats stats = cGen.SaveComponent(Label.text); //generate netlist
 
             if (stats.success)
             {
@@ -60,13 +57,17 @@ public class SaveCircuit : MonoBehaviour
                     //we need to regenerate the component because it has children now
                     //save to settings file
                     tempComponentStructure.Stats = stats;
-                    tempComponentStructure.ComponentName = Name.text;
-                    tempComponentStructure.ComponentNetlistPath = Application.persistentDataPath + "/User/Generated/" + filteredName + "/" + "c_" + filteredName + ".sp";
-                  
+                    tempComponentStructure.ComponentName = Label.text;
+                    tempComponentStructure.ComponentNetlistPath = Application.persistentDataPath + "/User/Generated/" + Label.text + "/" + "c_" + Label.text + ".sp";
+
+                    applicationmanager.InitHack = new List<GameObject>();
                     var go = GenerateListItem(tempComponentStructure, ContentContainer.transform, false);
+                    applicationmanager.clearInitHack = true;
+
+
                     go.GetComponent<DragDrop>().MenuVersion.SetActive(true);
                     go.GetComponent<DragDrop>().FullVersion.SetActive(false);
-                    go.name = Name.text;
+                    //go.name = Label.text;
 
                     Settings.Save(tempComponentStructure);
                 }
@@ -76,7 +77,7 @@ public class SaveCircuit : MonoBehaviour
                
                 //clear canvas, we clear the preview with a call in the unity btn handler
                 applicationmanager.ClearCanvas();
-                Name.text = "";
+                Label.text = "";
             }
         }
        
@@ -90,6 +91,7 @@ public class SaveCircuit : MonoBehaviour
         applicationmanager.scrollEnabled = true;
     }
 
+    //we should remove this preview generator and use the normal generator as there are some slight differences to ordering of inputs
     public void GeneratePreview()
     {
         applicationmanager.scrollEnabled = false;
@@ -143,38 +145,38 @@ public class SaveCircuit : MonoBehaviour
         }
 
 
-        //reorder the labels
-        List<string> tempLabels = new List<string>();
-        List<RadixOptions> tempRadixSource = new List<RadixOptions>();
+        ////reorder the labels
+        //List<string> tempLabels = new List<string>();
+        //List<RadixOptions> tempRadixSource = new List<RadixOptions>();
 
-        //sort inputOrder
-        var sorted = inputOrder.OrderBy(key => key.Value);
+        ////sort inputOrder
+        //var sorted = inputOrder.OrderBy(key => key.Value);
 
-        //assign tempLabels in correct order
-        foreach (var item in sorted)
-        {
-            tempLabels.Add(inputLabels[item.Key]);
-            tempRadixSource.Add(inputs[item.Key]);
-        }
+        ////assign tempLabels in correct order
+        //foreach (var item in sorted)
+        //{
+        //    tempLabels.Add(inputLabels[item.Key]);
+        //    tempRadixSource.Add(inputs[item.Key]);
+        //}
         
-        inputLabels = tempLabels;
-        inputs = tempRadixSource;
+        //inputLabels = tempLabels;
+        //inputs = tempRadixSource;
 
-        List<string> tempLabels1 = new List<string>();
-        List<RadixOptions> tempRadixSource1 = new List<RadixOptions>();
+        //List<string> tempLabels1 = new List<string>();
+        //List<RadixOptions> tempRadixSource1 = new List<RadixOptions>();
 
-        //do the same for outputLabels
-        sorted = outputOrder.OrderBy(key => key.Value);
+        ////do the same for outputLabels
+        //sorted = outputOrder.OrderBy(key => key.Value);
 
-        //assign tempLabels in correct order
-        foreach (var item in sorted)
-        {
-            tempLabels1.Add(outputLabels[item.Key]);
-            tempRadixSource1.Add(outputs[item.Key]);
-        }
+        ////assign tempLabels in correct order
+        //foreach (var item in sorted)
+        //{
+        //    tempLabels1.Add(outputLabels[item.Key]);
+        //    tempRadixSource1.Add(outputs[item.Key]);
+        //}
         
-        outputLabels = tempLabels1;
-        outputs = tempRadixSource1;
+        //outputLabels = tempLabels1;
+        //outputs = tempRadixSource1;
 
         //create a temp saved component for preview/save screen
         tempComponentStructure = new SavedComponent(inputs, inputLabels, outputs, outputLabels);
@@ -191,15 +193,19 @@ public class SaveCircuit : MonoBehaviour
 
     public void UpdateName(string componentName) //event triggered by input text box from save screen
     {
-         if (tempComponent != null)
+        //hacky, this is the same pattern as the input validator
+        var pattern = @"[^0-9a-zA-Z-]+"; //no spaces or _
+        var filteredName = Regex.Replace(componentName, pattern, "");
+        
+        if (tempComponent != null)
         {
             var cgs = tempComponent.GetComponentsInChildren<ComponentGenerator>();
             foreach (var item in cgs)
             {
-                item.title.text = componentName;
+                item.title.text = filteredName;
             }
 
-            tempComponent.name = componentName;
+            tempComponent.name = filteredName;
         }
     }
 
@@ -209,7 +215,6 @@ public class SaveCircuit : MonoBehaviour
         tempComponent = null;
     }
 
-    //this is aweful.This method does the same thing as preview only slightly different.We need to make time to do serious refactoring here
     public GameObject GenerateListItem(SavedComponent c, Transform parent, bool isDropped)
     {
         var ListItemObject = new GameObject();
@@ -234,7 +239,8 @@ public class SaveCircuit : MonoBehaviour
         componentView.name = "Level: " + c.Stats.abstractionLevelCount;
         dd.FullVersion = componentView;
         var buttons = componentView.GetComponent<ComponentGenerator>().Generate(c, Views.ComponentView);
-        componentView.SetActive(false);
+        //componentView.SetActive(false);
+        applicationmanager.InitHack.Add(componentView);
 
         GameObject selectionBox = GameObject.Instantiate(componentView.GetComponent<ComponentGenerator>().body.gameObject);
         selectionBox.transform.SetParent(componentView.transform);
@@ -264,12 +270,15 @@ public class SaveCircuit : MonoBehaviour
         ListItemObject.GetComponent<DragDrop>().Stats = c.Stats;
         ListItemObject.GetComponent<DragDrop>().FullVersion.AddComponent<InputController>().Buttons = buttons;
         ListItemObject.GetComponent<DragDrop>().FullVersion.GetComponent<InputController>().savedComponent = c;
-
+      
         if (isDropped)
         {
             ListItemObject.GetComponent<DragDrop>().SetVersion(true); //mimic it being already dropped
             ListItemObject.AddComponent<SelectionBehavior>();
         }
+
+        //applicationmanager.InitHack.Add(ListItemObject.GetComponent<DragDrop>().LowerAbstractionVersion.gameObject);
+
         return ListItemObject;
     }
 

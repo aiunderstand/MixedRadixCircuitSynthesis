@@ -10,26 +10,40 @@ using static InputController;
 //We should rename BtnInput to Port as it evolved more into that
 public class BtnInput : MonoBehaviour
 {
-    int _value = 0;
+    public int _value = 0;
     public string _radix = "";
     public TextMeshProUGUI DropdownLabel; //redundant as we also have a dropdown
 
     public void RemoveConnection(int id)
     {
         int index = 0;
+        bool isFound = false;
         for (int i = 0; i < Connections.Count; i++)
         {
             if (Connections[i].connection.id == id)
+            {
                 index = i;
+                isFound = true;
+            }
         }
 
-        Connections.RemoveAt(index);
+        if (isFound)
+            Connections.RemoveAt(index);
     }
 
     public void RemoveAllConnections()
     {
-        while (Connections.Count > 0)
-            Connections[0].DestroyConnection();
+        int l = Connections.Count;
+        for (int i = 0; i < l; i++)
+        {
+            var go = Connections[0].GetComponent<LineFunctions>();
+            var index = go.connection.id;
+            go.connection.startTerminal.RemoveConnection(index);
+            go.connection.endTerminal.RemoveConnection(index);
+            applicationmanager.ActiveCanvasElementStack[applicationmanager.abstractionLevel].Remove(go.gameObject);
+            Destroy(go.gameObject);
+        }
+            
     }
 
     public Image wireColor; 
@@ -41,14 +55,22 @@ public class BtnInput : MonoBehaviour
     public int _portIndex = 0;
     public TMP_Dropdown _Dropdown;
     public bool isOutput = false; //duplicate because we also set this in lineController, refactor
-    public List<LineFunctions> Connections = new List<LineFunctions>(); 
-
+    public BtnInput hasDownwardsLink;
+    public BtnInput hasUpwardsLink;
+    public List<LineFunctions> Connections = new List<LineFunctions>();
+    InputController ic;
     //refactors as Logic gate doesnt have any onclick events, only used for its references to value.
-    
+
     public enum RadixOptions { 
         BalancedTernary,
         UnbalancedTernary,
         Binary
+    }
+
+
+    public RadixOptions GetRadix()
+    {
+        return (RadixOptions) Enum.Parse(typeof(RadixOptions), _radix);
     }
 
     public void Start()
@@ -58,6 +80,8 @@ public class BtnInput : MonoBehaviour
 
     public void Init()
     {
+         ic = gameObject.transform.parent.GetComponent<InputController>();
+
         if (DropdownLabel != null)
         {
             //Fetch the Dropdown GameObject
@@ -69,6 +93,8 @@ public class BtnInput : MonoBehaviour
             });
 
             SetWireColor();
+
+            _radix = DropdownLabel.text;
         }
     }
 
@@ -146,7 +172,13 @@ public class BtnInput : MonoBehaviour
     public int GetValueAsIndex(RadixOptions radixTarget)
     {
         int outputValue = 0;
-        RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
+
+        RadixOptions radixSource;
+        if (DropdownLabel == null) //probably a input without explicit dropdown
+            radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), _radix, true);
+        else
+            radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
+
         switch (radixSource)
         {
             case RadixOptions.BalancedTernary: //from -1,0,1 to radix 2 (0,1) or to radix 3(0,1,2)
@@ -248,18 +280,18 @@ public class BtnInput : MonoBehaviour
     }
     public void OnClick(int amount)
     {
-      
-        RadixOptions radixSource = (RadixOptions) Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
+
+        RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
 
         //this function is not a conversion, but rather updates the value allowing cyclic behavior
         switch (radixSource)
         {
-            case  RadixOptions.BalancedTernary:
+            case RadixOptions.BalancedTernary:
                 {
                     _minValue = -1;
                     _maxValue = 1;
 
-                    _value+= amount;
+                    _value += amount;
 
                     if (_value > _maxValue)
                         _value = _minValue;
@@ -298,81 +330,89 @@ public class BtnInput : MonoBehaviour
                 break;
         }
 
-        label.text = _value.ToString();
+        SetValue(GetRadix(), _value, true);
 
-        //report back to counter to recount, which is the parent of this object;
-        var ic = gameObject.GetComponentInParent<InputController>();
-        ic.ComputeCounter();
 
-        //update connect
-        //go over connections and update next component, this code is duplicated in inputcontrollerlogicgate
-        if (Connections.Count > 0)
-        {
-            foreach (var c in Connections)
-            {
-                //determine if logic gate or output 
-                if (c.connection.endTerminal.tag.Equals("Output"))
-                {
-                    var val = c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixSource, _value,false);
-                    c.connection.endTerminal.GetComponentInChildren<LEDtoggle>().SetLedColor(val);
-                }
-                else
-                {
-                    if (c.connection.endTerminal.name.Contains("_saved"))
-                    {
-                        c.connection.endTerminal.GetComponentInParent<InputController>().ComputeSavedComponentOutput();
-                    }
-                    else
-                    {
-                        c.connection.endTerminal.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
-                    }
-                }
-            }
-        }
-    } 
+        //    //report back to counter to recount, which is the parent of this object;
+        //    var ic = gameObject.GetComponentInParent<InputController>();
+        //    ic.ComputeCounter();
 
-    //horrible api: set, transform and then get in one
-    public int SetValue(RadixOptions radixSource, int value, bool withPropagation)
+        //    //update connect
+        //    //go over connections and update next component, this code is duplicated in inputcontrollerlogicgate
+        //    if (Connections.Count > 0)
+        //    {
+        //        foreach (var c in Connections)
+        //        {
+        //            //determine if logic gate or output 
+        //            if (c.connection.endTerminal.tag.Equals("Output"))
+        //            {
+        //                var val = c.connection.endTerminal.SetValue(radixSource, _value,false);
+        //                c.connection.endTerminal.GetComponentInChildren<LEDtoggle>().SetLedColor(val);
+        //            }
+        //            else
+        //            {
+        //                if (c.connection.endTerminal.name.Contains("_saved"))
+        //                {
+        //                    c.connection.endTerminal.SetValue(GetRadix(), _value, true);
+        //                    c.connection.endTerminal.transform.parent.GetComponent<InputControllerSaved>().ComputeSavedComponentOutput();
+        //                }
+        //                else
+        //                {
+        //                    c.connection.endTerminal.transform.parent.parent.GetComponent<InputControllerLogicGate>().ComputeTruthTableOutput();
+        //                }
+        //            }
+        //        }
+        //    }
+        //} 
+    }
+
+        //horrible api: set, transform and then get in one
+        public int SetValue(RadixOptions radixSource, int value, bool withPropagation)
     {
-        RadixOptions radixTarget = (RadixOptions)Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
+        RadixOptions radixTarget;
+        if (DropdownLabel == null) //probably a input without explicit dropdown
+            radixTarget = (RadixOptions)Enum.Parse(typeof(RadixOptions), _radix, true);
+        else
+            radixTarget = (RadixOptions)Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
+
 
         _value = RadixHelper.ConvertRadixFromTo(radixSource, radixTarget, value);
 
         label.text = _value.ToString();
 
         //report back to counter to recount, which is the parent of this object;
-        var ic = gameObject.GetComponentInParent<InputController>();
-        if (ic != null)
+         if (ic != null)
         {
             ic.ComputeCounter();
 
             if (withPropagation)
             {
                 //update connect
-                //go over connections and update next component, this code is duplicated in inputcontrollerlogicgate
-                int index = int.Parse(this.name);
                 if (Connections.Count > 0)
                 {
                     foreach (var c in Connections)
                     {
+                        //Debug.Log("LinkId: " + c.connection.id);
                         //determine if logic gate or output 
                         if (c.connection.endTerminal.tag.Equals("Output"))
-                        {
-                            c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixSource, _value, false);
-                        }
+                            c.connection.endTerminal.SetValue(radixSource, _value, false);
                         else
                         {
                             if (c.connection.endTerminal.name.Contains("_saved"))
-                            {
-                                c.connection.endTerminal.GetComponentInParent<InputController>().ComputeSavedComponentOutput();
-                            }
+                                c.connection.endTerminal.SetValue(radixSource, _value, false);
                             else
-                            {
-                                c.connection.endTerminal.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
-                            }
+                                c.connection.endTerminal.transform.parent.parent.GetComponent<InputControllerLogicGate>().ComputeTruthTableOutput();
                         }
                     }
                 }
+            }
+            else //no further propagation within subckt but we need to check if signal can go to next interface
+            {
+                if (hasUpwardsLink != null)
+                    hasUpwardsLink.SetValue(GetRadix(), _value, true);
+
+                if (hasDownwardsLink != null)
+                    hasDownwardsLink.SetValue(GetRadix(), _value, true);
             }
         }
         return _value;

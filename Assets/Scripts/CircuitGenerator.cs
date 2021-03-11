@@ -94,10 +94,10 @@ public class CircuitGenerator : MonoBehaviour
                 var inputControler = c.GetComponentInChildren<InputController>();
                 string id = inputControler.GetInstanceID().ToString();
 
-                foreach (var b in inputControler.Buttons)
+                for (int i= 0; i < inputControler.Buttons.Count;  i++)
                 {
                     //double check if button is connected to something
-                    var bi = b.GetComponent<BtnInput>();
+                    var bi = inputControler.Buttons[i].GetComponent<BtnInput>();
 
                     if (bi.Connections.Count > 0)
                     {
@@ -121,7 +121,7 @@ public class CircuitGenerator : MonoBehaviour
                             inputOrder.Add(inputRadix.Count, bi.transform.position.y);
 
                             int portIndex = bi._portIndex;
-                            string portLabel = b.GetComponentInChildren<TMP_InputField>().text;
+                            string portLabel = inputControler.Buttons[i].GetComponentInChildren<TMP_InputField>().text;
                             string inputValidatedName = "i_" + portLabel + "_" + uid;
                             inputNames.Add(inputValidatedName); //refactor to only use inputLOT, build the tree and then convert the inputlot to input names
                             inputLOT.Add(portIndex + "_" + id, inputValidatedName);
@@ -144,22 +144,22 @@ public class CircuitGenerator : MonoBehaviour
             }
         }
 
-            //reorder the input labels to get correct interface order
-            List<string> tempinputNames = new List<string>();
-            List<string> tempInputRadix = new List<string>();
+            ////reorder the input labels to get correct interface order
+            //List<string> tempinputNames = new List<string>();
+            //List<string> tempInputRadix = new List<string>();
 
-            //sort inputOrder
-            var sorted = inputOrder.OrderBy(key => key.Value);
+            ////sort inputOrder
+            //var sorted = inputOrder.OrderBy(key => key.Value);
 
-            //assign tempLabels in correct order
-            foreach (var item in sorted)
-            {
-                tempinputNames.Add(inputNames[item.Key]);
-                tempInputRadix.Add(inputRadix[item.Key]);
-            }
+            ////assign tempLabels in correct order
+            //foreach (var item in sorted)
+            //{
+            //    tempinputNames.Add(inputNames[item.Key]);
+            //    tempInputRadix.Add(inputRadix[item.Key]);
+            //}
 
-            inputNames = tempinputNames;
-            inputRadix = tempInputRadix;
+            //inputNames = tempinputNames;
+            //inputRadix = tempInputRadix;
            
 
             //PASS 2: output names with semantic names
@@ -174,17 +174,17 @@ public class CircuitGenerator : MonoBehaviour
                 var inputControler = c.GetComponentInChildren<InputController>();
                 string id = inputControler.GetInstanceID().ToString();
 
-                foreach (var b in inputControler.Buttons)
+                for (int i = 0; i < inputControler.Buttons.Count; i++)
                 {
                     //double check if button is connected to something
-                    var bi = b.GetComponent<BtnInput>();
+                    var bi = inputControler.Buttons[i].GetComponent<BtnInput>();
 
                     if (bi.Connections.Count > 0)
                     {
                         outputOrder.Add(outputRadix.Count, bi.transform.position.y);
                         validButtons++;
                         int portIndex = bi._portIndex;
-                        string portLabel = b.GetComponentInChildren<TMP_InputField>().text;
+                        string portLabel = inputControler.Buttons[i].GetComponentInChildren<TMP_InputField>().text;
                         string inputValidatedName = "o_" + portLabel;
                         outputLOT.Add(portIndex + "_" + id, inputValidatedName);
                         outputRadix.Add(bi.DropdownLabel.text);
@@ -344,7 +344,6 @@ public class CircuitGenerator : MonoBehaviour
                                             var stored = (string)logicgateLOT[id.Key];
                                             if (current != stored)
                                             {
-                                                outputNames.Add((string)logicgateLOT[id.Key]);
                                                 outputLOT[(string)(parts[7] + "_" + parts[6])] = stored;
                                             }
                                         }
@@ -355,7 +354,6 @@ public class CircuitGenerator : MonoBehaviour
                                         //update the output LOT with a UID and add to final outputNames list
                                         var id = (string)outputLOT[(string)(parts[7] + "_" + parts[6])] + "_" + uid;
                                         outputLOT[(string)(parts[7] + "_" + parts[6])] = id; //update id with uid
-                                        outputNames.Add(id);
                                         uid++;
 
                                         logicgateLOT.Add((parts[3] + "_" + parts[2]), id);
@@ -397,7 +395,6 @@ public class CircuitGenerator : MonoBehaviour
                                             var stored = (string)logicgateLOT[id.Key];
                                             if (current != stored)
                                             {
-                                                outputNames.Add((string)logicgateLOT[id.Key]);
                                                 outputLOT[(string)(parts[7] + "_" + parts[6])] = stored;
                                             }
                                         }
@@ -408,7 +405,6 @@ public class CircuitGenerator : MonoBehaviour
                                         //update the output LOT with a UID and add to final outputNames list
                                         var id = (string)outputLOT[(string)(parts[7] + "_" + parts[6])] + "_" + uid;
                                         outputLOT[(string)(parts[7] + "_" + parts[6])] = id; //update id with uid
-                                        outputNames.Add(id);
                                         uid++;
 
                                         logicgateLOT.Add((parts[3] + "_" + parts[2]), id);
@@ -420,22 +416,22 @@ public class CircuitGenerator : MonoBehaviour
                 }
             }
 
-            //reorder the output labels to get correct interface order
-            List<string> tempOutputNames = new List<string>();
-            List<string> tempOutputRadix = new List<string>();
+            ////reorder the output labels to get correct interface order
+            //List<string> tempOutputNames = new List<string>();
+            //List<string> tempOutputRadix = new List<string>();
 
-            //sort inputOrder
-            var sorted1 = outputOrder.OrderBy(key => key.Value);
+            ////sort inputOrder
+            //var sorted1 = outputOrder.OrderBy(key => key.Value);
 
-            //assign tempLabels in correct order
-            foreach (var item in sorted1)
-            {
-                tempOutputNames.Add(outputLOT[item.Key].ToString());
-                tempOutputRadix.Add(outputRadix[item.Key]);
-            }
+            ////assign tempLabels in correct order
+            //foreach (var item in sorted1)
+            //{
+            //    tempOutputNames.Add(outputLOT[item.Key].ToString());
+            //    tempOutputRadix.Add(outputRadix[item.Key]);
+            //}
 
-            outputNames = tempOutputNames;
-            outputRadix = tempOutputRadix;
+            //outputNames = tempOutputNames;
+            //outputRadix = tempOutputRadix;
 
             //PASS 5a: forward pass, fill connection array
             foreach (var c in components)
@@ -657,8 +653,16 @@ public class CircuitGenerator : MonoBehaviour
                 }
             }
 
-            //doube check if everything is there before submitting to memory sensitive c++ land
-            bool fail = false;
+        //FINALLY
+        //Most of the complexity in this file is due to the semantic labels that could be duplicate eg if output#0 has name "sum" coming from gate A and output#1 coming from gate B but got its input from GATE A then it should have the same name since it is the same signal
+        //the order is important (should match with pass 2)
+        for (int i = 0; i < outputLOT.Count; i++)
+        {
+            outputNames.Add(outputLOT[i].ToString());
+        }
+
+        //doube check if everything is there before submitting to memory sensitive c++ land
+        bool fail = false;
         //bool fail = true; 
         foreach (var conn in connectionArray)
         {
@@ -670,7 +674,7 @@ public class CircuitGenerator : MonoBehaviour
         }
 
         //extra unit-like checks
-            if ((inputComponents + outputComponents) != ioRadixTypeArray.Count)
+        if ((inputComponents + outputComponents) != ioRadixTypeArray.Count)
         {
             fail = true;
             Debug.Log("ioRadixGTypeArray: " + ioRadixTypeArray.Count + " i: " + inputComponents + " o: " + outputComponents);            

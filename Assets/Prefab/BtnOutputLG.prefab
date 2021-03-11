@@ -543,9 +543,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9aa825b5ce1ac8c45acac84a0c100b59, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _value: 0
+  _radix: 
   DropdownLabel: {fileID: 0}
   wireColor: {fileID: 2843942066859329541}
-  label: {fileID: 7931423915526616644}
+  label: {fileID: 2235612920817230651}
   _portIndex: 0
-  isOutput: 0
+  _Dropdown: {fileID: 0}
+  isOutput: 1
+  hasDownwardsLink: {fileID: 0}
+  hasUpwardsLink: {fileID: 0}
   Connections: []

@@ -106,19 +106,24 @@ public class DragDrop : MonoBehaviour,
 
                 go.transform.SetParent(this.transform.parent, false);
                 go.name = this.name;
-                go.transform.SetSiblingIndex(this.transform.GetSiblingIndex()); //place it on top
+                go.transform.SetSiblingIndex(this.transform.GetSiblingIndex()); //place it on same index
                 //    go.GetComponent<DragDrop>().Stats = this.Stats;
             }
             else
             {
                 var saveCircuit = GameObject.FindObjectOfType<SaveCircuit>();
                 var component = this.FullVersion.GetComponent<InputController>().savedComponent;
+                
+                applicationmanager.InitHack = new List<GameObject>();
                 var go = saveCircuit.GenerateListItem(component, saveCircuit.ContentContainer.transform, false);
+                applicationmanager.clearInitHack = true;
+
+
                 go.GetComponent<DragDrop>().MenuVersion.SetActive(true);
                 go.GetComponent<DragDrop>().FullVersion.SetActive(false);
-                go.name = component.ComponentName;
+                //go.name = component.ComponentName;
                 go.GetComponent<DragDrop>().FullVersion.GetComponent<InputController>().savedComponent = component;
-                
+                go.transform.SetSiblingIndex(this.transform.GetSiblingIndex());
 
                 //Unity bug where it will auto default to wrong anchor position when part of layout group (sets it to top left). Probably due to some awake script. Set it to center here.
                 this.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
@@ -232,7 +237,16 @@ public class DragDrop : MonoBehaviour,
                     for (int k = 0; k < ioConns[j].Connections.Count; k++)
                     {
                         if (connections[i].name.Contains(ioConns[j].Connections[k].gameObject.name))
-                            connections[i].GetComponent<LineFunctions>().DestroyConnection();
+                        {
+                            var l = connections[i].GetComponent<LineFunctions>();
+                            var index = l.connection.id;
+                            var go = l.gameObject;
+                            l.connection.startTerminal.RemoveConnection(index);
+                            l.connection.endTerminal.RemoveConnection(index);
+                            applicationmanager.ActiveCanvasElementStack[applicationmanager.abstractionLevel].Remove(go);
+                            Destroy(go);
+                        }
+
                     }
                 }
             }

@@ -268,31 +268,37 @@ extern "C" __declspec(dllexport) int CreateCircuit(
     
     myfile << "\n*** SEMANTIC INTERFACE" << endl;
     //generate the inputs first
+    int helper = 0;
     for (size_t i = 0; i < inputComponents; i++)
     {
-        myfile << "*** @i " + parsedIORadixTypes[i] << endl;
+        myfile << "\n*** @i " + parsedIORadixTypes[i] << endl;
         myfile << "*** @id " + idList[i] << endl;
         myfile << "*** @size " + to_string(inputoutputSizes[i]) << endl;
-      
+
         string inputlbls = "";
-        for (int i = 0; i < input.getNr(); i++) {
-            inputlbls += parsedInputNames[i] + " ";
+        for (int j = 0; j < inputoutputSizes[i]; j++) {
+            inputlbls += parsedInputNames[helper] + " ";
+            helper++;
         }
+
         myfile << "*** @iolbl " + inputlbls << endl;
         myfile << "*** @pos2d " + parsedIoPositions[i * 2] + " " + parsedIoPositions[(i * 2) + 1] << endl;
     }
 
     //generate the outputs
+    helper = 0;
     for (size_t i = 0; i < outputComponents; i++)
     {
         myfile << "\n*** @o " + parsedIORadixTypes[inputComponents+i] << endl;
         myfile << "*** @id " + idList[inputComponents + i] << endl;
         myfile << "*** @size " + to_string(inputoutputSizes[inputComponents+i]) << endl;
-
+        
         string outputlbls = "";
-        for (int i = 0; i < output.getNr(); i++) {
-            outputlbls += parsedOutputNames[i] + " ";
+        for (int j = 0; j < inputoutputSizes[inputComponents + i]; j++) {
+            outputlbls += parsedOutputNames[helper] + " ";
+            helper++;
         }
+
         myfile << "*** @iolbl " + outputlbls << endl;
         myfile << "*** @pos2d " + parsedIoPositions[(inputComponents+i) * 2] + " " + parsedIoPositions[((inputComponents+i) * 2) + 1] << endl;
     }

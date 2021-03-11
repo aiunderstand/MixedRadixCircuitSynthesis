@@ -20,12 +20,14 @@ public class InputControllerLogicGate : MonoBehaviour
     int portC = 0;
     int portD = 0;
 
+    public InputController activeIC;
 
     private void Awake()
     {
         if (this.name.Equals("LogicGate"))
         {
             GetComponentInParent<DragDrop>().name = ";LogicGate;" + GetInstanceID().ToString();
+            activeIC = GetComponentInChildren<InputController>();
         }
     }
 
@@ -37,6 +39,15 @@ public class InputControllerLogicGate : MonoBehaviour
         }
     }
 
+    public void UpdateInputController(InputController ic)
+    {
+        activeIC = ic;
+        
+        portA = 0;
+        portB = 0;
+        portC = 0;
+        portD = 0;
+    }
 
     public int GetArity()
     {
@@ -49,7 +60,7 @@ public class InputControllerLogicGate : MonoBehaviour
         return GetComponent<Matrix>().GetMatrixCells();
     }
 
-    public RadixOptions GetRadixTarget()
+    public RadixOptions GetRadix()
     {
         _radixTarget = GetComponent<Matrix>().DropdownLabel;
         return (RadixOptions)Enum.Parse(typeof(RadixOptions), _radixTarget.text, true);
@@ -58,11 +69,16 @@ public class InputControllerLogicGate : MonoBehaviour
     public void ComputeTruthTableOutput()
     {
         bool stateChanged = false;
-        RadixOptions radixTarget = GetRadixTarget();
+        RadixOptions radixTarget = GetRadix();
 
         bool allConnected = false;
-         var ports = GetComponentsInChildren<BtnInput>();
 
+        List<BtnInput> ports = new List<BtnInput>();
+        foreach (var item in activeIC.Buttons)
+        {
+            ports.Add(item.GetComponent<BtnInput>());
+        }
+        
         int connectionCount =0;
         foreach (var p in ports)
         {
@@ -180,7 +196,7 @@ public class InputControllerLogicGate : MonoBehaviour
                     break;
             }
           
-            Matrix m = GetComponentInChildren<Matrix>();
+            Matrix m = GetComponent<Matrix>();
 
             //index 0 = A(row), index 1 = B (column), index 2 (depth)
             string label = m.Truthtable[inputs[0], inputs[1], inputs[2]].label.text;
@@ -228,17 +244,18 @@ public class InputControllerLogicGate : MonoBehaviour
             {
                 foreach (var c in outputPort.Connections)
                 {
+                    //Debug.Log("LinkId: " + c.connection.id);
                     //determine if logic gate or output 
                     if (c.connection.endTerminal.tag.Equals("Output"))
                     {
-                        var val = c.connection.endTerminal.GetComponentInParent<BtnInput>().SetValue(radixTarget, _output, false);
+                        var val = c.connection.endTerminal.SetValue(GetRadix(), _output, false);
                         c.connection.endTerminal.GetComponentInChildren<LEDtoggle>().SetLedColor(val);
                     }
                     else
                     {
                         //only propagate when states have changed
                         if (stateChanged)
-                            c.connection.endTerminal.GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                            c.connection.endTerminal.transform.parent.parent.GetComponent<InputControllerLogicGate>().ComputeTruthTableOutput();                            
                     }
                 }
             }

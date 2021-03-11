@@ -39,6 +39,5 @@ public class TruthTableDropDown : MonoBehaviour
 
         //DragExpandTableComponent to set the radix target
         expandController.SetPanelSize(radix, expandController.Arity);
-
     }
 }

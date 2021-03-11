@@ -802,7 +802,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7269420608874129651}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -1000,6 +1000,10 @@ PrefabInstance:
     - target: {fileID: 3444709543961409174, guid: 3121b335a9bc7a1408a20072e8d37f99, type: 3}
       propertyPath: m_Text
       value: DataOut
+      objectReference: {fileID: 0}
+    - target: {fileID: 5385925717001398603, guid: 3121b335a9bc7a1408a20072e8d37f99, type: 3}
+      propertyPath: isOutput
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5385925717001398603, guid: 3121b335a9bc7a1408a20072e8d37f99, type: 3}
       propertyPath: wireColor

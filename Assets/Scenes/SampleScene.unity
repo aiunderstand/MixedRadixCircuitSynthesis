@@ -9613,7 +9613,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95c8a7963994b284186007eb21397b4f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Name: {fileID: 1716367779}
+  Label: {fileID: 1716367779}
   previewPrefab: {fileID: 6885353967165597260, guid: 82bb0fceba43e374ebeb8b8b2424623e, type: 3}
   ContentContainer: {fileID: 972606854}
   SaveCanvas: {fileID: 1932348840}
@@ -11103,6 +11103,7 @@ GameObject:
   - component: {fileID: 1716367781}
   - component: {fileID: 1716367780}
   - component: {fileID: 1716367779}
+  - component: {fileID: 1716367782}
   m_Layer: 5
   m_Name: InputField (TMP)
   m_TagString: Untagged
@@ -11210,6 +11211,18 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
+      - m_Target: {fileID: 1716367782}
+        m_TargetAssemblyTypeName: InputValidator, Assembly-CSharp
+        m_MethodName: CheckIOLabel
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
       - m_Target: {fileID: 1466563247}
         m_TargetAssemblyTypeName: SaveCircuit, Assembly-CSharp
         m_MethodName: UpdateName
@@ -11278,6 +11291,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1716367777}
   m_CullTransparentMesh: 1
+--- !u!114 &1716367782
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1716367777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f25d57d82cbcd64d91163b3e0eb46c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1727780042
 GameObject:
   m_ObjectHideFlags: 0
@@ -13254,7 +13279,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1930164408}
   - component: {fileID: 1930164410}
-  - component: {fileID: 1930164409}
   m_Layer: 5
   m_Name: Clock
   m_TagString: Untagged
@@ -13283,24 +13307,6 @@ RectTransform:
   m_AnchoredPosition: {x: -398.59, y: 120}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1930164409
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1930164407}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 38b23c9a7eb3a9e43a22f2ed54609eb1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  SelectionBox: {fileID: 0}
-  MenuVersion: {fileID: 0}
-  FullVersion: {fileID: 0}
-  LowerAbstractionVersion: {fileID: 0}
-  storedPosition: {x: 0, y: 0, z: 0}
-  panelBg: {fileID: 1522923614}
 --- !u!114 &1930164410
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15248,7 +15254,6 @@ GameObject:
   - component: {fileID: 3405850609218254227}
   - component: {fileID: 7929882714248409511}
   - component: {fileID: 6919787257009335289}
-  - component: {fileID: 3634809988818254988}
   m_Layer: 5
   m_Name: BtnInput
   m_TagString: Untagged
@@ -15494,19 +15499,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -290}
   m_SizeDelta: {x: 960, y: 1.3}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1993582477028046101
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8451765056265215300}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 54c5a2a87e60af2448afb5405df4f687, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isInput: 1
 --- !u!1 &2386553844890166563
 GameObject:
   m_ObjectHideFlags: 0
@@ -15715,18 +15707,6 @@ RectTransform:
   m_AnchoredPosition: {x: -24.899971, y: 0}
   m_SizeDelta: {x: 21, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &3634809988818254988
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 463661487764123672}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f9720613612429c469d4ccea4ae4d205, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!222 &3995633018404024681
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -17289,7 +17269,6 @@ GameObject:
   - component: {fileID: 1470581041587000384}
   - component: {fileID: 2846953882800435548}
   - component: {fileID: 8995323229480566846}
-  - component: {fileID: 1993582477028046101}
   m_Layer: 5
   m_Name: Port
   m_TagString: Untagged
