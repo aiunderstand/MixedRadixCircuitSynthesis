@@ -8,7 +8,7 @@ public class Matrix : MonoBehaviour
 {
     public BtnInputTruthTable[,,] Truthtable;
     public TextMeshProUGUI DropdownLabel;
-
+    public int[,,] Heatmap = new int[3,3,3];
     private void Awake()
     {
         //get values from logicgate controller
@@ -20,6 +20,7 @@ public class Matrix : MonoBehaviour
             radix = 2;
         
         ComputeEmptyTruthTable(arity, radix); //default arity is 2, radix 3
+        ClearHeatmap();
     }
 
     public void ComputeEmptyTruthTable(int arity, int radix)
@@ -64,6 +65,37 @@ public class Matrix : MonoBehaviour
             bittd.DeActivateAll();
             bittd.Activate(currentIndex);
         }
+    }
+
+    public void UpdateHeatmap(int total)
+    {
+        for (int A = 0; A < Truthtable.GetLength(0); A++)
+        {
+            for (int B = 0; B < Truthtable.GetLength(1); B++)
+            {
+                for (int C = 0; C < Truthtable.GetLength(2); C++)
+                {
+                    if (Truthtable[A, B, C] != null)
+                        Truthtable[A, B, C].SetHeatmapColor(Heatmap[A, B, C], total);
+                }
+            }
+        }
+    }
+
+    public void ClearHeatmap()
+    {
+        for (int A = 0; A < 3; A++)
+        {
+            for (int B = 0; B < 3; B++)
+            {
+                for (int C = 0; C < 3; C++)
+                {
+                    Heatmap[A, B, C] = 0;
+                }
+            }
+        }
+
+        UpdateHeatmap(0);
     }
 
     public int ComputeArityFromTT()

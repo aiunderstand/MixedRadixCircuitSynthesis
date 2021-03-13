@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using static BtnInput;
 using static InputController;
+using UnityEngine.UI;
 
 public class BtnInputTruthTable : MonoBehaviour
 {
@@ -13,7 +14,13 @@ public class BtnInputTruthTable : MonoBehaviour
     int _minValue = 0;
     int _maxValue = 0;
     public TextMeshProUGUI label;
-   
+     Button _button;  
+
+    public void Awake()
+    {
+        _button = GetComponent<Button>();
+    }
+
     public void OnClick()
     {
         switch (DropdownLabel.text)
@@ -72,6 +79,158 @@ public class BtnInputTruthTable : MonoBehaviour
             label.text = _value.ToString();
     }
 
+    public void SetHeatmapColor(int frequency, int total)
+    {
+        if (frequency != 0)
+        {
+            //white R 255, G 255, B 255 = not used
+            //yellow R 255, G 255, B 0 = medium used
+            //red R 255, G 0, B 0 = heavy used
+            float green = 255;
+            float blue = 200;
+            
+            if (frequency > 1)
+            {
+                green = 255;
+                blue = 150;
+            }
+
+            if (frequency > 2)
+            {
+                green = 255;
+                blue = 100;
+            }
+
+            if (frequency > 4)
+            {
+                green = 255;
+                blue = 50;
+            }
+
+            if (frequency > 8)
+            {
+                green = 255;
+                blue = 0;
+            }
+
+            if (frequency > 16)
+            {
+                green = 200;
+                blue = 0;
+            }
+
+            if (frequency > 32)
+            {
+                green = 150;
+                blue = 0;
+            }
+
+
+            if (frequency > 64)
+            {
+                green = 100;
+                blue = 0;
+            }
+
+
+            if (frequency > 128)
+            {
+                green = 50;
+                blue = 0;
+            }
+
+            if (frequency > 256)
+            {
+                green = 0;
+                blue = 0;
+            }
+
+            //float relativeF = (float)frequency / (float) total;
+
+            //if (relativeF > 0.90)
+            //{
+            //    green = 0;
+            //    blue = 0;
+            //}
+
+            //if (relativeF > 0.80)
+            //{
+            //    green = 50;
+            //    blue = 0;
+            //}
+
+            //if (relativeF > 0.70)
+            //{
+            //    green = 100;
+            //    blue = 0;
+            //}
+
+            //if (relativeF > 0.60)
+            //{
+            //    green = 150;
+            //    blue = 0;
+            //}
+
+            //if (relativeF > 0.50)
+            //{
+            //    green = 200;
+            //    blue = 0;
+            //}
+
+            //if (relativeF > 0.40)
+            //{
+            //    green = 255;
+            //    blue = 0;
+            //}
+
+            //if (relativeF > 0.30)
+            //{
+            //    green = 255;
+            //    blue = 50;
+            //}
+
+            //if (relativeF > 0.20)
+            //{
+            //    green = 255;
+            //    blue = 100;
+            //}
+
+            //if (relativeF > 0.10)
+            //{
+            //    green = 255;
+            //    blue = 150;
+            //}
+
+            //if (relativeF > 0.00)
+            //{
+            //    green = 255;
+            //    blue = 200;
+            //}
+
+            //if (frequency + offset < 256)
+            //{
+            //    blue = 255 - frequency - offset;
+            //}
+            //else
+            //{
+            //    if (frequency + offset < 512)
+            //    {
+            //        blue = 0;
+            //        green = 255 - (frequency - 255 - offset);
+            //    }
+            //    else
+            //    {
+            //        blue = 0;
+            //        green = 0;
+            //    }
+            //}
+
+            var c = _button.colors;
+             c.normalColor = new Color(1, (float)green / 255f, (float)blue / 255f);
+            _button.colors = c;
+        }
+    }
+
     public int GetValueAsMapped()
     {
         //NOTE: we want use Dont Care values (marked as "x"). We label them as value 3 and decode them in the c++ function. 
@@ -110,7 +269,6 @@ public class BtnInputTruthTable : MonoBehaviour
                 }
                 break;
         }
-
         return outputValue;
     }
 }

@@ -13,12 +13,12 @@ public class InputControllerLogicGate : MonoBehaviour
     public Color panelColorDefault;
     public Color panelColorActive;
     public string _optimizedFunction; //field is filled after a save
-
-    //internal values used for state stabilisation (if the output does not change do not propagate)
+     //internal values used for state stabilisation (if the output does not change do not propagate)
     int portA = 0;
     int portB = 0;
     int portC = 0;
     int portD = 0;
+    int totalHeatmap = 0;
 
     public InputController activeIC;
 
@@ -224,7 +224,7 @@ public class InputControllerLogicGate : MonoBehaviour
                 }
             }
 
-            //Step 4: UI Stuff,  reset all backgrounds and highlight cell
+            //Step 4: UI Stuff,  reset all backgrounds and highlight cell a
             for (int i = 0; i < m.Truthtable.GetLength(0); i++)
             {
                 for (int j = 0; j < m.Truthtable.GetLength(1); j++)
@@ -236,9 +236,15 @@ public class InputControllerLogicGate : MonoBehaviour
                 }
             }
 
-            //highlight active cell (only works for unbalanced ternary ATM)
+            //highlight active cell (only works for unbalanced ternary ATM) and update heatmap
             m.Truthtable[inputs[0], inputs[1], inputs[2]].label.color = panelColorActive;
+            totalHeatmap++;
 
+            var freq = m.Heatmap[inputs[0], inputs[1], inputs[2]];
+
+            m.Heatmap[inputs[0], inputs[1], inputs[2]] = ++freq;
+            m.UpdateHeatmap(totalHeatmap);
+           
             //Step 5: Propagate output to its connections
             if ((outputPort != null) && (outputPort.Connections.Count > 0))
             {
