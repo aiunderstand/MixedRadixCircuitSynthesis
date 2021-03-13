@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEngine;
+using static BtnInput;
 
 public static class ReaderCSV
 {
@@ -13,11 +14,10 @@ public static class ReaderCSV
         //init variables
         Tests.Clear();
 
-        path = Application.dataPath + "/AutomatedTests/" + path;
-       
         if (!File.Exists(path))
         {
-            return;
+            Debug.Log("file not found");
+            return;            
         }
 
         int limit = 1000;
@@ -62,10 +62,10 @@ public static class ReaderCSV
                         {
                             ioNames.Add(attr[i]);
                         }
-                        List<ioRadixType> ioRadixTypes = new List<ioRadixType>();
+                        List<RadixOptions> ioRadixTypes = new List<RadixOptions>();
                         for (int i = 3 + n; i < 3 + 2 * n; i++)
                         {
-                            ioRadixTypes.Add((ioRadixType)Enum.Parse(typeof(ioRadixType), attr[i]));
+                            ioRadixTypes.Add((RadixOptions)Enum.Parse(typeof(RadixOptions), attr[i]));
                         }
                         List<int> ioValues = new List<int>();
                         for (int i = 3 + 2 * n; i < 3 + 3 * n; i++)
@@ -118,8 +118,31 @@ public static class ReaderCSV
 
         //do the processing
         //find inputs and outpus, note output can be ambiguious as port outputs are also output tags. We should refactor this
-        GameObject[] inputGOs = GameObject.FindGameObjectsWithTag("Input");
-        GameObject[] outputGOs = GameObject.FindGameObjectsWithTag("Output");
+        GameObject[] inputGO = GameObject.FindGameObjectsWithTag("Input");
+        GameObject[] outputGO = GameObject.FindGameObjectsWithTag("Output");
+
+        Transform dragdropContainer = GameObject.FindObjectOfType<SaveCircuit>()._DragDropArea.transform;
+        List<GameObject> inputs = new List<GameObject>();
+        List<GameObject> outputs = new List<GameObject>();
+
+        for (int i = 0; i < inputGO.Length; i++)
+        {
+            if (inputGO[i].transform.parent.parent.parent.parent.Equals(dragdropContainer))
+                inputs.Add(inputGO[i]);
+        }
+
+        for (int i = 0; i < outputGO.Length; i++)
+        {
+            if (outputGO[i].transform.parent.parent.parent.parent.Equals(dragdropContainer))
+                outputs.Add(outputGO[i]);
+        }
+
+        //only select ones that are on the top level
+        inputs.Reverse();
+        outputs.Reverse();
+        GameObject[] inputGOs = inputs.ToArray();
+        GameObject[] outputGOs = outputs.ToArray();
+
 
         for (int t=0; t< Tests.Count; t++)
         {
@@ -127,56 +150,31 @@ public static class ReaderCSV
             Test test = Tests[t];
             
             string status ="pass";
-            for (int i = 0; i < test.N; i++)
+            string debugIO = "in ";
+            for (int j = 0; j < inputGOs.Length; j++)
             {
-                //set input
-                foreach (var iGO in inputGOs)
-                {
-                    var ioName = iGO.GetComponentInChildren<TMP_InputField>().text;
-                    if (test.Input.IoNames[i].Equals(ioName))
-                    {
-                        BtnInput.RadixOptions radix = (test.Input.IoRadixTypes[i] ==  ioRadixType.binary  ) ? BtnInput.RadixOptions.Binary : BtnInput.RadixOptions.BalancedTernary;
-
-                        //set input to radix
-                        if (radix == BtnInput.RadixOptions.Binary)
-                            iGO.transform.parent.GetComponentInChildren<TMP_Dropdown>().value = 2;
-                        else
-                            iGO.transform.parent.GetComponentInChildren<TMP_Dropdown>().value = 0;
-
-
-                        //set input to value
-                        iGO.GetComponent<BtnInput>().SetValue(radix, test.Input.IoValues[i], true);
-                    }
-                }
-
-                //read output
-                foreach (var oGO in outputGOs)
-                {
-                    var ioName = oGO.GetComponentInChildren<TMP_InputField>();
-                    if (ioName != null)
-                    {
-                        if (test.Output.IoNames[i].Equals(ioName.text))
-                        {
-                            BtnInput.RadixOptions radix = (test.Output.IoRadixTypes[i] == ioRadixType.binary) ? BtnInput.RadixOptions.Binary : BtnInput.RadixOptions.BalancedTernary;
-
-                            //set output to radix
-                            if (radix == BtnInput.RadixOptions.Binary)
-                                oGO.transform.parent.GetComponentInChildren<TMP_Dropdown>().value = 2;
-                            else
-                                oGO.transform.parent.GetComponentInChildren<TMP_Dropdown>().value = 0;
-
-                            //read output 
-                            test.Output.IoValues[i] = int.Parse(oGO.GetComponent<BtnInput>().label.text);
-                            test.Output.DecimalValue = int.Parse(oGO.GetComponent<BtnInput>().transform.GetComponentInParent<InputController>().CounterLabel.text);
-                        }
-                    }
-                }
-
-                //compare to groundtruth
-                if (test.Output.DecimalValue != test.Groundtruth.DecimalValue)
-                    status = "fail"; 
+                var v =inputGOs[j].GetComponent<BtnInput>().SetValue(test.Input.IoRadixTypes[j], test.Input.IoValues[j], true);
+                debugIO += v.ToString() + " ";
+            }
+           
+            debugIO += " out ";
+            //read output
+            for (int j = 0; j < outputGOs.Length; j++)
+            {
+                test.Output.IoValues[j] = int.Parse(outputGOs[j].GetComponent<BtnInput>().label.text);
+                debugIO += test.Output.IoValues[j].ToString();
             }
 
+            //compare to groundtruth
+            test.Output.DecimalValue = int.Parse(outputGOs[0].GetComponent<BtnInput>().transform.GetComponentInParent<InputController>().CounterLabel.text);
+
+            if (test.Output.DecimalValue != test.Groundtruth.DecimalValue)
+                status = "fail";
+
+
+
+          //  Debug.Log("IO: " + debugIO);
+          //  Debug.Log("t: " + t + " " + status + " Decimal: " + test.Output.DecimalValue + " Groundtruth: " + test.Groundtruth.DecimalValue);
             test.TestResult = status;
         }
     
@@ -280,12 +278,12 @@ public class Test
 public class TestPart
 {
     public List<string> IoNames;
-    public List<ioRadixType> IoRadixTypes;
+    public List<RadixOptions> IoRadixTypes;
     public List<int> IoValues;
     public int DecimalValue;
     
     public TestPart() { }
-    public TestPart(List<string> ioNames, List<ioRadixType> ioRadixTypes, List<int> ioValues, int decimalValue)
+    public TestPart(List<string> ioNames, List<RadixOptions> ioRadixTypes, List<int> ioValues, int decimalValue)
     {
         IoNames = ioNames;
         IoRadixTypes = ioRadixTypes;
@@ -301,8 +299,3 @@ public enum ioType
     groundtruth
 }
 
-public enum ioRadixType
-{
-    binary,
-    balanced_ternary
-}

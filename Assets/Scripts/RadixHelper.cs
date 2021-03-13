@@ -14,10 +14,12 @@ namespace ExtensionMethods
             switch (source)
             {
                 case RadixOptions.Binary:
+                case RadixOptions.SignedBinary:
                     {
                         switch (target)
                         {
                             case RadixOptions.Binary:
+                            case RadixOptions.SignedBinary:
                                 {
                                     //no conversion needed
                                     outputValue = value;
@@ -49,6 +51,7 @@ namespace ExtensionMethods
                         switch (target)
                         {
                             case RadixOptions.Binary:
+                            case RadixOptions.SignedBinary:
                                 {
                                     //0 and 1 maps to 0
                                     if (value < 2)
@@ -79,6 +82,7 @@ namespace ExtensionMethods
                         switch (target)
                         {
                             case RadixOptions.Binary:
+                            case RadixOptions.SignedBinary:
                                 {
                                     //value -1 and 0 map to 0
                                     if (value < 1)

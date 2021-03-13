@@ -43,6 +43,7 @@ public class BtnInputTruthTable : MonoBehaviour
                 }
                 break;
             case "Binary":
+            case "SignedBinary":
                 {
                     _minValue = 0;
                     _maxValue = 3;
@@ -96,7 +97,8 @@ public class BtnInputTruthTable : MonoBehaviour
                         outputValue = int.Parse(label.text);
                 }
                 break;
-            case RadixOptions.Binary: 
+            case RadixOptions.Binary:
+            case RadixOptions.SignedBinary:
                 {
                     if (label.text == "x")
                         outputValue = 3;

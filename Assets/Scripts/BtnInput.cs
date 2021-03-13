@@ -64,7 +64,8 @@ public class BtnInput : MonoBehaviour
     public enum RadixOptions { 
         BalancedTernary,
         UnbalancedTernary,
-        Binary
+        Binary,
+        SignedBinary
     }
 
 
@@ -186,6 +187,7 @@ public class BtnInput : MonoBehaviour
                     switch (radixTarget)
                     {
                         case RadixOptions.Binary:
+                        case RadixOptions.SignedBinary:
                             {
                                 if (_value  <1)
                                     outputValue = 0;
@@ -213,6 +215,7 @@ public class BtnInput : MonoBehaviour
                     switch (radixTarget)
                     {
                         case RadixOptions.Binary:
+                        case RadixOptions.SignedBinary:
                             {
                                 if (_value < 2)
                                     outputValue = 0;
@@ -236,10 +239,12 @@ public class BtnInput : MonoBehaviour
                 }
                 break;
             case RadixOptions.Binary: //from -1,0,1 to radix 2 (0,1) or to radix 3(0,1,2)
+            case RadixOptions.SignedBinary:
                 {
                     switch (radixTarget)
                     {
                         case RadixOptions.Binary:
+                        case RadixOptions.SignedBinary:
                             {
                                 outputValue = _value;
                             }
@@ -315,6 +320,7 @@ public class BtnInput : MonoBehaviour
                 }
                 break;
             case RadixOptions.Binary:
+            case RadixOptions.SignedBinary:
                 {
                     _minValue = 0;
                     _maxValue = 1;

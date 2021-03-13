@@ -135,6 +135,8 @@ MonoBehaviour:
       m_Image: {fileID: 0}
     - m_Text: Binary
       m_Image: {fileID: 0}
+    - m_Text: SignedBinary
+      m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -757,7 +759,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _panel: {fileID: 1137684557600671680}
   BtnInputPrefab: {fileID: 0}
-  MaxInputs: 6
   InputController: {fileID: 7456632258926398822}
 --- !u!1 &5919215368570537929
 GameObject:

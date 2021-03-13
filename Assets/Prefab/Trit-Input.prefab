@@ -135,6 +135,8 @@ MonoBehaviour:
       m_Image: {fileID: 0}
     - m_Text: Binary
       m_Image: {fileID: 0}
+    - m_Text: SignedBinary
+      m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -757,7 +759,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _panel: {fileID: 589087065006770304}
   BtnInputPrefab: {fileID: 0}
-  MaxInputs: 6
   InputController: {fileID: 6962074689103135270}
 --- !u!1 &6179011837969025161
 GameObject:
@@ -1627,7 +1628,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5749572376929804067, guid: e78a2faa84bfe1844895ecd1be3d1f45, type: 3}
       propertyPath: m_fontSize
-      value: 9.25
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 7427257599275672021, guid: e78a2faa84bfe1844895ecd1be3d1f45, type: 3}
       propertyPath: m_Pivot.x

@@ -482,6 +482,7 @@ MonoBehaviour:
   panelColorDefault: {r: 0, g: 0, b: 0, a: 1}
   panelColorActive: {r: 0.1911776, g: 1, b: 0, a: 1}
   _optimizedFunction: 
+  activeIC: {fileID: 0}
 --- !u!114 &3041550489221432268
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8186,6 +8187,8 @@ MonoBehaviour:
     - m_Text: UnbalancedTernary
       m_Image: {fileID: 0}
     - m_Text: Binary
+      m_Image: {fileID: 0}
+    - m_Text: SignedBinary
       m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:

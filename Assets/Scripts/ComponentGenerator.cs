@@ -54,7 +54,7 @@ public class ComponentGenerator : MonoBehaviour
             input.GetComponent<BtnInput>()._radix = s.Inputs[i].ToString();
             input.GetComponent<BtnInput>().Init(); //needed?
             tempResult.Add(input);
-           if (s.Inputs[i] == RadixOptions.Binary)
+           if (s.Inputs[i] == RadixOptions.Binary || s.Inputs[i] == RadixOptions.SignedBinary)
             {
                 input.transform.GetChild(0).GetComponent<Image>().color = _colorBinary;
 
@@ -87,7 +87,7 @@ public class ComponentGenerator : MonoBehaviour
             output.GetComponent<BtnInput>().Init(); //needed?
             tempResult.Add(output);
         
-            if (s.Outputs[i] == RadixOptions.Binary)
+            if (s.Outputs[i] == RadixOptions.Binary || s.Outputs[i] == RadixOptions.SignedBinary)
             {
                 output.transform.GetChild(1).GetComponent<Image>().color = _colorBinary;
 
