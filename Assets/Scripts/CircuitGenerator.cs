@@ -646,6 +646,9 @@ public class CircuitGenerator : MonoBehaviour
                     //add temp to array
                     for (int i = 0; i < tempConnArray.Length; i++)
                     {
+                        if (tempConnArray[i] == null)
+                            tempConnArray[i] = "";
+
                         connectionArray.Add(tempConnArray[i]);
                     }
 

@@ -405,8 +405,11 @@ public class ComponentGenerator : MonoBehaviour
                     //add to individual component
                     components.Add(c);
 
-                    //add to all component as well
-                    inputs.Add((RadixOptions) Enum.Parse(typeof(RadixOptions), partsRadixType[2]));
+                    //add to all component as well. Since we can have 1 output container with multiple outputs, do loop
+                    for (int i = 0; i < c.size; i++)
+                    {
+                        inputs.Add((RadixOptions)Enum.Parse(typeof(RadixOptions), partsRadixType[2]));
+                    }
                 }
 
                 if (line.Contains("*** @o "))
@@ -439,8 +442,11 @@ public class ComponentGenerator : MonoBehaviour
 
                     components.Add(c);
 
-                    //add to all component as well
-                    outputs.Add((RadixOptions)Enum.Parse(typeof(RadixOptions), partsRadixType[2]));
+                    //add to all component as well. Since we can have 1 output container with multiple outputs, do loop
+                    for (int i = 0; i < c.size; i++)
+                    {
+                        outputs.Add((RadixOptions)Enum.Parse(typeof(RadixOptions), partsRadixType[2]));
+                    }
                 }
 
                 if (line.Contains("*** @conn "))

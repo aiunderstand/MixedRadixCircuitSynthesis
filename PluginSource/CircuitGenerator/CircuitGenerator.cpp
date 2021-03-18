@@ -125,19 +125,20 @@ void printData(int compCount) {
 vector<vector<string>> ParseConnectionIntoVectorStructure(char** a, int rows)
 {
     vector<vector<string>>connVector;
+    int index = 0;
     for (size_t i = 0; i < rows; i++)
     {
-        vector<string> tempVector;
+         vector<string> tempVector;
 
         //create a row of vectors, with fixed length 4 (due to arity 3, arity 2 will not use third spot)
         for (size_t j = 0; j < connectionIndices[i]; j++)
         {
-            tempVector.push_back(a[i* connectionIndices[i] + j]);
+            tempVector.push_back(a[index]);
+            index++;
         }
 
         connVector.push_back(tempVector);
     }
-
     return connVector;
 }
 
@@ -170,7 +171,6 @@ vector<int> ParseIntArrayIntoIntVector(int* a, int length)
     {
         v.push_back(a[i]);
     }
-    
     return v;
 }
 
@@ -196,7 +196,7 @@ extern "C" __declspec(dllexport) int CreateCircuit(
     char** ttIndices,
     int arityCount,
     int* arityArray,
-    int connecionCount,
+    int connectionCount,
     char** connectionArray,
     int invCount,
     int* invArray,
@@ -224,7 +224,7 @@ extern "C" __declspec(dllexport) int CreateCircuit(
 
     //STEP 1: assign parameters with some conversion due to c# to c++ (we can refactor this as some of the fucntions use the same code)
     connectionIndices = ParseIntArrayIntoIntVector(connectionIndexArray, connectionIndexCount);
-    connections = ParseConnectionIntoVectorStructure(connectionArray, connectionIndexCount);
+    connections = ParseConnectionIntoVectorStructure(connectionArray, connectionIndexCount); //because the vector uses connectionIndicies we need to use its length.
     inv = ParseInverterIntoBoolStructure(invArray, ttIndicesCount);
     index = ParseCharArrayIntoStringVector(ttIndices, ttIndicesCount);
     arity = ParseIntArrayIntoIntVector(arityArray, ttIndicesCount);
@@ -233,7 +233,7 @@ extern "C" __declspec(dllexport) int CreateCircuit(
     parsedPositions = ParseCharArrayIntoStringVector(positionArray, positionCount); //2 coordinates -- x,y -- per component
     savedCircuitNames = ParseCharArrayIntoStringVector(savedCircuitNamesArray, savedCircuitCount);
     parsedIORadixTypes = ParseCharArrayIntoStringVector(ioRadixTypeArray, ioRadixTypeCount);
-    inputoutputSizes = ParseIntArrayIntoIntVector(inputOutputSizeArray, inputOutputSizeCount) ;
+    inputoutputSizes = ParseIntArrayIntoIntVector(inputOutputSizeArray, inputOutputSizeCount);
     parsedIoPositions = ParseCharArrayIntoStringVector(ioPositionArray, ioPositionCount); //2 coordinates -- x,y -- per component;
     parsedFunctionRadixTypes = ParseCharArrayIntoStringVector(functionRadixTypeArray, functionRadixTypeCount);
     connectionPairs = ParseCharArrayIntoStringVector(connectionPairArray, connectionPairCount);

@@ -103,42 +103,47 @@ public class SaveCircuit : MonoBehaviour
         List<string> outputLabels = new List<string>();
         Dictionary<int, float> inputOrder = new Dictionary<int, float>(); //needed for ordering the labels from low to high (using transform.position.y)
         Dictionary<int, float> outputOrder = new Dictionary<int, float>();
+        
         foreach (var c in components)
         {
-            if (c.name.Contains("Input"))
+            //only save top abstraction level at this moment, not the lower one if they have been changed
+            if (c.transform.parent.transform == DragDropArea.transform)
             {
-                var inputControler = c.GetComponentInChildren<InputController>();
-                string id = inputControler.GetInstanceID().ToString();
-
-                for (int i = 0; i <inputControler.Buttons.Count ; i++)
+                if (c.name.Contains("Input"))
                 {
-                    var bi = inputControler.Buttons[i].GetComponent<BtnInput>();
+                    var inputControler = c.GetComponentInChildren<InputController>();
+                    string id = inputControler.GetInstanceID().ToString();
 
-                    if (bi.Connections.Count > 0)
+                    for (int i = 0; i < inputControler.Buttons.Count; i++)
                     {
-                        inputOrder.Add(inputs.Count, bi.transform.position.y);
-                        RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), bi.DropdownLabel.text, true);
-                        inputs.Add(radixSource);
-                        inputLabels.Add(bi.transform.GetChild(3).GetComponent<TMP_InputField>().text);
+                        var bi = inputControler.Buttons[i].GetComponent<BtnInput>();
+
+                        if (bi.Connections.Count > 0)
+                        {
+                            inputOrder.Add(inputs.Count, bi.transform.position.y);
+                            RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), bi.DropdownLabel.text, true);
+                            inputs.Add(radixSource);
+                            inputLabels.Add(bi.transform.GetChild(3).GetComponent<TMP_InputField>().text);
+                        }
                     }
                 }
-            }
 
-            if (c.name.Contains("Output"))
-            {
-                var inputControler = c.GetComponentInChildren<InputController>();
-                string id = inputControler.GetInstanceID().ToString();
-
-                for (int i = 0; i < inputControler.Buttons.Count; i++)
+                if (c.name.Contains("Output"))
                 {
-                    var bi = inputControler.Buttons[i].GetComponent<BtnInput>();
+                    var inputControler = c.GetComponentInChildren<InputController>();
+                    string id = inputControler.GetInstanceID().ToString();
 
-                    if (bi.Connections.Count > 0)
+                    for (int i = 0; i < inputControler.Buttons.Count; i++)
                     {
-                        outputOrder.Add(outputs.Count, bi.transform.position.y);
-                        RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), bi.DropdownLabel.text, true);
-                        outputs.Add(radixSource);
-                        outputLabels.Add(bi.transform.GetComponentInChildren<TMP_InputField>().text);
+                        var bi = inputControler.Buttons[i].GetComponent<BtnInput>();
+
+                        if (bi.Connections.Count > 0)
+                        {
+                            outputOrder.Add(outputs.Count, bi.transform.position.y);
+                            RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), bi.DropdownLabel.text, true);
+                            outputs.Add(radixSource);
+                            outputLabels.Add(bi.transform.GetComponentInChildren<TMP_InputField>().text);
+                        }
                     }
                 }
             }
