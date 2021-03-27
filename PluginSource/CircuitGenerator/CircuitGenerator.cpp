@@ -317,7 +317,7 @@ extern "C" __declspec(dllexport) int CreateCircuit(
         myfile << " " << parsedOutputNames[i];
     }
     myfile << " vdd\n";
-    myfile << ".lib 'CNFET.lib' CNFET \n";
+    //myfile << ".lib 'CNFET.lib' CNFET \n";
 
     vector<string> includedIndex;
 

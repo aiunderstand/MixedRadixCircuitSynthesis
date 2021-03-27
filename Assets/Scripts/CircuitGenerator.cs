@@ -222,7 +222,7 @@ public class CircuitGenerator : MonoBehaviour
                     int[] optimizedTT = TruthtableFunctionHelper.GetOptimizedTT(arity);
                     string optimizedTTindex = TruthtableFunctionHelper.ConvertTTtoHeptEncoding(optimizedTT);
                     ttIndices.Add(optimizedTTindex);
-                    logicgateIndicesLOT.Add(controller.GetInstanceID().ToString(), optimizedTTindex);
+                    logicgateIndicesLOT.Add(controller.GetInstanceID().ToString(), "lg_" + optimizedTTindex);
                   
 
 
@@ -289,7 +289,7 @@ public class CircuitGenerator : MonoBehaviour
                         stats.abstractionLevelCount = controller.savedComponent.Stats.abstractionLevelCount;
 
                     savedCircuitNames.Add("c_" + controller.savedComponent.ComponentName);
-                    logicgateIndicesLOT.Add(controller.GetInstanceID().ToString(), "f_" + controller.savedComponent.ComponentName);
+                    logicgateIndicesLOT.Add(controller.GetInstanceID().ToString(), "lg_" + controller.savedComponent.ComponentName);
 
                     //get positions
                     Vector2 pos = c.GetComponentInParent<DragDrop>().gameObject.transform.localPosition;
@@ -667,12 +667,13 @@ public class CircuitGenerator : MonoBehaviour
         //doube check if everything is there before submitting to memory sensitive c++ land
         bool fail = false;
         //bool fail = true; 
-        foreach (var conn in connectionArray)
+        for (int i = 0; i < connectionArray.Count; i++)
         {
-            if (conn == null)
+            if (connectionArray[i] == null)
             {
-                fail = true;
-                Debug.Log("Connections error, check if everything is connected");
+                connectionArray[i] = "";
+                //fail = true;
+                Debug.Log("Warning: Not all connections were connected");
             }
         }
 

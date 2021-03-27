@@ -667,7 +667,7 @@ extern "C" __declspec(dllexport) int CreateNetlist(char* filePath, int* ttFromUn
 		}
 
 		if (directConnection[n]){
-			myfile << "\nDirect Connection\n";	
+			myfile << "\n***Direct Connection\n";	
 		}
 
 		for (int g = 0; g < mysteryNumber; g++) {

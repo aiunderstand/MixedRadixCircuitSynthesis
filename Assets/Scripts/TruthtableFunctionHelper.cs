@@ -845,9 +845,9 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                     {
                                         //0 is top left, 1 is bottom left, 2 is top right, 3 is bottom rig+ht
                                         cells[0].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[0]).ToString();
-                                        cells[1].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[6]).ToString();
+                                        cells[4].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[6]).ToString();
                                         cells[2].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[2]).ToString();
-                                        cells[3].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[8]).ToString();
+                                        cells[6].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[8]).ToString();
                                     }
 
 
@@ -856,9 +856,9 @@ public class TruthtableFunctionHelper : MonoBehaviour
                                     if (i == 2)
                                     {
                                         //0 is top left, 1 is bottom left, 2 is top right, 3 is bottom rig+ht
-                                        cells[4].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[0]).ToString();
+                                        cells[1].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[0]).ToString();
                                         cells[5].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[6]).ToString();
-                                        cells[6].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[2]).ToString();
+                                        cells[3].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[2]).ToString();
                                         cells[7].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[8]).ToString();
                                     }
                                 }
