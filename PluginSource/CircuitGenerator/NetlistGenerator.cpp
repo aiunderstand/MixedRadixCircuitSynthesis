@@ -28,6 +28,7 @@ vector<char> mask;	// the rectangular groupings are first generated here, then c
 vector<vector<char>> groups;	//groupnr, values. The valid rectangular groupings are stored here.
 string optimizedIndex;
 vector<bool> invArray;
+int mode = 0; //0 is model A and without body effect, 1 is model B and with body effect
 
 int dimensions = -1; // the number of inputs
 int maskIndex = 0;
@@ -76,6 +77,11 @@ void drawMask(int p1, int p2) {		// draws an n-dimensional rectangle between two
 	else {
 		maskRecurs(dimensions, p1, p2); // calls the recursive function to draw the rectangle in the mask vector
 	}
+}
+
+
+extern "C" __declspec(dllexport) void SetMode(int newMode) {
+	mode = newMode;
 }
 
 extern "C" __declspec(dllexport) int* GetOptimzedTT() {
@@ -141,7 +147,7 @@ extern "C" __declspec(dllexport) int TestSum(int* ttFromUnity, int ttFromUnityLe
 
 
 
-extern "C" __declspec(dllexport) int CreateNetlist(char* filePath, int* ttFromUnity, int ttFromUnityLength, int arity) {
+extern "C" __declspec(dllexport) int CreateNetlist(int newMode, char* filePath, int* ttFromUnity, int ttFromUnityLength, int arity) {
 
 /////////////////
 //Stage0: INIT
@@ -157,7 +163,7 @@ extern "C" __declspec(dllexport) int CreateNetlist(char* filePath, int* ttFromUn
 	invArray.clear();
 
 	dimensions = arity; //or three, derive from function name
-
+	mode = newMode;
 	int mysteryNumber = dimensions * dimensions * 100;//dimensions * 1000;	// This number must be higher for more inputs. Program will crash if it is too low. Must be higher than number of groups found.
 	int mysteryExponent = 1.64;		// NOTE: The author is not happy with the use of these mystery numbers. However it will do for now.
 	
@@ -609,169 +615,368 @@ extern "C" __declspec(dllexport) int CreateNetlist(char* filePath, int* ttFromUn
 	//in case there should be a direct connection within a transistor network, it's connected without transistors 
 	if (directConnection[0]) {
 		myfile << "vdd "; //output is VDD
-	} else if (directConnection[1]) {
+	}
+	else if (directConnection[1]) {
 		myfile << "gnd "; //output is VDD
-	}  else {
+	}
+	else {
 		myfile << "out ";
 	}
-	
-	
+
 	myfile << "vdd\n"; // end of inputs/outputs interface
 
-	myfile << "\n\nxp0 ";
-	if (directConnection[2]) {
-		myfile << "vdd "; //connects "up" to VDD
-	} else {myfile << "up ";}
-	myfile << "out out" << p0;
-	
-	myfile << "\nxn1 ";
-	myfile << "out out ";
-	if (directConnection[3]) {
-		myfile << "gnd "; //connects "down" to GND
-	} else {myfile << "down";}
-	myfile << n0 << "\n";
-	
-	int connections = 0; //counts number of connection nodes
-	int transistors = 2; //counts number of transistors
+	int transistors = 0;
 
-
-	string connect1 = ""; // connection variables (these depend on the network and group number)
-	string connect2 = "";
-	string connect3 = "";
-	string out = "";		// the connection to the output (out, up, down)
-	string vsource = "";	// the first connection (gnd, vdd)
-
-	for (int n = 0; n < 4; n++) {
-		
-
-		if (n == 0) {
-			out = "out";
-			vsource = "vdd";
-			myfile << "\n\n***pullup full" << endl;
+	switch (mode)
+	{
+	case 0:
+	{
+		myfile << "\n\nxp0 ";
+		if (directConnection[2]) {
+			myfile << "vdd "; //connects "up" to VDD
 		}
-		if (n == 1) {
-			out = "out";
-			vsource = "gnd";
-			myfile << "\n\n***pulldown full" << endl;
-		}
-		if (n == 2) {
-			out = "up";
-			vsource = "vdd";
-			myfile << "\n\n***pullup half" << endl;
-		}
+		else { myfile << "up "; }
+		myfile << "out out" << p0;
 
-		if (n == 3) {
-			out = "down";
-			vsource = "gnd";
-			myfile << "\n\n***pulldown half" << endl;
+		myfile << "\nxn1 ";
+		myfile << "out out ";
+		if (directConnection[3]) {
+			myfile << "gnd "; //connects "down" to GND
 		}
+		else { myfile << "down"; }
+		myfile << n0 << "\n";
 
-		if (directConnection[n]){
-			myfile << "\n***Direct Connection\n";	
-		}
+		int connections = 0; //counts number of connection nodes
+		transistors = 2; //counts number of transistors
 
-		for (int g = 0; g < mysteryNumber; g++) {
-			// the first and last groups to be implemented indicates when the connections should be at vsource and out
-			// in circuit[n][g][d], what number d is the first and last valid one? (empty, 111, 000 are not valid)
-			int firstDimension = -1;
-			int lastDimension = 0;
-			for (int dd = 0; dd < dimensions; dd++) {
 
-				if (circuit[n][g][dd] != "000" && circuit[n][g][dd] != "111" && !circuit[n][g][dd].empty()) {
-					lastDimension = dd;
-					if (firstDimension == -1) {
-						firstDimension = dd;
-					}
-				}
+		string connect1 = ""; // connection variables (these depend on the network and group number)
+		string connect2 = "";
+		string connect3 = "";
+		string out = "";		// the connection to the output (out, up, down)
+		string vsource = "";	// the first connection (gnd, vdd)
+
+		for (int n = 0; n < 4; n++) {
+
+
+			if (n == 0) {
+				out = "out";
+				vsource = "vdd";
+				myfile << "\n\n***pullup full" << endl;
+			}
+			if (n == 1) {
+				out = "out";
+				vsource = "gnd";
+				myfile << "\n\n***pulldown full" << endl;
+			}
+			if (n == 2) {
+				out = "up";
+				vsource = "vdd";
+				myfile << "\n\n***pullup half" << endl;
 			}
 
-			for (int d = 0; d < dimensions; d++) {
-				if (!circuit[n][g][d].empty() && circuit[n][g][d] != "000" && circuit[n][g][d] != "111") {
+			if (n == 3) {
+				out = "down";
+				vsource = "gnd";
+				myfile << "\n\n***pulldown half" << endl;
+			}
 
-					// connection variables are defined
-					if (d == firstDimension) {
-						myfile << "\n";
-						connect1 = vsource;
-					}
-					else {
-						connect1 = 'p' + to_string(connections);
-						connections += 1;
-					}
+			if (directConnection[n]) {
+				myfile << "\n***Direct Connection\n";
+			}
 
-					if (d == lastDimension) {
-						if (circuit[n][g][d] == "010") {
-							connect2 = 'p' + to_string(connections);
-							connections += 1;
-							connect3 = out;
+			for (int g = 0; g < mysteryNumber; g++) {
+				// the first and last groups to be implemented indicates when the connections should be at vsource and out
+				// in circuit[n][g][d], what number d is the first and last valid one? (empty, 111, 000 are not valid)
+				int firstDimension = -1;
+				int lastDimension = 0;
+				for (int dd = 0; dd < dimensions; dd++) {
+
+					if (circuit[n][g][dd] != "000" && circuit[n][g][dd] != "111" && !circuit[n][g][dd].empty()) {
+						lastDimension = dd;
+						if (firstDimension == -1) {
+							firstDimension = dd;
+						}
+					}
+				}
+
+				for (int d = 0; d < dimensions; d++) {
+					if (!circuit[n][g][d].empty() && circuit[n][g][d] != "000" && circuit[n][g][d] != "111") {
+
+						// connection variables are defined
+						if (d == firstDimension) {
+							myfile << "\n";
+							connect1 = vsource;
 						}
 						else {
-							connect2 = out;
-						}
-					}
-					else {
-						connect2 = 'p' + to_string(connections);
-						if (circuit[n][g][d] == "010") {
+							connect1 = 'p' + to_string(connections);
 							connections += 1;
-							connect3 = 'p' + to_string(connections);
-
-						}
-					}
-
-					// circuit is built using the "transistor types" in the circuit vector and the connection variables
-					if (n % 2 == 0) {
-						if (circuit[n][g][d] == "100") {	// small ptype I
-							myfile << "\nxp" << transistors << " " << connect1 << " i" << d << " " << connect2 << p1;
-							transistors += 1;
-						}
-						if (circuit[n][g][d] == "110") {	// big ptype I
-							myfile << "\nxp" << transistors << " " << connect1 << " i" << d << " " << connect2 << p2;
-							transistors += 1;
-						}
-						if (circuit[n][g][d] == "001") {	// big ptype I_P
-							myfile << "\nxp" << transistors << " " << connect1 << " i" << d << "_p " << connect2 << p2;
-							transistors += 1;
-						}
-						if (circuit[n][g][d] == "011") {	// big ptype I_N
-							myfile << "\nxp" << transistors << " " << connect1 << " i" << d << "_n " << connect2 << p2;
-							transistors += 1;
-						}
-						if (circuit[n][g][d] == "010") {	// big ptype I + big ptype I_N
-							myfile << "\nxp" << transistors << " " << connect1 << " i" << d << " " << connect2 << p2;
-							transistors += 1;
-							myfile << "\nxp" << transistors << " " << connect2 << " i" << d << "_n " << connect3 << p2;
-							transistors += 1;
-						}
-					}
-					else {
-						if (circuit[n][g][d] == "100") {	// big ntype I_N
-							myfile << "\nxn" << transistors << " " << connect1 << " i" << d << "_n " << connect2 << n2;
-							transistors += 1;
-						}
-						if (circuit[n][g][d] == "110") {	// big ntype I_P
-							myfile << "\nxn" << transistors << " " << connect1 << " i" << d << "_p " << connect2 << n2;
-							transistors += 1;
-						}
-						if (circuit[n][g][d] == "001") {	// small ntype I
-							myfile << "\nxn" << transistors << " " << connect1 << " i" << d << " " << connect2 << n1;
-							transistors += 1;
-						}
-						if (circuit[n][g][d] == "011") {	// big ntype I
-							myfile << "\nxn" << transistors << " " << connect1 << " i" << d << " " << connect2 << n2;
-							transistors += 1;
 						}
 
-						if (circuit[n][g][d] == "010") {	// big ntype I_P + big ntype I
-							myfile << "\nxn" << transistors << " " << connect1 << " i" << d << "_p " << connect2 << n2;
-							transistors += 1;
-							myfile << "\nxn" << transistors << " " << connect2 << " i" << d << " " << connect3 << n2;
-							transistors += 1;
+						if (d == lastDimension) {
+							if (circuit[n][g][d] == "010") {
+								connect2 = 'p' + to_string(connections);
+								connections += 1;
+								connect3 = out;
+							}
+							else {
+								connect2 = out;
+							}
+						}
+						else {
+							connect2 = 'p' + to_string(connections);
+							if (circuit[n][g][d] == "010") {
+								connections += 1;
+								connect3 = 'p' + to_string(connections);
+
+							}
+						}
+
+						// circuit is built using the "transistor types" in the circuit vector and the connection variables
+						if (n % 2 == 0) {
+							if (circuit[n][g][d] == "100") {	// small ptype I
+								myfile << "\nxp" << transistors << " " << connect1 << " i" << d << " " << connect2 << p1;
+								transistors += 1;
+							}
+							if (circuit[n][g][d] == "110") {	// big ptype I
+								myfile << "\nxp" << transistors << " " << connect1 << " i" << d << " " << connect2 << p2;
+								transistors += 1;
+							}
+							if (circuit[n][g][d] == "001") {	// big ptype I_P
+								myfile << "\nxp" << transistors << " " << connect1 << " i" << d << "_p " << connect2 << p2;
+								transistors += 1;
+							}
+							if (circuit[n][g][d] == "011") {	// big ptype I_N
+								myfile << "\nxp" << transistors << " " << connect1 << " i" << d << "_n " << connect2 << p2;
+								transistors += 1;
+							}
+							if (circuit[n][g][d] == "010") {	// big ptype I + big ptype I_N
+								myfile << "\nxp" << transistors << " " << connect1 << " i" << d << " " << connect2 << p2;
+								transistors += 1;
+								myfile << "\nxp" << transistors << " " << connect2 << " i" << d << "_n " << connect3 << p2;
+								transistors += 1;
+							}
+						}
+						else {
+							if (circuit[n][g][d] == "100") {	// big ntype I_N
+								myfile << "\nxn" << transistors << " " << connect1 << " i" << d << "_n " << connect2 << n2;
+								transistors += 1;
+							}
+							if (circuit[n][g][d] == "110") {	// big ntype I_P
+								myfile << "\nxn" << transistors << " " << connect1 << " i" << d << "_p " << connect2 << n2;
+								transistors += 1;
+							}
+							if (circuit[n][g][d] == "001") {	// small ntype I
+								myfile << "\nxn" << transistors << " " << connect1 << " i" << d << " " << connect2 << n1;
+								transistors += 1;
+							}
+							if (circuit[n][g][d] == "011") {	// big ntype I
+								myfile << "\nxn" << transistors << " " << connect1 << " i" << d << " " << connect2 << n2;
+								transistors += 1;
+							}
+
+							if (circuit[n][g][d] == "010") {	// big ntype I_P + big ntype I
+								myfile << "\nxn" << transistors << " " << connect1 << " i" << d << "_p " << connect2 << n2;
+								transistors += 1;
+								myfile << "\nxn" << transistors << " " << connect2 << " i" << d << " " << connect3 << n2;
+								transistors += 1;
+							}
 						}
 					}
 				}
 			}
 		}
+
+	}
+	break;
+	case 1:
+	{
+		//slightly adjust to accomodate for body effect
+		p0 = " vdd PCNFET Lch=Lg  Lgeff='Lgef' Lss=32e-9  Ldd=32e-9 \n+Kgate = 'Kox' Tox = 'Hox' Csub = 'Cb' Vfbp = 'Vfp' Dout = 0  Sout = 0  Pitch = 20e-9 tubes = 3  n2 = n  n1 = 13 "; //" ptype 1.018nm";
+		
+		//if (n == 0) cout << "\nBuilding the 0.9V pull-up circuit...\n";
+		//if (n == 1) cout << "\nBuilding the 0.9V pull-down circuit...\n";
+		//if (n == 2) cout << "\nBuilding the 0.45V pull-up circuit...\n";
+		//if (n == 3) cout << "\nBuilding the 0.45V pull-down circuit...\n";
+				
+		myfile << "\n\nxp0 ";
+		if (directConnection[0]) //pull up full
+		{
+			myfile << "vdd "; 
+		}
+		else if (directConnection[3]) //pull down half
+		{
+			myfile << "gnd ";
+		}
+		else
+		{ 
+			myfile << "up "; 
+		}
+		myfile << "gnd out" << p0;
+
+		myfile << "\nxn1 ";
+		if (directConnection[1]) //pull down full
+		{
+			myfile << "gnd ";
+		}
+		else if (directConnection[2]) //pull up half
+		{
+			myfile << "vdd ";
+		}
+		else 
+		{ 
+			myfile << "down "; 
+		}
+		myfile << "vdd out" << n0 << "\n";
+		
+		int connections = 0; //counts number of connection nodes
+		transistors = 2; //counts number of transistors
+
+
+		string connect1 = ""; // connection variables (these depend on the network and group number)
+		string connect2 = "";
+		string connect3 = "";
+		string out = "";		// the connection to the output (out, up, down)
+		string vsource = "";	// the first connection (gnd, vdd)
+
+		for (int n = 0; n < 4; n++) {
+
+
+			if (n == 0) {
+				out = "up";
+				vsource = "vdd";
+				myfile << "\n\n***pullup full" << endl;
+			}
+			if (n == 1) {
+				out = "down";
+				vsource = "gnd";
+				myfile << "\n\n***pulldown full" << endl;
+			}
+			if (n == 2) {
+				out = "down";
+				vsource = "vdd";
+				myfile << "\n\n***pullup half" << endl;
+			}
+
+			if (n == 3) {
+				out = "up";
+				vsource = "gnd";
+				myfile << "\n\n***pulldown half" << endl;
+			}
+
+			if (directConnection[n]) {
+				myfile << "\n***Direct Connection\n";
+			}
+
+			for (int g = 0; g < mysteryNumber; g++) {
+				// the first and last groups to be implemented indicates when the connections should be at vsource and out
+				// in circuit[n][g][d], what number d is the first and last valid one? (empty, 111, 000 are not valid)
+				int firstDimension = -1;
+				int lastDimension = 0;
+				for (int dd = 0; dd < dimensions; dd++) {
+
+					if (circuit[n][g][dd] != "000" && circuit[n][g][dd] != "111" && !circuit[n][g][dd].empty()) {
+						lastDimension = dd;
+						if (firstDimension == -1) {
+							firstDimension = dd;
+						}
+					}
+				}
+
+				for (int d = 0; d < dimensions; d++) {
+					if (!circuit[n][g][d].empty() && circuit[n][g][d] != "000" && circuit[n][g][d] != "111") {
+
+						// connection variables are defined
+						if (d == firstDimension) {
+							myfile << "\n";
+							connect1 = vsource;
+						}
+						else {
+							connect1 = 'p' + to_string(connections);
+							connections += 1;
+						}
+
+						if (d == lastDimension) {
+							if (circuit[n][g][d] == "010") {
+								connect2 = 'p' + to_string(connections);
+								connections += 1;
+								connect3 = out;
+							}
+							else {
+								connect2 = out;
+							}
+						}
+						else {
+							connect2 = 'p' + to_string(connections);
+							if (circuit[n][g][d] == "010") {
+								connections += 1;
+								connect3 = 'p' + to_string(connections);
+
+							}
+						}
+
+						// circuit is built using the "transistor types" in the circuit vector and the connection variables
+						if (n % 2 == 0) {
+							if (circuit[n][g][d] == "100") {	// small ptype I
+								myfile << "\nxp" << transistors << " " << connect1 << " i" << d << " " << connect2 << p1;
+								transistors += 1;
+							}
+							if (circuit[n][g][d] == "110") {	// big ptype I
+								myfile << "\nxp" << transistors << " " << connect1 << " i" << d << " " << connect2 << p2;
+								transistors += 1;
+							}
+							if (circuit[n][g][d] == "001") {	// big ptype I_P
+								myfile << "\nxp" << transistors << " " << connect1 << " i" << d << "_p " << connect2 << p2;
+								transistors += 1;
+							}
+							if (circuit[n][g][d] == "011") {	// big ptype I_N
+								myfile << "\nxp" << transistors << " " << connect1 << " i" << d << "_n " << connect2 << p2;
+								transistors += 1;
+							}
+							if (circuit[n][g][d] == "010") {	// big ptype I + big ptype I_N
+								myfile << "\nxp" << transistors << " " << connect1 << " i" << d << " " << connect2 << p2;
+								transistors += 1;
+								myfile << "\nxp" << transistors << " " << connect2 << " i" << d << "_n " << connect3 << p2;
+								transistors += 1;
+							}
+						}
+						else {
+							if (circuit[n][g][d] == "100") {	// big ntype I_N
+								myfile << "\nxn" << transistors << " " << connect1 << " i" << d << "_n " << connect2 << n2;
+								transistors += 1;
+							}
+							if (circuit[n][g][d] == "110") {	// big ntype I_P
+								myfile << "\nxn" << transistors << " " << connect1 << " i" << d << "_p " << connect2 << n2;
+								transistors += 1;
+							}
+							if (circuit[n][g][d] == "001") {	// small ntype I
+								myfile << "\nxn" << transistors << " " << connect1 << " i" << d << " " << connect2 << n1;
+								transistors += 1;
+							}
+							if (circuit[n][g][d] == "011") {	// big ntype I
+								myfile << "\nxn" << transistors << " " << connect1 << " i" << d << " " << connect2 << n2;
+								transistors += 1;
+							}
+
+							if (circuit[n][g][d] == "010") {	// big ntype I_P + big ntype I
+								myfile << "\nxn" << transistors << " " << connect1 << " i" << d << "_p " << connect2 << n2;
+								transistors += 1;
+								myfile << "\nxn" << transistors << " " << connect2 << " i" << d << " " << connect3 << n2;
+								transistors += 1;
+							}
+						}
+					}
+				}
+			}
+		}
+
+	}
+	break;
+	default:
+		break;
 	}
 
+	
 	myfile << "\n\n.ends\n\n";
 	myfile.close();
 

@@ -14,6 +14,12 @@ using System.Collections.Specialized;
 // https://github.com/lazerfalcon/Unite2018_Native/tree/master/Assets
 public class TruthtableFunctionHelper : MonoBehaviour
 {
+    public enum HardwareMappingModes
+    {
+        variantA_woBody = 0,
+        variantB_wBody = 1
+    }
+
     AutoCompleteComboBox _Dropdown;
     DragExpandTableComponent _DETC;
     public enum TempFunctions { //special name must be start with s
@@ -51,7 +57,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
     public static extern int GetTableFromIndexSingle(int tableIndex, int index);
 
     [DllImport("CircuitGenerator", EntryPoint = "CreateNetlist")]
-    public static extern int CreateNetlist(string filePath, int[] array, int length,int arity);
+    public static extern int CreateNetlist(int mode,string filePath, int[] array, int length,int arity);
 
     [DllImport("CircuitGenerator", EntryPoint = "TestSum")]
     public static extern int TestSum(int[] array, int length);
@@ -141,6 +147,9 @@ public class TruthtableFunctionHelper : MonoBehaviour
     [DllImport("CircuitGenerator", EntryPoint = "GetInvArray_Release")]
     public static extern void GetInvArray_Release(IntPtr ptr);
 
+    [DllImport("CircuitGenerator", EntryPoint = "SetMode")]
+    public static extern void SetMode(int newMode);
+    
     bool isInitialized = false;
 
     public void Awake() //must init after autocompletebox hence at second possition in hierarchy
@@ -990,10 +999,10 @@ public class TruthtableFunctionHelper : MonoBehaviour
         return index;
     }
 
-    public static int CreateNetlist(string path, int[] tt, int arity)
+    public static int CreateNetlist(int mode, string path, int[] tt, int arity)
     {
         //from unoptimized tt
-        return CreateNetlist(path, tt, tt.Length, arity);
+        return CreateNetlist(mode, path, tt, tt.Length, arity);
        
     }
 
