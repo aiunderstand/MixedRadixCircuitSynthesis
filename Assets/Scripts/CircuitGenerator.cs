@@ -218,7 +218,7 @@ public class CircuitGenerator : MonoBehaviour
                     arityArray.Add(arity);
 
                 //we should just create a c++ data structure and marshall this. Now it is important that we first call create netlist!
-                    int mode = (int)TruthtableFunctionHelper.HardwareMappingModes.variantB_wBody;
+                    int mode = (int)TruthtableFunctionHelper.HardwareMappingModes.variantB_wBodyDividersTransistors;
                     stats.transistorCount += TruthtableFunctionHelper.CreateNetlist(mode,path, tt, arity); //from unoptimized tt
                     int[] optimizedTT = TruthtableFunctionHelper.GetOptimizedTT(arity);
                     string optimizedTTindex = TruthtableFunctionHelper.ConvertTTtoHeptEncoding(optimizedTT);

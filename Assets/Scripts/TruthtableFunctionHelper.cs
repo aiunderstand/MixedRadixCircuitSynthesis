@@ -17,7 +17,8 @@ public class TruthtableFunctionHelper : MonoBehaviour
     public enum HardwareMappingModes
     {
         variantA_woBody = 0,
-        variantB_wBody = 1
+        variantB_wBodyDividersOnly = 1,
+        variantB_wBodyDividersTransistors = 2
     }
 
     AutoCompleteComboBox _Dropdown;
