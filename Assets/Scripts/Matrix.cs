@@ -175,9 +175,9 @@ public class Matrix : MonoBehaviour
 
             if (arity == 1)
             {
-                tt.Add(Truthtable[1, 0, 0].GetValueAsMapped());
-                tt.Add(3); //x
                 tt.Add(Truthtable[0, 0, 0].GetValueAsMapped());
+                tt.Add(3); //x
+                tt.Add(Truthtable[1, 0, 0].GetValueAsMapped());
             }
         }
         else
@@ -233,9 +233,9 @@ public class Matrix : MonoBehaviour
 
             if (arity == 1)
             {
-                tt.Add(Truthtable[2, 0, 0].GetValueAsMapped());
-                tt.Add(Truthtable[1, 0, 0].GetValueAsMapped());
                 tt.Add(Truthtable[0, 0, 0].GetValueAsMapped());
+                tt.Add(Truthtable[1, 0, 0].GetValueAsMapped());
+                tt.Add(Truthtable[2, 0, 0].GetValueAsMapped());
             }
         }
 

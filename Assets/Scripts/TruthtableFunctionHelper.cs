@@ -768,14 +768,14 @@ public class TruthtableFunctionHelper : MonoBehaviour
                             //fill in the cells
                             if (targetRadix.ToString().Contains("Binary"))
                             {
-                                cells[1].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[6]).ToString();
-                                cells[0].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[8]).ToString();
+                                cells[0].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[6]).ToString();
+                                cells[1].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[8]).ToString();
                             }
                             else
                             {
-                                cells[2].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[6]).ToString();
+                                cells[0].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[6]).ToString();
                                 cells[1].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[7]).ToString();
-                                cells[0].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[8]).ToString();
+                                cells[2].label.text = RadixHelper.ConvertRadixFromTo(RadixOptions.UnbalancedTernary, targetRadix, ttMatrix[8]).ToString();
                             }
 
                             GetTableFromIndex_Release(srcPtr);
