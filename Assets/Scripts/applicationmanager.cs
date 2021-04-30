@@ -21,10 +21,14 @@ public class applicationmanager : MonoBehaviour
 
         //restore tree by disabling the ones that are not top abstraction layer
         for (int i = 0; i < applicationmanager.InitHack.Count; i++)
-        {
-            applicationmanager.InitHack[i].SetActive(false);
+        {   
+            if (i == 0)
+                applicationmanager.InitHack[0].SetActive(true);
+            else
+                applicationmanager.InitHack[i].SetActive(false);
         }
 
+       
         InitHack.Clear();
     }
 

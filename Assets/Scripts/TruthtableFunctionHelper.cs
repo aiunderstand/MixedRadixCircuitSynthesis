@@ -893,6 +893,8 @@ public class TruthtableFunctionHelper : MonoBehaviour
                             bittd.Activate(currentIndex);
                         }
                     }
+
+                    GetComponentInParent<InputControllerLogicGate>().ComputeTruthTableOutput();
                 }
             }
         }

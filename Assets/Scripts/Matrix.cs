@@ -12,7 +12,6 @@ public class Matrix : MonoBehaviour
     private void Awake()
     {
         //get values from logicgate controller
-
         var arity = GetComponent<InputControllerLogicGate>().GetArity();
 
         var radix = 3;

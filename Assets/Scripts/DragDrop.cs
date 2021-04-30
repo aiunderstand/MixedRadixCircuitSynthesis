@@ -21,6 +21,7 @@ public class DragDrop : MonoBehaviour,
     public GameObject FullVersion; //view 1 
     public GameObject LowerAbstractionVersion; //view 2     
     public Stats Stats;
+    public SavedComponent SavedComponent;
     public Vector3 storedPosition;
     Color panelColorDefault;
     Color panelColorActive = new Color(255/255,82/255,45/255);
@@ -78,20 +79,15 @@ public class DragDrop : MonoBehaviour,
     public void OnBeginDrag(PointerEventData eventData)
     {
         _limits = SaveCircuit.DragDropArea.transform.GetComponent<RectTransform>().rect.max;
+        _dragOffset = eventData.position - (Vector2)transform.position;
 
-        if (_isFullVersion)
+        //construct new menu item
+        if (!_isFullVersion)
         {
-            _dragOffset = eventData.position - (Vector2)transform.position;
-        }
-        else
-        {
-            _dragOffset = eventData.position - (Vector2)transform.position;
-
-            //instantiate for the dnd menu either a new standard component (without component generator) or with
-            if (this.FullVersion.GetComponent<ComponentGenerator>() == null)
+            if (this.MenuVersion.GetComponent<ComponentGenerator>() == null)
             {
-               GameObject go = null;
-               switch (this.name)
+                GameObject go = null;
+                switch (this.name)
                 {
                     case "Input":
                         go = GameObject.Instantiate(CircuitGenerator.InputPrefab);
@@ -107,22 +103,15 @@ public class DragDrop : MonoBehaviour,
                 go.transform.SetParent(this.transform.parent, false);
                 go.name = this.name;
                 go.transform.SetSiblingIndex(this.transform.GetSiblingIndex()); //place it on same index
-                //    go.GetComponent<DragDrop>().Stats = this.Stats;
             }
             else
             {
                 var saveCircuit = GameObject.FindObjectOfType<SaveCircuit>();
-                var component = this.FullVersion.GetComponent<InputController>().savedComponent;
-                
-                applicationmanager.InitHack = new List<GameObject>();
-                var go = saveCircuit.GenerateListItem(component, saveCircuit.ContentContainer.transform, false);
-                applicationmanager.clearInitHack = true;
 
+                var go = saveCircuit.GenerateMenuItem(SavedComponent, saveCircuit.ContentContainer.transform);
 
                 go.GetComponent<DragDrop>().MenuVersion.SetActive(true);
-                go.GetComponent<DragDrop>().FullVersion.SetActive(false);
-                //go.name = component.ComponentName;
-                go.GetComponent<DragDrop>().FullVersion.GetComponent<InputController>().savedComponent = component;
+                go.GetComponent<DragDrop>().SavedComponent = SavedComponent;
                 go.transform.SetSiblingIndex(this.transform.GetSiblingIndex());
 
                 //Unity bug where it will auto default to wrong anchor position when part of layout group (sets it to top left). Probably due to some awake script. Set it to center here.
@@ -131,20 +120,17 @@ public class DragDrop : MonoBehaviour,
                 this.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
 
                 //addtional stuff for correct UI
-                this.FullVersion.GetComponent<ComponentGenerator>().infoBtn.SetActive(true);
                 this.transform.localScale = new Vector3(SaveCircuit.FullScale, SaveCircuit.FullScale, SaveCircuit.FullScale);
             }
-            
-          
+
             //update current drag drop component 
             this.transform.SetParent(SaveCircuit.DragDropArea.transform);
             this.transform.tag = "DnDComponent";
             this.transform.SetAsLastSibling();
-           
-            //show expanded version of control
-            MenuVersion.SetActive(false);
-            FullVersion.SetActive(true);
-            panelColorDefault = panelBg.color;
+            this.panelColorDefault = panelBg.color;
+
+            if (this.MenuVersion.GetComponent<ComponentGenerator>() != null)
+                this.MenuVersion.GetComponent<ComponentGenerator>().deleteBtn.SetActive(false);
         }
     }
 
@@ -205,21 +191,38 @@ public class DragDrop : MonoBehaviour,
             return false;
     }
 
+    public void ConstructDroppedItem() {
+
+        //construct a full item       
+        var saveCircuit = GameObject.FindObjectOfType<SaveCircuit>();
+
+        applicationmanager.InitHack = new List<GameObject>();
+        var go = saveCircuit.GenerateItem(SavedComponent, saveCircuit.ContentContainer.transform, true);
+        applicationmanager.clearInitHack = true;
+
+        go.GetComponent<DragDrop>().SavedComponent = SavedComponent;
+        go.transform.SetSiblingIndex(this.transform.GetSiblingIndex());
+        go.transform.SetParent(SaveCircuit.DragDropArea.transform);
+        go.transform.tag = "DnDComponent";
+        go.transform.SetAsLastSibling();
+        go.transform.localPosition = this.transform.localPosition;
+        //go.GetComponent<DragDrop>().SavedComponent = SavedComponent;
+        //go.transform.SetSiblingIndex(this.transform.GetSiblingIndex());
+
+        ////Unity bug where it will auto default to wrong anchor position when part of layout group (sets it to top left). Probably due to some awake script. Set it to center here.
+        //this.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
+        //this.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.5f);
+        //this.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+
+        //addtional stuff for correct UI
+        //this.transform.localScale = new Vector3(SaveCircuit.FullScale, SaveCircuit.FullScale, SaveCircuit.FullScale);
+
+        applicationmanager.ActiveCanvasElementStack[applicationmanager.abstractionLevel].Add(go);
+        Destroy(this.gameObject);
+    }
+
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (!_isFullVersion)
-        {
-            _isFullVersion = true;
-
-            //if it is a saved component add selection behavior
-            if (this.FullVersion.GetComponent<ComponentGenerator>() != null)
-            {
-                this.gameObject.AddComponent<SelectionBehavior>();
-            }
-
-            applicationmanager.ActiveCanvasElementStack[applicationmanager.abstractionLevel].Add(gameObject);
-        }
-
         if (IsDeleteDropZone(transform.position))
         {
             //remove connections first
@@ -253,7 +256,7 @@ public class DragDrop : MonoBehaviour,
 
             //deselect if applicable
             applicationmanager.DeleteCascade(gameObject);
-            
+
             Destroy(gameObject);
         }
         else
@@ -275,8 +278,22 @@ public class DragDrop : MonoBehaviour,
                     c.Redraw(Color.clear); //no color update
                 }
             }
-        }
 
+            if (!_isFullVersion) //transform from menu item to dropped item
+            {
+                _isFullVersion = true;
+
+                if (this.MenuVersion.GetComponent<ComponentGenerator>() != null) //only construct new component if non-basic component
+                    ConstructDroppedItem();
+                else
+                {
+                    this.MenuVersion.SetActive(false);
+                    this.FullVersion.SetActive(true);
+                    applicationmanager.ActiveCanvasElementStack[applicationmanager.abstractionLevel].Add(this.gameObject);
+                }
+            }
+        }
+       
         _dragOffset = Vector2.zero;
     }
 }

@@ -103,7 +103,7 @@ public class ImportNetlist : MonoBehaviour, IPointerDownHandler
             result.savedComponent.ComponentNetlistPath = generatedFilePath;
             var sc = GameObject.FindObjectOfType<SaveCircuit>();
 
-            var go = sc.GenerateListItem(result.savedComponent, sc.ContentContainer.transform, false);
+            var go = sc.GenerateItem(result.savedComponent, sc.ContentContainer.transform, false);
             
             go.GetComponent<DragDrop>().MenuVersion.SetActive(true);
             //go.GetComponent<DragDrop>().FullVersion.SetActive(false);

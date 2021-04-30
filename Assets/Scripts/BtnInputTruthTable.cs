@@ -77,6 +77,9 @@ public class BtnInputTruthTable : MonoBehaviour
             label.text = "x";
         else
             label.text = _value.ToString();
+
+        //propagate via inputcontrollerlogicgate
+        this.transform.parent.parent.GetComponent<InputControllerLogicGate>().ComputeTruthTableOutput();
     }
 
     public void SetHeatmapColor(int frequency, int total)

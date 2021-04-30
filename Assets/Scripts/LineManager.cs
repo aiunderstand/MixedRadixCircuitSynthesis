@@ -121,6 +121,8 @@ public class LineManager : MonoBehaviour
 
                         //finalize
                         applicationmanager.ActiveCanvasElementStack[applicationmanager.abstractionLevel].Add(_tempLine);
+
+                        conn.startTerminal.SetValue(conn.startTerminal.GetRadix(), conn.startTerminal._value, true);
                         _tempLine = null;
                         _tempStartTerminal = null;
                     }
@@ -216,6 +218,8 @@ public class LineManager : MonoBehaviour
                 //add connection to start and end terminals (ports)
                 conn.startTerminal.Connections.Add(_tempLine.GetComponent<LineFunctions>());
                 conn.endTerminal.Connections.Add(_tempLine.GetComponent<LineFunctions>());
+                conn.startTerminal.SetValue(conn.startTerminal.GetRadix(), conn.startTerminal._value, true);
+
                 _tempLine.gameObject.SetActive(false);
             }
         }

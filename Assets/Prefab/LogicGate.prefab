@@ -429,8 +429,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3041550489221432266}
-  - component: {fileID: 3041550489221432267}
   - component: {fileID: 3041550489221432268}
+  - component: {fileID: 3041550489221432267}
   m_Layer: 5
   m_Name: LogicGate
   m_TagString: LogicGate
@@ -466,6 +466,19 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 129.1557, y: 127.2}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &3041550489221432268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3041550489221432265}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed4ea1776e90ca741b3feea70a45dfc7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DropdownLabel: {fileID: 4320261766852719536}
 --- !u!114 &3041550489221432267
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -483,19 +496,6 @@ MonoBehaviour:
   panelColorActive: {r: 0.1911776, g: 1, b: 0, a: 1}
   _optimizedFunction: 
   activeIC: {fileID: 0}
---- !u!114 &3041550489221432268
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3041550489221432265}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ed4ea1776e90ca741b3feea70a45dfc7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DropdownLabel: {fileID: 4320261766852719536}
 --- !u!1 &3041550489318852589
 GameObject:
   m_ObjectHideFlags: 0

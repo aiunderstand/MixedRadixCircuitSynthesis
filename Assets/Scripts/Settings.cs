@@ -26,20 +26,13 @@ public class Settings : MonoBehaviour
             System.IO.Directory.CreateDirectory(settingsDirectory);
 
         settingsPath += settingsDirectory + "savedcomponents.csv";
-        bool FileExist = System.IO.File.Exists(settingsPath);       
+        bool FileExist = System.IO.File.Exists(settingsPath);
 
-        if (!FileExist)
-        { 
-            loadingDone = true;
-        }
-        else
-        {
-            applicationmanager.InitHack = new List<GameObject>();
+        if (FileExist)
             LoadSavedComponents();
-            loadingDone = true;
-            applicationmanager.clearInitHack = true;
-
-        }
+       
+        loadingDone = true;
+     
     }
 
     private void LoadSavedComponents()
@@ -94,11 +87,7 @@ public class Settings : MonoBehaviour
                 component.ComponentNetlistPath = netlistPath;
                 component.Stats = stats;
 
-                var go = saveCircuit.GenerateListItem(component, saveCircuit.ContentContainer.transform, false);
-                
-                go.GetComponent<DragDrop>().MenuVersion.SetActive(true);
-                //go.GetComponent<DragDrop>().FullVersion.SetActive(false);
-                //go.name = name;
+                var go = saveCircuit.GenerateMenuItem(component, saveCircuit.ContentContainer.transform);
                 savedComponents.Add(component.ComponentName, component);
             }
         }

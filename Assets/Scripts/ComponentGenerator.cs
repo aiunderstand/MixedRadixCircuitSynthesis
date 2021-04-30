@@ -24,6 +24,7 @@ public class ComponentGenerator : MonoBehaviour
     public GameObject terminalOutputPrefab; //we can refactor and merge this with input to "terminal"
     public TextMeshProUGUI title;
     public RectTransform body;
+    public GameObject deleteBtn;
     public GameObject infoBtn;
     public int Size; //actually height 
     Color _colorTernary = new Color(255, 0, 211); //we should define it in 1 place instead of 2, see btninput
@@ -202,7 +203,7 @@ public class ComponentGenerator : MonoBehaviour
                 //create a saved component
                 string path = Application.persistentDataPath + "/User/Generated/" + n.id.Substring(2) + "/" + n.id + ".sp";
                 var result1 = FindComponentsInNetlist(path, n.id.Substring(2));
-                var go = saveCircuit.GenerateListItem(result1.savedComponent, root.transform, true);
+                var go = saveCircuit.GenerateItem(result1.savedComponent, root.transform, true);
 
                 go.transform.localPosition = n.pos2d;
                 go.transform.GetComponent<DragDrop>().FullVersion.GetComponent<InputController>().Init();
@@ -286,8 +287,15 @@ public class ComponentGenerator : MonoBehaviour
         }
 
         //second pass instantiate connections
+         StartCoroutine(CreateConnections(result.connections, componentList, root));
+       
+    }
+
+    IEnumerator CreateConnections(List<string> connections, Dictionary<string,InputController> componentList, GameObject root)
+    {
         var lm = GameObject.FindObjectOfType<LineManager>();
-        foreach (var n in result.connections)
+
+        foreach (var n in connections)
         {
             var parts = n.Split(' ');
             string inputId = parts[0];
@@ -296,7 +304,7 @@ public class ComponentGenerator : MonoBehaviour
             int outputPort = int.Parse(parts[3]);
             InputController input = componentList[inputId];
             InputController output = componentList[outputId];
-          
+
             BtnInput startTerminal = input.Buttons[inputPort].GetComponent<BtnInput>();
             BtnInput endTerminal = null;
 
@@ -316,7 +324,10 @@ public class ComponentGenerator : MonoBehaviour
                 Debug.Log("A connection could not be made");
             else
                 lm.NewConnection(startTerminal, endTerminal, root.transform);
+
+            yield return null;
         }
+
     }
 
     public static (NetlistComponent[] components, List<string> connections, SavedComponent savedComponent) FindComponentsInNetlist(string path, string fileName)

@@ -107,12 +107,76 @@ namespace ExtensionMethods
                         }
 
                     }
-                    break;                   
+                    break;
+                case RadixOptions.Unknown:
+                    {
+                        switch (target)
+                        {
+                            case RadixOptions.Binary:
+                            case RadixOptions.SignedBinary:
+                                {
+                                    if (value <1)
+                                        outputValue = 0;
+                                    else
+                                        outputValue = 1;
+                                }
+                                break;
+                            case RadixOptions.UnbalancedTernary:
+                                {
+                                    if (value < 1)
+                                        outputValue = 0;
+                                    else if (value > 1)
+                                        outputValue = 2;
+                                    else
+                                        outputValue = 1;
+                                }
+                                break;
+                            case RadixOptions.BalancedTernary:
+                                {
+                                    if (value < 0)
+                                        outputValue = -1;
+                                    else if (value > 0)
+                                        outputValue = 1;
+                                    else
+                                        outputValue = 0;
+                                }
+                                break;
+                        }
+                    }
+                    break;
             }
 
             return outputValue;
         }
+
+       public static int GetValueAsIndex(RadixOptions radixSource,int value)
+        {
+            int outputValue = 0;
+
+            switch (radixSource)
+                        {
+                            case RadixOptions.Binary:
+                            case RadixOptions.SignedBinary:
+                                {
+                                    outputValue = value;
+                                }
+                                break;
+                            case RadixOptions.UnbalancedTernary:
+                                {
+                                    outputValue = value;
+                                }
+                                break;
+                            case RadixOptions.BalancedTernary:
+                                {
+                                    outputValue = value + 1;
+                                }
+                                break;
+                        }
+
+            return outputValue;
+        }
+
     }
 
-   
+
 }

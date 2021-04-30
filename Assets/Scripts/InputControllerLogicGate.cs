@@ -1,3 +1,4 @@
+using ExtensionMethods;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,10 +15,10 @@ public class InputControllerLogicGate : MonoBehaviour
     public Color panelColorActive;
     public string _optimizedFunction; //field is filled after a save
      //internal values used for state stabilisation (if the output does not change do not propagate)
-    int portA = 0;
-    int portB = 0;
-    int portC = 0;
-    int portD = 0;
+    int portA = -1;
+    int portB = -1;
+    int portC = -1;
+    int portD = -1;
     int totalHeatmap = 0;
 
     public InputController activeIC;
@@ -37,6 +38,8 @@ public class InputControllerLogicGate : MonoBehaviour
         {
             DropDownFunctionLabel.text = _optimizedFunction;
         }
+
+        ComputeTruthTableOutput();
     }
 
     public void UpdateInputController(InputController ic)
@@ -74,22 +77,22 @@ public class InputControllerLogicGate : MonoBehaviour
         bool allConnected = false;
 
         List<BtnInput> ports = new List<BtnInput>();
-        foreach (var item in activeIC.Buttons)
+        foreach (var item in activeIC.Buttons) //potential bug? Is foreach always correctly ordered?
         {
             ports.Add(item.GetComponent<BtnInput>());
         }
         
-        int connectionCount =0;
-        foreach (var p in ports)
-        {
-            if (p.Connections.Count > 0)
-                connectionCount++;
-        }
+        //int connectionCount =0;
+        //foreach (var p in ports)
+        //{
+        //    if (p.Connections.Count > 0)
+        //        connectionCount++;
+        //}
 
-        if (connectionCount == (GetArity() + 1)) // +1 since this is the output port
-            allConnected = true;
+        //if (connectionCount == (GetArity() + 1)) // +1 since this is the output port
+        //    allConnected = true;
 
-        if (allConnected)
+        //if (allConnected)
         {
             //Step 1: get input values of the logic gate
             int _output = 0;
@@ -97,12 +100,18 @@ public class InputControllerLogicGate : MonoBehaviour
 
             if (applicationmanager.UseBigEndianForLogicGates())
             {
-                foreach (var p in ports)
+                foreach (var p in ports) 
                 {
                     switch (p.tag)
                     {
                         case "PortA":
-                            inputs.Add(0, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+                            if (p.Connections.Count != 0)
+                                inputs.Add(0, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+                            else
+                            {
+                                int zeroVolt = RadixHelper.ConvertRadixFromTo(RadixOptions.Unknown, radixTarget, -1);
+                                inputs.Add(0, RadixHelper.GetValueAsIndex(radixTarget, zeroVolt)); //default to "no voltage" if not connected
+                            }
 
                             if (inputs[0] != portA)
                             {
@@ -113,7 +122,13 @@ public class InputControllerLogicGate : MonoBehaviour
 
                             break;
                         case "PortB":
-                            inputs.Add(1, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+                            if (p.Connections.Count != 0)
+                                inputs.Add(1, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+                            else
+                            {
+                                int zeroVolt = RadixHelper.ConvertRadixFromTo(RadixOptions.Unknown, radixTarget, -1);
+                                inputs.Add(1, RadixHelper.GetValueAsIndex(radixTarget, zeroVolt)); //default to "no voltage" if not connected
+                            }
 
                             if (inputs[1] != portB)
                             {
@@ -123,7 +138,13 @@ public class InputControllerLogicGate : MonoBehaviour
 
                             break;
                         case "PortC":
-                            inputs.Add(2, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+                            if (p.Connections.Count != 0)
+                                inputs.Add(2, p.Connections[0].connection.startTerminal.GetValueAsIndex(radixTarget));
+                            else
+                            {
+                                int zeroVolt = RadixHelper.ConvertRadixFromTo(RadixOptions.Unknown, radixTarget, -1);
+                                inputs.Add(2, RadixHelper.GetValueAsIndex(radixTarget, zeroVolt)); //default to "no voltage" if not connected
+                            }
 
                             if (inputs[2] != portC)
                             {
@@ -266,9 +287,9 @@ public class InputControllerLogicGate : MonoBehaviour
                 }
             }
         }
-        else //report that one or more connections are missing
-        {
-            new NotImplementedException(); //should not happen
-        }
+        //else //report that one or more connections are missing
+        //{
+        //    new NotImplementedException(); //should not happen
+        //}
     }
 }

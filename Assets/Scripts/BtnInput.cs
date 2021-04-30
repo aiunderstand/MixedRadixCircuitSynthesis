@@ -65,7 +65,8 @@ public class BtnInput : MonoBehaviour
         BalancedTernary,
         UnbalancedTernary,
         Binary,
-        SignedBinary
+        SignedBinary,
+        Unknown
     }
 
 
