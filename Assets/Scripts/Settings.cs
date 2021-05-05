@@ -20,13 +20,14 @@ public class Settings : MonoBehaviour
         saveCircuit = GameObject.FindObjectOfType<SaveCircuit>();
 
         var settingsDirectory = Application.persistentDataPath + "/User/Settings/";
-
+       
         bool DirExists = System.IO.Directory.Exists(settingsDirectory);
         if (!DirExists)
             System.IO.Directory.CreateDirectory(settingsDirectory);
 
         settingsPath += settingsDirectory + "savedcomponents.csv";
         bool FileExist = System.IO.File.Exists(settingsPath);
+        Debug.Log("Exist: " + FileExist);
 
         if (FileExist)
             LoadSavedComponents();
@@ -42,10 +43,12 @@ public class Settings : MonoBehaviour
         {
             while ((line = reader.ReadLine()) != null)
             {
+                
                 var parts = line.Split(';');
                 int index = 0;
                 string name = parts[index++];
                 string netlistPath = parts[index++];
+                Debug.Log("Load :" + name);
 
                 int inputCount = int.Parse(parts[index++]);
                 List<RadixOptions> inputs = new List<RadixOptions>();
@@ -89,6 +92,7 @@ public class Settings : MonoBehaviour
 
                 var go = saveCircuit.GenerateMenuItem(component, saveCircuit.ContentContainer.transform);
                 savedComponents.Add(component.ComponentName, component);
+                
             }
         }
     }
@@ -144,5 +148,12 @@ public class Settings : MonoBehaviour
                 writer.WriteLine(line);
             }
         }
+
+        #if UNITY_WEBGL && !UNITY_EDITOR
+        //we need to flush the result to disk
+        //https://forum.unity.com/threads/how-does-saving-work-in-webgl.390385/
+        Application.ExternalEval("_JS_FileSystem_Sync();");
+        #endif
+
     }
 }

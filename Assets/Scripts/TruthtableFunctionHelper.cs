@@ -12,6 +12,8 @@ using System.Collections.Specialized;
 //see this presentation about marshalling data from c++ to C# and inverse
 //https://www.slideshare.net/unity3d/adding-love-to-an-api-or-how-to-expose-c-in-unity
 // https://github.com/lazerfalcon/Unite2018_Native/tree/master/Assets
+// https://www.jacksondunstan.com/articles/3938 
+// https://blogs.unity3d.com/2017/01/19/low-level-plugins-in-unity-webgl/
 public class TruthtableFunctionHelper : MonoBehaviour
 {
     public enum HardwareMappingModes
@@ -47,7 +49,75 @@ public class TruthtableFunctionHelper : MonoBehaviour
         _Carry2,
         _Bal_dist_measure
     }
+#if UNITY_WEBGL && !UNITY_EDITOR
+    [DllImport("__Internal")]
+    public static extern IntPtr GetTableFromIndex(int tableIndex);
 
+    [DllImport("__Internal")]
+    public static extern void GetTableFromIndex_Release(IntPtr ptr);
+
+    [DllImport("__Internal")]
+    public static extern int GetTableFromIndexSingle(int tableIndex, int index);
+
+    [DllImport("__Internal")]
+    public static extern int CreateNetlist(int mode,string filePath, int[] array, int length,int arity);
+
+    [DllImport("__Internal")]
+    public static extern int TestSum(int[] array, int length);
+
+    [DllImport("__Internal")]
+    public static extern int CreateCircuit(
+        string filePath, 
+        string fileName,
+        int inputs,
+        string[] inputNames,
+        int outputs,
+        string[] outputNames, 
+        int ttIndicesCount, 
+        string[] ttIndices,
+        int arityCount,
+        int[] arityArray,
+        int connectionCount,
+        string[] connectionArray,
+        int invCount,
+        int[] invArray, 
+        int positionCount,
+        string[] positionArray, 
+        int savedCircuitCount, 
+        string[] savedCircuitNamesArray,
+        int connectionIndexCount,
+        int[] connectionIndexArray,
+        string[] functionRadixTypeArray,
+        int functionRadixTypeCount,
+        int inputComponents,
+        int outputComponents,
+        string[] ioRadixTypeArray,
+        int ioRadixTypeCount,
+        int[] inputOutputSizeArray,
+        int inputOutputSizeCount,
+        string[] ioPositionArray,
+        int ioPositionCount,
+        string[] connectionPairArray,
+        int connectionPairCount,
+        string[] idArray,
+        int idArrayCount
+        );
+
+    [DllImport("__Internal")]
+    public static extern IntPtr GetOptimzedTT();
+
+    [DllImport("__Internal")]
+    public static extern void GetOptimzedTT_Release(IntPtr ptr);
+
+    [DllImport("__Internal")]
+    public static extern IntPtr GetInvArray();
+
+    [DllImport("__Internal")]
+    public static extern void GetInvArray_Release(IntPtr ptr);
+
+    [DllImport("__Internal")]
+    public static extern void SetMode(int newMode);
+#else
     [DllImport("CircuitGenerator", EntryPoint = "GetTableFromIndex")]
     public static extern IntPtr GetTableFromIndex(int tableIndex);
 
@@ -62,41 +132,6 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
     [DllImport("CircuitGenerator", EntryPoint = "TestSum")]
     public static extern int TestSum(int[] array, int length);
-
-    public static int[] GetAndConvertInvArrayFormat(int arity)
-    {
-        List<int> invArray = new List<int>();
-        int tablesize = arity*3;
-
-        int[] tempInvArray = new int[tablesize];
-        IntPtr srcPtr = GetInvArray(); //if we use this method, we have to release the pointer later!
-        Marshal.Copy(srcPtr, tempInvArray, 0, tablesize);
-
-        for (int j = 0; j < tablesize; j++)
-        {
-            invArray.Add(tempInvArray[j]);
-        }
-
-        GetInvArray_Release(srcPtr);
-
-        if (arity ==2)
-        {
-            for (int i = 0; i < 3; i++)
-            {
-                invArray.Add(0);
-            }
-        }
-
-        if (arity == 1)
-        {
-            for (int i = 0; i < 6; i++)
-            {
-                invArray.Add(0);
-            }
-        }
-
-        return invArray.ToArray();
-    }
 
     [DllImport("CircuitGenerator", EntryPoint = "CreateCircuit")]
     public static extern int CreateCircuit(
@@ -150,8 +185,45 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
     [DllImport("CircuitGenerator", EntryPoint = "SetMode")]
     public static extern void SetMode(int newMode);
-    
+
+#endif
+
     bool isInitialized = false;
+
+    public static int[] GetAndConvertInvArrayFormat(int arity)
+    {
+        List<int> invArray = new List<int>();
+        int tablesize = arity * 3;
+
+        int[] tempInvArray = new int[tablesize];
+        IntPtr srcPtr = GetInvArray(); //if we use this method, we have to release the pointer later!
+        Marshal.Copy(srcPtr, tempInvArray, 0, tablesize);
+
+        for (int j = 0; j < tablesize; j++)
+        {
+            invArray.Add(tempInvArray[j]);
+        }
+
+        GetInvArray_Release(srcPtr);
+
+        if (arity == 2)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                invArray.Add(0);
+            }
+        }
+
+        if (arity == 1)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                invArray.Add(0);
+            }
+        }
+
+        return invArray.ToArray();
+    }
 
     public void Awake() //must init after autocompletebox hence at second possition in hierarchy
     {

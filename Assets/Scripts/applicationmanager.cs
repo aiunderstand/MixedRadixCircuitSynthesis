@@ -4,6 +4,7 @@ using UnityEngine;
 using TMPro;
 using System;
 using ExtensionMethods;
+using UnityEngine.UI;
 
 public class applicationmanager : MonoBehaviour
 {
@@ -134,8 +135,11 @@ public class applicationmanager : MonoBehaviour
         curSelectedComponent = null;
 
     }
-
-    
+        
+    public void OnFileDownload()
+    {
+        Debug.Log("Export completed");
+    }
 
     public void Update()
     {

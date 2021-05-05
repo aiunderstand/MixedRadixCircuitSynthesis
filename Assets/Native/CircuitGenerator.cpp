@@ -4,6 +4,9 @@
 #include <vector>
 #include <algorithm>
 #include <string>
+
+#include "common.h"
+
 using namespace std;
 
 class IO {
@@ -47,28 +50,36 @@ void::Subcircuit::setInverters(int i, bool x) {
 
 
 ///////////////////////////////// DATA
-vector<vector<string>> connections = {
-    {"in0", "in1", "", "out_ckt0"}  ,       //20K
-    {"out_ckt0", "in2", "", "out0"}  ,      //20K
-    {"in0", "in1", "", "out_ckt2"},         //K00
-    {"out_ckt0", "in2", "", "out_ckt3"},    //K00
-    {"out_ckt2", "out_ckt3", "", "out2"},   //ZKK
-};
+vector<vector<string> > connections;
 
-vector<vector<bool>> inv = {
-    {true,true,false,true,true,false,false,false,false},
-    {true,true,false,true,true,false,false,false,false},
-    {false,true,false,false,true,false,false,false,false},
-    {false,true,false,false,true,false,false,false,false},
-    {false,true,false,false,true,false,false,false,false}
-};
+//= {
+//    {"in0", "in1", "", "out_ckt0"}  ,       //20K
+//    {"out_ckt0", "in2", "", "out0"}  ,      //20K
+//    {"in0", "in1", "", "out_ckt2"},         //K00
+//    {"out_ckt0", "in2", "", "out_ckt3"},    //K00
+//    {"out_ckt2", "out_ckt3", "", "out2"},   //ZKK
+//};
+
+vector<vector<bool> > inv;
+
+//= {
+//    {true,true,false,true,true,false,false,false,false},
+//    {true,true,false,true,true,false,false,false,false},
+//    {false,true,false,false,true,false,false,false,false},
+//    {false,true,false,false,true,false,false,false,false},
+//    {false,true,false,false,true,false,false,false,false}
+//};
 
 
-vector<string> index = {
-    "20K", "20K", "K00", "K00", "ZKK"
-};
+vector<string> ttIndex;
 
-vector<int> arity = { 2,2,2,2,2 };
+//= {
+//    "20K", "20K", "K00", "K00", "ZKK"
+//};
+
+vector<int> arity;
+
+//= { 2,2,2,2,2 };
 
 vector<string> parsedInputNames;
 vector<string> parsedOutputNames;
@@ -87,7 +98,7 @@ vector<Subcircuit> netlists;
 void enterData(int compCount) {
     for (int i = 0; i < compCount; i++) {
 
-        netlists[i].setIndex(index[i]);
+        netlists[i].setIndex(ttIndex[i]);
         netlists[i].setArity(arity[i]);
         // entering connection data
         for (int j = 0; j < connections[i].size(); j++) {
@@ -100,7 +111,6 @@ void enterData(int compCount) {
         }
     }
 }
-
 
 void printData(int compCount) {
     for (int i = 0; i < compCount; i++) {
@@ -122,10 +132,10 @@ void printData(int compCount) {
 }
 
 
-vector<vector<string>> ParseConnectionIntoVectorStructure(char** a, int rows)
+vector<vector<string> > ParseConnectionIntoVectorStructure(char** a, int rows)
 {
-    vector<vector<string>>connVector;
-    int index = 0;
+    vector<vector<string> >connVector;
+    int idx = 0;
     for (size_t i = 0; i < rows; i++)
     {
          vector<string> tempVector;
@@ -133,8 +143,8 @@ vector<vector<string>> ParseConnectionIntoVectorStructure(char** a, int rows)
         //create a row of vectors, with fixed length 4 (due to arity 3, arity 2 will not use third spot)
         for (size_t j = 0; j < connectionIndices[i]; j++)
         {
-            tempVector.push_back(a[index]);
-            index++;
+            tempVector.push_back(a[idx]);
+            idx++;
         }
 
         connVector.push_back(tempVector);
@@ -142,9 +152,9 @@ vector<vector<string>> ParseConnectionIntoVectorStructure(char** a, int rows)
     return connVector;
 }
 
-vector<vector<bool>> ParseInverterIntoBoolStructure(int* a, int rows)
+vector<vector<bool> > ParseInverterIntoBoolStructure(int* a, int rows)
 {
-    vector<vector<bool>>invVector;
+    vector<vector<bool> >invVector;
     for (size_t i = 0; i < rows; i++)
     {
         vector<bool> tempVector;
@@ -185,7 +195,7 @@ vector<string> ParseCharArrayIntoStringVector(char** a, int length)
     return v;
 }
 
-extern "C" __declspec(dllexport) int CreateCircuit(
+LIBRARY_API int CreateCircuit(
     char* filePath, 
     char* fileName, 
     int inputs,
@@ -226,7 +236,7 @@ extern "C" __declspec(dllexport) int CreateCircuit(
     connectionIndices = ParseIntArrayIntoIntVector(connectionIndexArray, connectionIndexCount);
     connections = ParseConnectionIntoVectorStructure(connectionArray, connectionIndexCount); //because the vector uses connectionIndicies we need to use its length.
     inv = ParseInverterIntoBoolStructure(invArray, ttIndicesCount);
-    index = ParseCharArrayIntoStringVector(ttIndices, ttIndicesCount);
+    ttIndex = ParseCharArrayIntoStringVector(ttIndices, ttIndicesCount);
     arity = ParseIntArrayIntoIntVector(arityArray, ttIndicesCount);
     parsedInputNames = ParseCharArrayIntoStringVector(inputNames, inputs);
     parsedOutputNames = ParseCharArrayIntoStringVector(outputNames, outputs);

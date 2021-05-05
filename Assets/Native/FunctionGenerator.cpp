@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 
+#include "common.h"
+
 using namespace std;
 
 int table[9] = //Logic table outputs. It is also the function index expressed in ternary.
@@ -90,7 +92,7 @@ void callFunction(int input1, int input2, int index) {
 	cout << "(" << input1 << "," << input2 << ") => " << table[9 - n] << "\n\n";
 }
 
-extern "C" __declspec(dllexport) int* GetTableFromIndex(int tableIndex) {
+LIBRARY_API int* GetTableFromIndex(int tableIndex) {
 	//create a new table
 	int* tt = new int[9];
 
@@ -105,12 +107,12 @@ extern "C" __declspec(dllexport) int* GetTableFromIndex(int tableIndex) {
 	return tt;
 }
 
-extern "C" __declspec(dllexport) void GetTableFromIndex_Release(int* pArray)
+LIBRARY_API void GetTableFromIndex_Release(int* pArray)
 {
 	delete[] pArray;
 }
 
-extern "C" __declspec(dllexport) int GetTableFromIndexSingle(int tableIndex, int index) {
+LIBRARY_API int GetTableFromIndexSingle(int tableIndex, int index) {
 	//create a new table
 	int* tt = new int[9];
 

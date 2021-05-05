@@ -189,7 +189,11 @@ public class SaveCircuit : MonoBehaviour
         //create a temp saved component for preview/save screen
         tempComponentStructure = new SavedComponent(inputs, inputLabels, outputs, outputLabels);
         tempComponentStructure.Stats = new Stats();
+
+        applicationmanager.InitHack = new List<GameObject>();
         tempComponent = GenerateItem(tempComponentStructure, SaveCanvas.transform, false);
+        applicationmanager.InitHack.Clear();
+
         tempComponent.GetComponent<DragDrop>().FullVersion.SetActive(true);
         tempComponent.GetComponent<DragDrop>().FullVersion.GetComponent<ComponentGenerator>().infoBtn.SetActive(false);
 

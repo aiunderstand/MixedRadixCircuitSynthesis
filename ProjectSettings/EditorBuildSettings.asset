@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/LetterBoxer-master/LetterBoxer/Assets/LetterBoxer/Demo/DemoScene.unity
     guid: f91f22c79b025124d973058f496e84ef
+  - enabled: 0
+    path: Assets/test.unity
+    guid: 3efd3aaf320864a448272d08b860a367
   m_configObjects: {}
