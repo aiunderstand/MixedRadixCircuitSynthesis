@@ -287,11 +287,12 @@ public class ComponentGenerator : MonoBehaviour
         }
 
         //second pass instantiate connections
-         StartCoroutine(CreateConnections(result.connections, componentList, root));
-       
+        // StartCoroutine(CreateConnections(result.connections, componentList, root));
+        CreateConnections(result.connections, componentList, root);
+
     }
 
-    IEnumerator CreateConnections(List<string> connections, Dictionary<string,InputController> componentList, GameObject root)
+    void CreateConnections(List<string> connections, Dictionary<string,InputController> componentList, GameObject root)
     {
         var lm = GameObject.FindObjectOfType<LineManager>();
 
@@ -325,7 +326,7 @@ public class ComponentGenerator : MonoBehaviour
             else
                 lm.NewConnection(startTerminal, endTerminal, root.transform);
 
-            yield return null;
+           // yield return null;
         }
 
     }
