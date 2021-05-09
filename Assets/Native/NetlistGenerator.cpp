@@ -36,7 +36,7 @@ Mode mode; //0 is model A and without body effect, 1 is model B and with body ef
 
 int dimensions = -1; // the number of inputs
 int maskIndex = 0;
-
+int dividersNeeded = 0;
 
 int dimensionLevel(int index, int dimension) {	//returns the level a specific dimension is for a given index (not its value) NOT ZERO INDEXED
 	return ((index % int((pow(3, dimension)))) / int(pow(3, (dimension - 1))));
@@ -631,29 +631,45 @@ LIBRARY_API int CreateNetlist(int newMode, char* filePath, int* ttFromUnity, int
 
 	int transistors = 0;
 
+	//check if dividers are needed
+	//assume it is false, until proven otherwise by going over pull down and pull up networks and decide if they have only "000" meaning empty
+	dividersNeeded = 0;
+	for (size_t g = 0; g < mysteryNumber; g++)
+	{
+		for (int dd = 0; dd < dimensions; dd++) {
+			if (circuit[2][g][dd] != "000" && circuit[2][g][dd] != "111" && !circuit[2][g][dd].empty() &&
+				circuit[3][g][dd] != "000" && circuit[3][g][dd] != "111" && !circuit[3][g][dd].empty())
+			{
+				dividersNeeded = 1;
+			}
+		}
+	}
+
 	switch (mode)
 	{
 	case Mode::modelA_woBody:
 	{
-		myfile << "\n\nxp0 ";
-		if (directConnection[2]) {
-			myfile << "vdd "; //connects "up" to VDD
-		}
-		else { myfile << "up "; }
-		myfile << "out out" << p0;
+		if (dividersNeeded)
+		{
+			myfile << "\n\nxp0 ";
+			if (directConnection[2]) {
+				myfile << "vdd "; //connects "up" to VDD
+			}
+			else { myfile << "up "; }
+			myfile << "out out" << p0;
 
-		myfile << "\nxn1 ";
-		myfile << "out out ";
-		if (directConnection[3]) {
-			myfile << "gnd "; //connects "down" to GND
+			myfile << "\nxn1 ";
+			myfile << "out out ";
+			if (directConnection[3]) {
+				myfile << "gnd "; //connects "down" to GND
+			}
+			else { myfile << "down"; }
+			myfile << n0 << "\n";
+
+			transistors = 2; //counts number of transistors
 		}
-		else { myfile << "down"; }
-		myfile << n0 << "\n";
 
 		int connections = 0; //counts number of connection nodes
-		transistors = 2; //counts number of transistors
-
-
 		string connect1 = ""; // connection variables (these depend on the network and group number)
 		string connect2 = "";
 		string connect3 = "";
@@ -802,41 +818,43 @@ LIBRARY_API int CreateNetlist(int newMode, char* filePath, int* ttFromUnity, int
 		//if (n == 1) cout << "\nBuilding the 0.9V pull-down circuit...\n";
 		//if (n == 2) cout << "\nBuilding the 0.45V pull-up circuit...\n";
 		//if (n == 3) cout << "\nBuilding the 0.45V pull-down circuit...\n";
-				
-		myfile << "\n\nxp0 ";
-		if (directConnection[0]) //pull up full
-		{
-			myfile << "vdd "; 
-		}
-		else if (directConnection[3]) //pull down half
-		{
-			myfile << "gnd ";
-		}
-		else
-		{ 
-			myfile << "up "; 
-		}
-		myfile << "gnd out" << p0;
-
-		myfile << "\nxn1 ";
-		if (directConnection[1]) //pull down full
-		{
-			myfile << "gnd ";
-		}
-		else if (directConnection[2]) //pull up half
-		{
-			myfile << "vdd ";
-		}
-		else 
-		{ 
-			myfile << "down "; 
-		}
-		myfile << "vdd out" << n0 << "\n";
 		
+		if (dividersNeeded)
+		{
+			myfile << "\n\nxp0 ";
+			if (directConnection[0]) //pull up full
+			{
+				myfile << "vdd ";
+			}
+			else if (directConnection[3]) //pull down half
+			{
+				myfile << "gnd ";
+			}
+			else
+			{
+				myfile << "up ";
+			}
+			myfile << "gnd out" << p0;
+
+			myfile << "\nxn1 ";
+			if (directConnection[1]) //pull down full
+			{
+				myfile << "gnd ";
+			}
+			else if (directConnection[2]) //pull up half
+			{
+				myfile << "vdd ";
+			}
+			else
+			{
+				myfile << "down ";
+			}
+			myfile << "vdd out" << n0 << "\n";
+
+			transistors = 2; //counts number of transistors
+		}
+
 		int connections = 0; //counts number of connection nodes
-		transistors = 2; //counts number of transistors
-
-
 		string connect1 = ""; // connection variables (these depend on the network and group number)
 		string connect2 = "";
 		string connect3 = "";
@@ -992,40 +1010,42 @@ LIBRARY_API int CreateNetlist(int newMode, char* filePath, int* ttFromUnity, int
 		//if (n == 2) cout << "\nBuilding the 0.45V pull-up circuit...\n";
 		//if (n == 3) cout << "\nBuilding the 0.45V pull-down circuit...\n";
 
-		myfile << "\n\nxp0 ";
-		if (directConnection[0]) //pull up full
+		if (dividersNeeded)
 		{
-			myfile << "vdd ";
-		}
-		else if (directConnection[3]) //pull down half
-		{
-			myfile << "gnd ";
-		}
-		else
-		{
-			myfile << "up ";
-		}
-		myfile << "gnd out" << p0;
+			myfile << "\n\nxp0 ";
+			if (directConnection[0]) //pull up full
+			{
+				myfile << "vdd ";
+			}
+			else if (directConnection[3]) //pull down half
+			{
+				myfile << "gnd ";
+			}
+			else
+			{
+				myfile << "up ";
+			}
+			myfile << "gnd out" << p0;
 
-		myfile << "\nxn1 ";
-		if (directConnection[1]) //pull down full
-		{
-			myfile << "gnd ";
+			myfile << "\nxn1 ";
+			if (directConnection[1]) //pull down full
+			{
+				myfile << "gnd ";
+			}
+			else if (directConnection[2]) //pull up half
+			{
+				myfile << "vdd ";
+			}
+			else
+			{
+				myfile << "down ";
+			}
+			myfile << "vdd out" << n0 << "\n";
+
+			transistors = 2; //counts number of transistors
 		}
-		else if (directConnection[2]) //pull up half
-		{
-			myfile << "vdd ";
-		}
-		else
-		{
-			myfile << "down ";
-		}
-		myfile << "vdd out" << n0 << "\n";
 
 		int connections = 0; //counts number of connection nodes
-		transistors = 2; //counts number of transistors
-
-
 		string connect1 = ""; // connection variables (these depend on the network and group number)
 		string connect2 = "";
 		string connect3 = "";

@@ -255,7 +255,7 @@ public class StatisticsUI : MonoBehaviour
             int maxRows = 0;
             while ((line = reader.ReadLine()) != null)
             {
-                if (line.Contains("***"))
+                if (line.Contains("***pullup full") || line.Contains("***pulldown full") || line.Contains("***pullup half") || line.Contains("***pulldown half"))
                 {
                     tempNetwork.Columns = tempNetwork.Transistors.Count;
                     tempNetwork.Rows = maxRows;
