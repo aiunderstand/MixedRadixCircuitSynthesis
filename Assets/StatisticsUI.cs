@@ -98,6 +98,7 @@ public class StatisticsUI : MonoBehaviour
         if (LogicGateAsTxt.Dividers.Rows > 0)
         {
             startY = offsetY;
+            int shiftRight = LogicGateAsTxt.PU_halfN.Columns > LogicGateAsTxt.PD_halfN.Columns ? LogicGateAsTxt.PU_halfN.Columns : LogicGateAsTxt.PD_halfN.Columns;
 
             Transistors t = LogicGateAsTxt.Dividers.Transistors[0][0];
             GameObject tGo;
@@ -112,7 +113,7 @@ public class StatisticsUI : MonoBehaviour
                 vt.SetTransistorTypeTo(TransistorTypes.NMOS_BodyToDrain, t.diameter);
           
             tGo.transform.SetParent(CircuitCanvas);
-            tGo.transform.localPosition = new Vector3((LogicGateAsTxt.PU_halfN.Columns - 0.5f) * -offsetX, 0.5f * offsetY, 0);
+            tGo.transform.localPosition = new Vector3((shiftRight - 0.5f) * -offsetX, 0.5f * offsetY, 0);
 
 
             t = LogicGateAsTxt.Dividers.Transistors[0][1];
@@ -127,20 +128,47 @@ public class StatisticsUI : MonoBehaviour
                 vt.SetTransistorTypeTo(TransistorTypes.NMOS_BodyToDrain, t.diameter);
 
             tGo.transform.SetParent(CircuitCanvas);
-            tGo.transform.localPosition = new Vector3((LogicGateAsTxt.PD_halfN.Columns - 0.5f) * -offsetX, 0.5f * -offsetY, 0);
+            tGo.transform.localPosition = new Vector3((shiftRight - 0.5f) * -offsetX, 0.5f * -offsetY, 0);
+
+            //Edge case: draw connections to gnd or vdd if column of half network is zero but full network rows is larger than 1
+            //check for up network
+            if (LogicGateAsTxt.PU_halfN.Columns == 0 && LogicGateAsTxt.PUN.Rows > 1)
+            {
+                for (int i = 0; i < LogicGateAsTxt.PUN.Rows-1; i++)
+                {
+                    var emtpyTransGo = GameObject.Instantiate(TransistorPrefab);
+                    var emptyVT = emtpyTransGo.GetComponent<VisualTransistor>();
+                    emptyVT.SetTransistorTypeTo(TransistorTypes.Empty, 0);
+                    emtpyTransGo.transform.SetParent(CircuitCanvas);
+                    emtpyTransGo.transform.localPosition = new Vector3((shiftRight - 0.5f) * -offsetX, (i+1.5f) * offsetY, 0);
+                }
+            }
+
+            //check for down network
+            if (LogicGateAsTxt.PD_halfN.Columns == 0 && LogicGateAsTxt.PDN.Rows > 1)
+            {
+                for (int i = 0; i < LogicGateAsTxt.PDN.Rows - 1; i++)
+                {
+                    var emtpyTransGo = GameObject.Instantiate(TransistorPrefab);
+                    var emptyVT = emtpyTransGo.GetComponent<VisualTransistor>();
+                    emptyVT.SetTransistorTypeTo(TransistorTypes.Empty, 0);
+                    emtpyTransGo.transform.SetParent(CircuitCanvas);
+                    emtpyTransGo.transform.localPosition = new Vector3((shiftRight - 0.5f) * -offsetX, (i+1.5f) * -offsetY, 0);
+                }
+            }
 
 
             //draw Wires
             DivUpWire.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, (LogicGateAsTxt.PU_halfN.Columns-1) * offsetX);
-            DivUpWire.transform.localPosition = new Vector3(-26 +(LogicGateAsTxt.PU_halfN.Columns-1) * -40f, offsetY, 0);
+            DivUpWire.transform.localPosition = new Vector3(-26 +(shiftRight - 1) * -40f, offsetY, 0);
             DivUpWire.GetComponent<Image>().color = Color.green;
 
             DivDownWire.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, (LogicGateAsTxt.PD_halfN.Columns-1) * offsetX);
-            DivDownWire.transform.localPosition = new Vector3(-26 +(LogicGateAsTxt.PD_halfN.Columns-1) * -40f, -offsetY, 0);
+            DivDownWire.transform.localPosition = new Vector3(-26 +(shiftRight - 1) * -40f, -offsetY, 0);
             DivDownWire.GetComponent<Image>().color = Color.green;
 
             DivVertWire.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, offsetY);
-            DivVertWire.transform.localPosition = new Vector3(-14 + (LogicGateAsTxt.PD_halfN.Columns - 0.5f) * -offsetX, 0, 0);
+            DivVertWire.transform.localPosition = new Vector3(-14 + (shiftRight - 0.5f) * -offsetX, 0, 0);
             DivVertWire.GetComponent<Image>().color = Color.green;
 
             DivUpWire.gameObject.SetActive(true);
@@ -174,23 +202,30 @@ public class StatisticsUI : MonoBehaviour
         //HACK: shift background based on imbalance of pu_half and pu networks, better is to compute start pos left corner
 
         float middle = ((float) LogicGateAsTxt.Columns) /2f;
-        float shiftRight = (-LogicGateAsTxt.PU_halfN.Columns + middle) * offsetX;
 
-        Background.transform.localPosition = new Vector3(shiftRight,0, 0);
+        int largestLeftColumn = LogicGateAsTxt.PU_halfN.Columns > LogicGateAsTxt.PD_halfN.Columns ? LogicGateAsTxt.PU_halfN.Columns : LogicGateAsTxt.PD_halfN.Columns;
+        int largestRightColumn = LogicGateAsTxt.PUN.Columns > LogicGateAsTxt.PDN.Columns ? LogicGateAsTxt.PUN.Columns : LogicGateAsTxt.PDN.Columns;
+        int largestColumn = largestLeftColumn > largestRightColumn ? largestLeftColumn : largestRightColumn;
+      
+        int shiftOffset = largestLeftColumn > largestRightColumn ? offsetX : -offsetX;
+
+        float shift = (-largestColumn + middle) * shiftOffset;
+      
+        Background.transform.localPosition = new Vector3(shift,0, 0);
 
         //add power lines
         float alignRight = (((LogicGateAsTxt.Columns - 0.2f) *80)/2) +8f;
 
         Vdd.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, (LogicGateAsTxt.Columns - 0.2f) * offsetX);
-        Vdd.transform.localPosition = new Vector3(shiftRight, (LogicGateAsTxt.MaxRowsTop ) * offsetY, 0);
+        Vdd.transform.localPosition = new Vector3(shift, (LogicGateAsTxt.MaxRowsTop ) * offsetY, 0);
         Vdd.transform.GetChild(0).transform.localPosition = new Vector3(alignRight,0,0);
 
         Gnd.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, (LogicGateAsTxt.Columns - 0.2f) * offsetX);
-        Gnd.transform.localPosition = new Vector3(shiftRight, (LogicGateAsTxt.MaxRowsBottom ) * -offsetY, 0);
+        Gnd.transform.localPosition = new Vector3(shift, (LogicGateAsTxt.MaxRowsBottom ) * -offsetY, 0);
         Gnd.transform.GetChild(0).transform.localPosition = new Vector3(alignRight, 0, 0);
 
         Out.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, (LogicGateAsTxt.Columns - 0.4f) * offsetX);
-        Out.transform.localPosition = new Vector3(shiftRight+10, 0, 0);
+        Out.transform.localPosition = new Vector3(shift+10, 0, 0);
         Out.transform.GetChild(0).transform.localPosition = new Vector3(-8+ alignRight, 0, 0);
 
 
@@ -352,39 +387,26 @@ public class StatisticsUI : MonoBehaviour
         }
 
         int maxTopRow;
-        if (result.PUN.Rows == result.PU_halfN.Rows)
-        {
-            if (result.Dividers.Rows > 0)
-                maxTopRow = result.PUN.Rows + 1; //1 for divider
-            else
-                maxTopRow = result.PUN.Rows;
-        }
+        if (result.Dividers.Transistors.Count > 0)
+            maxTopRow = result.PUN.Rows > result.PU_halfN.Rows+1 ? result.PUN.Rows : result.PU_halfN.Rows+1;
         else
-        {
             maxTopRow = result.PUN.Rows > result.PU_halfN.Rows ? result.PUN.Rows : result.PU_halfN.Rows;
-        }
 
         int maxBottomRow;
-        if (result.PDN.Rows == result.PD_halfN.Rows)
-        {
-            if (result.Dividers.Rows > 0)
-                maxBottomRow = result.PDN.Rows + 1; //1 for divider
-            else
-                maxBottomRow = result.PDN.Rows;
-        }
+        if (result.Dividers.Transistors.Count > 0)
+            maxBottomRow = result.PDN.Rows > result.PD_halfN.Rows + 1 ? result.PDN.Rows : result.PD_halfN.Rows + 1;
         else
-        {
             maxBottomRow = result.PDN.Rows > result.PD_halfN.Rows ? result.PDN.Rows : result.PD_halfN.Rows;
-        }
-
-        result.Rows = maxTopRow + maxBottomRow;
-
-        int maxRightCols = result.PDN.Transistors.Count > result.PUN.Transistors.Count ? result.PDN.Transistors.Count : result.PDN.Transistors.Count;
-        int maxLeftCols = result.PD_halfN.Transistors.Count > result.PU_halfN.Transistors.Count ? result.PD_halfN.Transistors.Count : result.PU_halfN.Transistors.Count;
-        result.Columns = maxLeftCols + maxRightCols;
 
         result.MaxRowsTop = maxTopRow;
         result.MaxRowsBottom = maxBottomRow;
+        result.Rows = maxTopRow + maxBottomRow;
+
+        int maxRightCols = result.PUN.Columns > result.PDN.Columns ? result.PUN.Columns : result.PDN.Columns;
+        int maxLeftCols = result.PU_halfN.Columns > result.PD_halfN.Columns ? result.PU_halfN.Columns : result.PD_halfN.Columns;
+        
+        result.Columns = maxLeftCols + maxRightCols;
+
         return result;
     }
 
