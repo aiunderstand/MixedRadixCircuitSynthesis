@@ -159,11 +159,13 @@ public class StatisticsUI : MonoBehaviour
 
 
             //draw Wires
-            DivUpWire.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, (LogicGateAsTxt.PU_halfN.Columns-1) * offsetX);
+
+            int divWireWidth = LogicGateAsTxt.PU_halfN.Columns > LogicGateAsTxt.PD_halfN.Columns ? LogicGateAsTxt.PU_halfN.Columns - 1 : LogicGateAsTxt.PD_halfN.Columns - 1;
+            DivUpWire.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, divWireWidth * offsetX);
             DivUpWire.transform.localPosition = new Vector3(-26 +(shiftRight - 1) * -40f, offsetY, 0);
             DivUpWire.GetComponent<Image>().color = Color.green;
 
-            DivDownWire.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, (LogicGateAsTxt.PD_halfN.Columns-1) * offsetX);
+            DivDownWire.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, divWireWidth * offsetX);
             DivDownWire.transform.localPosition = new Vector3(-26 +(shiftRight - 1) * -40f, -offsetY, 0);
             DivDownWire.GetComponent<Image>().color = Color.green;
 
