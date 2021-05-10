@@ -161,11 +161,14 @@ public class StatisticsUI : MonoBehaviour
             //draw Wires
 
             int divWireWidth = LogicGateAsTxt.PU_halfN.Columns > LogicGateAsTxt.PD_halfN.Columns ? LogicGateAsTxt.PU_halfN.Columns - 1 : LogicGateAsTxt.PD_halfN.Columns - 1;
-            DivUpWire.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, divWireWidth * offsetX);
+
+            int divUpWireWidth = LogicGateAsTxt.PU_halfN.Columns == 0 ? 0 : divWireWidth;
+            DivUpWire.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, divUpWireWidth * offsetX);
             DivUpWire.transform.localPosition = new Vector3(-26 +(shiftRight - 1) * -40f, offsetY, 0);
             DivUpWire.GetComponent<Image>().color = Color.green;
 
-            DivDownWire.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, divWireWidth * offsetX);
+            int divDownWireWidth = LogicGateAsTxt.PD_halfN.Columns == 0 ? 0 : divWireWidth;
+            DivDownWire.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, divDownWireWidth * offsetX);
             DivDownWire.transform.localPosition = new Vector3(-26 +(shiftRight - 1) * -40f, -offsetY, 0);
             DivDownWire.GetComponent<Image>().color = Color.green;
 
@@ -408,6 +411,8 @@ public class StatisticsUI : MonoBehaviour
         int maxLeftCols = result.PU_halfN.Columns > result.PD_halfN.Columns ? result.PU_halfN.Columns : result.PD_halfN.Columns;
         
         result.Columns = maxLeftCols + maxRightCols;
+        
+
 
         return result;
     }

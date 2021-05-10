@@ -635,8 +635,15 @@ extern "C" __declspec(dllexport) int CreateNetlist(int newMode, char* filePath, 
 	for (size_t g = 0; g < mysteryNumber; g++)
 	{
 		for (int dd = 0; dd < dimensions; dd++) {
-			if (circuit[2][g][dd] != "000" || circuit[2][g][dd] != "111" || !circuit[2][g][dd].empty() ||
-				circuit[3][g][dd] != "000" || circuit[3][g][dd] != "111" || !circuit[3][g][dd].empty())
+
+			//check pull-up half
+			if (circuit[2][g][dd] != "000" && circuit[2][g][dd] != "111" && !circuit[2][g][dd].empty())
+			{
+				dividersNeeded = 1;
+			}
+
+			//check pull-down half
+			if (circuit[3][g][dd] != "000" && circuit[3][g][dd] != "111" && !circuit[3][g][dd].empty())
 			{
 				dividersNeeded = 1;
 			}
