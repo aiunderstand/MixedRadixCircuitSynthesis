@@ -76,7 +76,7 @@ public class SaveCircuit : MonoBehaviour
                 }
 
                 //show statistics
-                StatisticsScreen.Show(stats, tempComponentStructure);
+                StatisticsScreen.ShowSimple(stats, tempComponentStructure);
                
                 //clear canvas, we clear the preview with a call in the unity btn handler
                 applicationmanager.ClearCanvas();

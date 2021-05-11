@@ -408,7 +408,10 @@ public class BtnInput : MonoBehaviour
                             if (c.connection.endTerminal.name.Contains("_saved"))
                                 c.connection.endTerminal.SetValue(radixSource, _value, false);
                             else
+                            {
+                                c.connection.endTerminal._value = _value;
                                 c.connection.endTerminal.transform.parent.parent.GetComponent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                            }
                         }
                     }
                 }

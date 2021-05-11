@@ -39,7 +39,24 @@ public class StatisticsUI : MonoBehaviour
         pulldown_half = 4
     }
 
-    public void Show(Stats stats, SavedComponent sc)
+    public void Show(Stats stats, DragDrop dd)
+    {
+        transistorCount.text = stats.transistorCount.ToString();
+        abstractionLevelCount.text = stats.abstractionLevelCount.ToString();
+        totalLogicGateCount.text = stats.totalLogicGateCount.ToString();
+        uniqueLogicGateCount.text = stats.uniqueLogicGateCount.ToString();
+        netlistName.text = dd.SavedComponent.ComponentName;
+        gameObject.SetActive(true);
+
+        logicGateId = 0;
+
+        logicGatePaths = GetLogicGatePaths(Path.GetDirectoryName(dd.SavedComponent.ComponentNetlistPath));
+
+        DrawLogicGate(logicGateId);
+        UpdateDrawingWithActiveTransistorPath(dd);
+    }
+
+    public void ShowSimple(Stats stats, SavedComponent sc) //without any active path
     {
         transistorCount.text = stats.transistorCount.ToString();
         abstractionLevelCount.text = stats.abstractionLevelCount.ToString();
@@ -53,9 +70,145 @@ public class StatisticsUI : MonoBehaviour
         logicGatePaths = GetLogicGatePaths(Path.GetDirectoryName(sc.ComponentNetlistPath));
 
         DrawLogicGate(logicGateId);
-      
     }
 
+    private void UpdateDrawingWithActiveTransistorPath(DragDrop dd)
+    {
+        //get all transistors
+        var allTs = GameObject.FindGameObjectsWithTag("Transistor");
+
+        //get all btnInputs from the logic gate. Add them in order (eg. C, B, A in arity 3)
+        dd.LowerAbstractionVersion.gameObject.SetActive(true);
+        List<BtnInput> inputs = new List<BtnInput>();
+        foreach (Transform child in dd.LowerAbstractionVersion.gameObject.transform)
+        {
+            GameObject go = child.gameObject;
+            if (go.name.Contains("LogicGate"))
+            {
+                if (go.GetComponent<DragDrop>()) //only drag drop components, not wires
+                {
+                    var iclg = go.GetComponent<DragDrop>().FullVersion.transform.GetChild(0).GetComponent<InputControllerLogicGate>();
+
+                    foreach (var btn in iclg.activeIC.Buttons)
+                    {
+                        inputs.Add(btn.GetComponent<BtnInput>());
+                    }
+                }   
+            }
+        }
+
+        dd.LowerAbstractionVersion.gameObject.SetActive(false);
+
+        //update label of each transistor with: inverter (optional) bntInput label and value in format p:?n:?"" +label + [state]
+        //check each row of each network and set its color ON (colored) or OFF (grayscalish).
+        //blue NMOS/PMOS are OFF (HIGH) ON (MED) ON (LOW)
+        //red  NMOS/PMOS are OFF (HIGH) OFF (MED) ON (LOW)
+
+        foreach (var t in allTs)
+        {
+            VisualTransistor vt = t.GetComponent<VisualTransistor>();
+
+            //parse label to find port, which is always the second symbol (eg. i0_p)
+            if (vt.origLabel != "") //skip empty (eg. voltage dividers)
+            {
+                int port = int.Parse(vt.origLabel.Substring(1,1));
+                var parsedLabel = vt.origLabel.Split('_');
+
+                string value = inputs[port]._value.ToString();
+                if (parsedLabel.Length == 2)
+                {
+                    if (parsedLabel[1].Equals("p"))
+                        value = InvertValueP(value);
+                    else
+                        value = InvertValueN(value);
+                }
+
+                string lbl = inputs[port].label.text + " [" + value + "]";
+                string newLabel = parsedLabel.Length == 2 ? parsedLabel[1] + ":" + lbl : lbl;
+                vt.label.text = newLabel;
+
+                //determine color based on if transistor is ON or OFF
+                bool isOn = false;
+                switch (value)
+                {
+                    case "-1":
+                        if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.PMOS_BodyToSource))
+                            isOn = true;
+                       
+                        if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.NMOS_BodyToSource))
+                            isOn = false;
+                        break;
+                    case "0":
+                        if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.PMOS_BodyToSource))
+                        {
+                            if (vt.GetDiameter().Equals(19))
+                                isOn = true;
+                            else
+                                isOn = false;
+                        }
+
+                        if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.NMOS_BodyToSource))
+                        {
+                            if (vt.GetDiameter().Equals(19))
+                                isOn = true;
+                            else
+                                isOn = false;
+                        }
+                        break;
+                    case "1":
+                        if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.PMOS_BodyToSource))
+                            isOn = false;
+
+                        if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.NMOS_BodyToSource))
+                            isOn = true;
+                        break;
+                }
+
+                vt.SetActivationLevel(isOn);
+            }
+        }
+        
+        
+
+    }
+
+    private string InvertValueP(string value)
+    {
+       string result = "";
+       switch (value)
+        {
+            case "-1":
+                result = "1";
+                break;
+            case "0":
+                result = "1";
+                break;
+            case "1":
+                result = "-1";
+                break;
+        }
+
+        return result;
+    }
+
+    private string InvertValueN(string value)
+    {
+        string result = "";
+        switch (value)
+        {
+            case "-1":
+                result = "1";
+                break;
+            case "0":
+                result = "-1";
+                break;
+            case "1":
+                result = "-1";
+                break;
+        }
+
+        return result;
+    }
     private List<string> GetLogicGatePaths(string path)
     {
         var files = System.IO.Directory.GetFiles(path, "f_***.sp", SearchOption.TopDirectoryOnly);
@@ -105,12 +258,13 @@ public class StatisticsUI : MonoBehaviour
             tGo = GameObject.Instantiate(TransistorPrefab);
             VisualTransistor vt = tGo.GetComponent<VisualTransistor>();
 
-            //vt.label.text = t.gate;
+            vt.label.text = "";
+            vt.origLabel = "";
 
             if (t.channel.Equals("PCNFET"))
                 vt.SetTransistorTypeTo(TransistorTypes.PMOS_BodyToSource, t.diameter);
             else
-                vt.SetTransistorTypeTo(TransistorTypes.NMOS_BodyToDrain, t.diameter);
+                vt.SetTransistorTypeTo(TransistorTypes.NMOS_BodyToSource, t.diameter);
           
             tGo.transform.SetParent(CircuitCanvas);
             tGo.transform.localPosition = new Vector3((shiftRight - 0.5f) * -offsetX, 0.5f * offsetY, 0);
@@ -120,12 +274,13 @@ public class StatisticsUI : MonoBehaviour
             tGo = GameObject.Instantiate(TransistorPrefab);
             vt = tGo.GetComponent<VisualTransistor>();
 
-            //vt.label.text = t.gate;
+            vt.label.text = "";
+            vt.origLabel = "";
 
             if (t.channel.Equals("PCNFET"))
                 vt.SetTransistorTypeTo(TransistorTypes.PMOS_BodyToSource, t.diameter);
             else
-                vt.SetTransistorTypeTo(TransistorTypes.NMOS_BodyToDrain, t.diameter);
+                vt.SetTransistorTypeTo(TransistorTypes.NMOS_BodyToSource, t.diameter);
 
             tGo.transform.SetParent(CircuitCanvas);
             tGo.transform.localPosition = new Vector3((shiftRight - 0.5f) * -offsetX, 0.5f * -offsetY, 0);
@@ -259,15 +414,19 @@ public class StatisticsUI : MonoBehaviour
                 {
                     var t = network.Transistors[c][r];
                     vt.label.text = t.gate;
+                    vt.origLabel = t.gate;
+
 
                     if (t.channel.Equals("PCNFET"))
                         vt.SetTransistorTypeTo(TransistorTypes.PMOS_BodyToSource, t.diameter);
                     else
-                        vt.SetTransistorTypeTo(TransistorTypes.NMOS_BodyToDrain, t.diameter);
+                        vt.SetTransistorTypeTo(TransistorTypes.NMOS_BodyToSource, t.diameter);
                 }
                 else
                 {
                     vt.SetTransistorTypeTo(TransistorTypes.Empty, 0);
+                    vt.label.text = "";
+                    vt.origLabel = "";
                 }
        
                 tGo.transform.SetParent(CircuitCanvas);

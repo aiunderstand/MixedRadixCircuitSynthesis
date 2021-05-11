@@ -15,6 +15,6 @@ public class ShowInfo : MonoBehaviour
     {
         var dd = transform.GetComponentInParent<DragDrop>();
         Stats stats = dd.Stats;
-        panel.Show(stats, dd.SavedComponent);        
+        panel.Show(stats, dd);        
     }
 }
