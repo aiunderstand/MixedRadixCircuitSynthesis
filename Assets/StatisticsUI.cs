@@ -28,6 +28,9 @@ public class StatisticsUI : MonoBehaviour
     public Transform CircuitCanvas;
     
     int logicGateId;
+    DragDrop tempDD;
+    bool showActiveTransistors = true;
+
     List<string> logicGatePaths = new List<string>();
 
     public enum ParsePhases
@@ -41,6 +44,8 @@ public class StatisticsUI : MonoBehaviour
 
     public void Show(Stats stats, DragDrop dd)
     {
+        showActiveTransistors = true;
+        tempDD = dd;
         transistorCount.text = stats.transistorCount.ToString();
         abstractionLevelCount.text = stats.abstractionLevelCount.ToString();
         totalLogicGateCount.text = stats.totalLogicGateCount.ToString();
@@ -52,12 +57,12 @@ public class StatisticsUI : MonoBehaviour
 
         logicGatePaths = GetLogicGatePaths(Path.GetDirectoryName(dd.SavedComponent.ComponentNetlistPath));
 
-        DrawLogicGate(logicGateId);
-        UpdateDrawingWithActiveTransistorPath(dd);
+        DrawLogicGate(logicGateId);        
     }
 
     public void ShowSimple(Stats stats, SavedComponent sc) //without any active path
     {
+        showActiveTransistors = false;
         transistorCount.text = stats.transistorCount.ToString();
         abstractionLevelCount.text = stats.abstractionLevelCount.ToString();
         totalLogicGateCount.text = stats.totalLogicGateCount.ToString();
@@ -72,7 +77,7 @@ public class StatisticsUI : MonoBehaviour
         DrawLogicGate(logicGateId);
     }
 
-    private void UpdateDrawingWithActiveTransistorPath(DragDrop dd)
+    private void UpdateDrawingWithActiveTransistors(DragDrop dd)
     {
         //get all transistors
         var allTs = GameObject.FindGameObjectsWithTag("Transistor");
@@ -392,8 +397,23 @@ public class StatisticsUI : MonoBehaviour
         //resize if to big
         if (LogicGateAsTxt.Columns > 16)
             CircuitCanvas.transform.localScale = new Vector3(0.8f, 0.8f, 1);
-         
 
+
+        if (showActiveTransistors)
+        {
+
+
+            //draw active transistors
+            UpdateDrawingWithActiveTransistors(tempDD);
+
+            //draw actrive transistor path
+            UpdateDrawingWithActiveTransistorPath();
+        }
+    }
+
+    private void UpdateDrawingWithActiveTransistorPath()
+    {
+        //2do: disable divider(s) and their lines if needed, add background box UI element, enable background box if connection between rails and output is found when looping over all active transitors else disable 
     }
 
     private void DrawNetwork(TransistorNetwork network, int startY, int offsetX, int offsetY, bool addExtraRowForDivider)
