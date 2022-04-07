@@ -382,8 +382,7 @@ public class ComponentGenerator : MonoBehaviour
                     c.name = partsName[2];
                     c.radixType = partsRadixType[2];
                     c.arity = int.Parse(partsArity[2]);
-                    c.pos2d = new Vector2(float.Parse(partsPos2d[2], CultureInfo.InvariantCulture), float.Parse(partsPos2d[3], CultureInfo.InvariantCulture));
-
+                    c.pos2d = SanitizePosInput(partsPos2d[2],partsPos2d[3]);
                     components.Add(c);
                 }
 
@@ -399,8 +398,7 @@ public class ComponentGenerator : MonoBehaviour
                     c.type = NetlistComponentType.savedcomponent;
                     c.id = partsId[2];
                     c.name = partsName[2];
-                    c.pos2d = new Vector2(float.Parse(partsPos2d[2], CultureInfo.InvariantCulture), float.Parse(partsPos2d[3], CultureInfo.InvariantCulture));
-
+                    c.pos2d = SanitizePosInput(partsPos2d[2], partsPos2d[3]);
                     components.Add(c);
                 }
 
@@ -430,8 +428,7 @@ public class ComponentGenerator : MonoBehaviour
                     c.size = int.Parse(partSize[2]);
                     c.type = NetlistComponentType.input;
                     c.ioLabels = ioLbls.ToArray();
-                    c.pos2d = new Vector2(float.Parse(partsPos2d[2], CultureInfo.InvariantCulture), float.Parse(partsPos2d[3], CultureInfo.InvariantCulture));
-
+                    c.pos2d = SanitizePosInput(partsPos2d[2], partsPos2d[3]);
                     //add to individual component
                     components.Add(c);
 
@@ -468,8 +465,7 @@ public class ComponentGenerator : MonoBehaviour
                     c.size = int.Parse(partSize[2]);
                     c.type = NetlistComponentType.output;
                     c.ioLabels = ioLbls.ToArray();
-                    c.pos2d = new Vector2(float.Parse(partsPos2d[2], CultureInfo.InvariantCulture), float.Parse(partsPos2d[3], CultureInfo.InvariantCulture));
-
+                    c.pos2d = SanitizePosInput(partsPos2d[2], partsPos2d[3]);
                     components.Add(c);
 
                     //add to all component as well. Since we can have 1 output container with multiple outputs, do loop
@@ -498,7 +494,19 @@ public class ComponentGenerator : MonoBehaviour
         return (components.ToArray(), connectionList, s);
     }
 
-    
+    private static Vector2 SanitizePosInput(string x, string y)
+    {
+        if (x.Contains(','))
+        {
+            x = x.Replace(',', '.');
+            y = y.Replace(',', '.');
+            return new Vector2(float.Parse(x, CultureInfo.InvariantCulture), float.Parse(y, CultureInfo.InvariantCulture));
+        }
+        else
+        {
+            return new Vector2(float.Parse(x, CultureInfo.InvariantCulture), float.Parse(y, CultureInfo.InvariantCulture));
+        }
+    }
 }
 
 public class NetlistComponent

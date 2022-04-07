@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using TMPro;
@@ -135,8 +136,8 @@ public class CircuitGenerator : MonoBehaviour
                 {
                     inputComponents++;
                     Vector2 pos2d = c.GetComponentInParent<DragDrop>().transform.localPosition;
-                    ioPositionArray.Add(pos2d.x.ToString());
-                    ioPositionArray.Add(pos2d.y.ToString());
+                    ioPositionArray.Add(pos2d.x.ToString("F", CultureInfo.InvariantCulture));
+                    ioPositionArray.Add(pos2d.y.ToString("F", CultureInfo.InvariantCulture));
                     ioRadixTypeArray.Add(inputControler.DropdownLabel.text);
                     inputOutputSizeArray.Add(validButtons);
                     idArray.Add(id);
@@ -196,8 +197,8 @@ public class CircuitGenerator : MonoBehaviour
                 {
                     outputComponents++;
                     Vector2 pos2d = c.GetComponentInParent<DragDrop>().transform.localPosition;
-                    ioPositionArray.Add(pos2d.x.ToString());
-                    ioPositionArray.Add(pos2d.y.ToString());
+                    ioPositionArray.Add(pos2d.x.ToString("F", CultureInfo.InvariantCulture));
+                    ioPositionArray.Add(pos2d.y.ToString("F", CultureInfo.InvariantCulture));
                     ioRadixTypeArray.Add(inputControler.DropdownLabel.text);
                     inputOutputSizeArray.Add(validButtons);
                     idArray.Add(id);
@@ -236,8 +237,8 @@ public class CircuitGenerator : MonoBehaviour
 
                     //get positions
                     Vector2 pos = c.GetComponentInParent<DragDrop>().gameObject.transform.localPosition;
-                    positionArray.Add(pos.x.ToString());
-                    positionArray.Add(pos.y.ToString());
+                    positionArray.Add(pos.x.ToString("F", CultureInfo.InvariantCulture));
+                    positionArray.Add(pos.y.ToString("F", CultureInfo.InvariantCulture));
 
                     //add radixtype
                      var radixDropdown = controller.transform.GetComponentInChildren<TMP_Dropdown>();
@@ -294,8 +295,8 @@ public class CircuitGenerator : MonoBehaviour
 
                     //get positions
                     Vector2 pos = c.GetComponentInParent<DragDrop>().gameObject.transform.localPosition;
-                    positionArray.Add(pos.x.ToString());
-                    positionArray.Add(pos.y.ToString());
+                    positionArray.Add(pos.x.ToString("F", CultureInfo.InvariantCulture));
+                    positionArray.Add(pos.y.ToString("F", CultureInfo.InvariantCulture));
 
                     //move all .sp files to path, remove/overwrite existing f_* files
                     var fpath = Path.GetDirectoryName(controller.savedComponent.ComponentNetlistPath);
