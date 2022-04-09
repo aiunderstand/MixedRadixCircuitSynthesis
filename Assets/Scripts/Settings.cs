@@ -25,7 +25,7 @@ public class Settings : MonoBehaviour
         if (!DirExists)
             System.IO.Directory.CreateDirectory(settingsDirectory);
 
-        settingsPath += settingsDirectory + "savedcomponents.csv";
+        settingsPath += settingsDirectory + "library.csv";
         bool FileExist = System.IO.File.Exists(settingsPath);
         Debug.Log("Exist: " + FileExist);
 
@@ -41,58 +41,28 @@ public class Settings : MonoBehaviour
         string line;
         using (StreamReader reader = new StreamReader(settingsPath))
         {
-            while ((line = reader.ReadLine()) != null)
+            //read version
+            var version = reader.ReadLine();
+
+            if (version.Contains("1.0"))
             {
-                
-                var parts = line.Split(';');
-                int index = 0;
-                string name = parts[index++];
-                string netlistPath = parts[index++];
-                Debug.Log("Load :" + name);
-
-                int inputCount = int.Parse(parts[index++]);
-                List<RadixOptions> inputs = new List<RadixOptions>();
-                for (int i = 0; i < inputCount; i++)
+                //read library entries
+                while ((line = reader.ReadLine()) != null)
                 {
-                    inputs.Add((RadixOptions) Enum.Parse(typeof(RadixOptions),parts[index++]));
+
+                    var parts = line.Split(';');
+                    string name = parts[0];
+                    Debug.Log("Load :" + name);
+
+                    string generatedPath = Application.persistentDataPath + "/User/Generated/" + name;
+                    string generatedFilePath = generatedPath + "/c_" + name + ".sp";
+
+                    var result = ComponentGenerator.FindComponentsInNetlist(generatedFilePath, name);
+                 
+                    var go = saveCircuit.GenerateMenuItem(result.savedComponent, saveCircuit.ContentContainer.transform);
+                    savedComponents.Add(result.savedComponent.ComponentName, result.savedComponent);
+                    go.name = name;
                 }
-
-                int inputLabelCount = int.Parse(parts[index++]);
-                List<string> inputLabels = new List<string>();
-                for (int i = 0; i < inputLabelCount; i++)
-                {
-                    inputLabels.Add(parts[index++]);
-                }
-             
-                int outputCount = int.Parse(parts[index++]);
-                List<RadixOptions> outputs = new List<RadixOptions>();
-                for (int i = 0; i < outputCount; i++)
-                {
-                    outputs.Add((RadixOptions)Enum.Parse(typeof(RadixOptions), parts[index++]));
-                }
-
-                int outputLabelCount = int.Parse(parts[index++]);
-                List<string> outputLabels = new List<string>();
-                for (int i = 0; i < outputLabelCount; i++)
-                {
-                    outputLabels.Add(parts[index++]);
-                }
-
-                Stats stats = new Stats();
-                stats.transistorCount = int.Parse(parts[index++]);
-                stats.totalLogicGateCount = int.Parse(parts[index++]);
-                stats.uniqueLogicGateCount = int.Parse(parts[index++]);
-                stats.abstractionLevelCount = int.Parse(parts[index++]);
-
-
-                SavedComponent component = new SavedComponent(inputs, inputLabels, outputs, outputLabels);
-                component.ComponentName = name;
-                component.ComponentNetlistPath = netlistPath;
-                component.Stats = stats;
-
-                var go = saveCircuit.GenerateMenuItem(component, saveCircuit.ContentContainer.transform);
-                savedComponents.Add(component.ComponentName, component);
-                
             }
         }
     }
@@ -120,32 +90,14 @@ public class Settings : MonoBehaviour
     {
         using (StreamWriter writer = new StreamWriter(settingsPath, false))
         {
+            //version
+            writer.WriteLine("Library version: 1.0;");
+
+            //library entries
             foreach (DictionaryEntry sc in savedComponents)
             {
                 SavedComponent c =(SavedComponent) sc.Value;
-                string line = "";
-                line += (c.ComponentName + ";");
-                line += (c.ComponentNetlistPath + ";");
-                line += (c.Inputs.Count + ";");
-                foreach (var i in c.Inputs)
-                    line += i + ";";
-                line += (c.InputLabels.Count + ";"); //not really neccesarry because alwasy the same
-                foreach (var i in c.InputLabels)
-                    line += i + ";";
-                line += (c.Outputs.Count + ";");
-                foreach (var i in c.Outputs)
-                    line += i + ";";
-                line += (c.OutputLabels.Count + ";");
-                foreach (var i in c.OutputLabels)
-                    line += i + ";";
-
-                //stats
-                line+= c.Stats.transistorCount + ";";
-                line += c.Stats.totalLogicGateCount + ";";
-                line += c.Stats.uniqueLogicGateCount + ";";
-                line += c.Stats.abstractionLevelCount + ";";
-
-                writer.WriteLine(line);
+                writer.WriteLine(c.ComponentName + ";");
             }
         }
 

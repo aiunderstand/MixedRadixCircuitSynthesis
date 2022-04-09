@@ -63,15 +63,13 @@ public class SaveCircuit : MonoBehaviour
                     var go = GenerateMenuItem(tempComponentStructure, ContentContainer.transform);
                     go.GetComponent<DragDrop>().MenuVersion.SetActive(true);
                     go.GetComponent<DragDrop>().SavedComponent = tempComponentStructure;
-                    go.transform.SetSiblingIndex(this.transform.GetSiblingIndex());
-
+                  
                     //Unity bug where it will auto default to wrong anchor position when part of layout group (sets it to top left). Probably due to some awake script. Set it to center here.
                     go.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
                     go.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.5f);
                     go.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
 
-                    //go.name = Label.text;
-
+                    go.name = Label.text;
                     Settings.Save(tempComponentStructure);
                 }
 
@@ -208,6 +206,7 @@ public class SaveCircuit : MonoBehaviour
         var ListItemObject = new GameObject();
         ListItemObject.AddComponent<RectTransform>();
         ListItemObject.transform.SetParent(parent);
+        ListItemObject.transform.SetSiblingIndex(0);
         ListItemObject.transform.localScale = new Vector3(1, 1, 1);
         ListItemObject.transform.localPosition = new Vector3(0, 120);
         var dd = ListItemObject.AddComponent<DragDrop>();
