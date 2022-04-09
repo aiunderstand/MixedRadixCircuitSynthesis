@@ -14,15 +14,21 @@ public class InputControllerLogicGate : MonoBehaviour
     public Color panelColorDefault;
     public Color panelColorActive;
     public string _optimizedFunction; //field is filled after a save
-     //internal values used for state stabilisation (if the output does not change do not propagate)
+                                      //internal values used for state stabilisation (if the output does not change do not propagate)
     int portA = -1;
     int portB = -1;
     int portC = -1;
     int portD = -1;
     int totalHeatmap = 0;
-
+    int stateChangeCounter = 0;
+    public static int stateChangeThreshold = 10;
     public InputController activeIC;
 
+    public void resetStateChangeCounter()
+    {
+        stateChangeCounter = 0;
+    }
+    
     private void Awake()
     {
         if (this.name.Equals("LogicGate"))
@@ -282,7 +288,26 @@ public class InputControllerLogicGate : MonoBehaviour
                     {
                         //only propagate when states have changed
                         if (stateChanged)
-                            c.connection.endTerminal.transform.parent.parent.GetComponent<InputControllerLogicGate>().ComputeTruthTableOutput();                            
+                        {
+                            stateChangeCounter++;
+
+                            if (stateChangeCounter < stateChangeThreshold)
+                            {
+                                if (c.connection.endTerminal.name.Contains("_saved"))
+                                {
+                                    c.connection.endTerminal.SetValue(GetRadix(), _output, false);
+                                }
+                                else
+                                {
+                                    c.connection.endTerminal.transform.parent.parent.GetComponent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                                }
+                            }
+                            else
+                            {
+                                MessageManager.Instance.Show("Error","Simulation stopped: circuit did not reach stable output state after 10 changes");
+                                SimulationManager.Instance.ResetCounters();
+                            }
+                        }
                     }
                 }
             }

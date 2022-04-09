@@ -286,7 +286,10 @@ public class BtnInput : MonoBehaviour
     }
     public void OnClick(int amount)
     {
-
+        //reset simulation oscillation detection
+        SimulationManager.Instance.ResetCounters();
+        
+        
         RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
 
         //this function is not a conversion, but rather updates the value allowing cyclic behavior

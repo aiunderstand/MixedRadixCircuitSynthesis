@@ -6,7 +6,7 @@ using System;
 using ExtensionMethods;
 using UnityEngine.UI;
 
-public class applicationmanager : MonoBehaviour
+public class applicationmanager : Singleton<applicationmanager>
 {
     public bool useBigEndianForLogicGates = true;
     public static int abstractionLevel = 0;
