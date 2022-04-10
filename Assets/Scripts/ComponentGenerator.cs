@@ -496,7 +496,7 @@ public class ComponentGenerator : MonoBehaviour
 
     private static Vector2 SanitizePosInput(string x, string y)
     {
-        if (x.Contains(','))
+        if (x.Contains(","))
         {
             x = x.Replace(',', '.');
             y = y.Replace(',', '.');
