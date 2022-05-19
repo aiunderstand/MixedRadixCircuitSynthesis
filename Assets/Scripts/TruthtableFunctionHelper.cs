@@ -827,7 +827,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                         if (tIndex != -1)
                         {
                             //only change panel size if needed, otherwise all connections are reset
-                            if (_DETC.Arity != 1)
+                            if (_DETC.GetArity() != 1)
                                 _DETC.SetPanelSize(radix, 1);
 
                             //get all the cells
@@ -862,7 +862,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                         if (tIndex != -1)
                         {
                             //only change panel size if needed, otherwise all connections are reset
-                            if (_DETC.Arity != 2)
+                            if (_DETC.GetArity() != 2)
                                 _DETC.SetPanelSize(radix, 2);
 
                             //get all the cells
@@ -898,7 +898,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                         if (isValid)
                         {
                             //only change panel size if needed, otherwise all connections are reset
-                            if (_DETC.Arity != 3)
+                            if (_DETC.GetArity() != 3)
                                 _DETC.SetPanelSize(radix, 3);
 
                             //get all the cells

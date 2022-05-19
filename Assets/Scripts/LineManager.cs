@@ -63,8 +63,17 @@ public class LineManager : MonoBehaviour
             if (_tempStartTerminal._radix.Contains("Binary"))
                 color = BtnInput._colorBinary;
             else
-                color = BtnInput._colorTernary;
-
+            {
+                if (_tempStartTerminal._radix.Contains("Unbal"))
+                {
+                    color = BtnInput._colorUnbalTernary;
+                }
+                else
+                {
+                    color = BtnInput._colorBalTernary;
+                }
+                
+            }
             lr.startColor = color;
 
             var positionObject = _tempStartTerminal.transform.position;
@@ -122,7 +131,12 @@ public class LineManager : MonoBehaviour
                         //finalize
                         applicationmanager.ActiveCanvasElementStack[applicationmanager.abstractionLevel].Add(_tempLine);
 
+                        SimulationManager.Instance.ResetCounters();
+                        SimulationManager.Instance.SetSimulationTo(true);
+
                         conn.startTerminal.SetValue(conn.startTerminal.GetRadix(), conn.startTerminal._value, true);
+
+                        _tempLine.GetComponent<LineFunctions>().ActivateLineFunctions();
                         _tempLine = null;
                         _tempStartTerminal = null;
                     }
@@ -178,8 +192,16 @@ public class LineManager : MonoBehaviour
                 if (startTerminal._radix.Contains("Binary"))
                     color = BtnInput._colorBinary;
                 else
-                    color = BtnInput._colorTernary;
-
+                {
+                    if (startTerminal._radix.Contains("Unbal"))
+                    {
+                        color = BtnInput._colorUnbalTernary;
+                    }
+                    else
+                    {
+                        color = BtnInput._colorBalTernary;
+                    }
+                }
                 lr.startColor = color;
                 lr.endColor = color;
                 var posStart = startTerminal.transform.localPosition;
@@ -218,6 +240,12 @@ public class LineManager : MonoBehaviour
                 //add connection to start and end terminals (ports)
                 conn.startTerminal.Connections.Add(_tempLine.GetComponent<LineFunctions>());
                 conn.endTerminal.Connections.Add(_tempLine.GetComponent<LineFunctions>());
+
+                //reset simulation oscillation detection
+                SimulationManager.Instance.ResetCounters();
+                SimulationManager.Instance.SetSimulationTo(true);
+
+                //propagate value from connected circuit
                 conn.startTerminal.SetValue(conn.startTerminal.GetRadix(), conn.startTerminal._value, true);
 
                 _tempLine.gameObject.SetActive(false);

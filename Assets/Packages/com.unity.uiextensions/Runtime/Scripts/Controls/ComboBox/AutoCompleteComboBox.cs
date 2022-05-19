@@ -379,10 +379,10 @@ namespace UnityEngine.UI.Extensions
                 _isPanelActive = true;//this makes it get turned off
                 ToggleDropdownPanel(false);
             }
-            else if (!_isPanelActive)
-            {
-                ToggleDropdownPanel(false);
-            }
+            //else if (!_isPanelActive)
+            //{
+            //    ToggleDropdownPanel(false);
+            //}
 
 			bool validity_changed = (_panelItems.Contains (Text) != _selectionIsValid);
 			_selectionIsValid = _panelItems.Contains (Text);
@@ -427,6 +427,15 @@ namespace UnityEngine.UI.Extensions
             {
                 // scrollOffset = Mathf.RoundToInt(itemsPanelRT.anchoredPosition.y / _rectTransform.sizeDelta.y); 
             }
+        }
+
+        public void ShowDropdownPanel(bool show)
+        {
+            _isPanelActive = show;
+            _overlayRT.gameObject.SetActive(_isPanelActive);
+
+            if (show)
+                transform.SetAsLastSibling();
         }
 
         private void PruneItems(string currText)

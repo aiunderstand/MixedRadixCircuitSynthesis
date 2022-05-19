@@ -13,6 +13,29 @@ public class BtnInput : MonoBehaviour
     public int _value = 0;
     public string _radix = "";
     public TextMeshProUGUI DropdownLabel; //redundant as we also have a dropdown
+    public Image wireColor;
+    public static Color _colorBalTernary = new Color(1, 0, 1);
+    public static Color _colorUnbalTernary = new Color(0.5f, 0, 0.5f);
+    public static Color _colorBinary = new Color(0, 1, 1);
+    int _minValue = 0;
+    int _maxValue = 0;
+    public TextMeshProUGUI label;
+    public int _portIndex = 0;
+    public TMP_Dropdown _Dropdown;
+    public bool isOutput = false; //duplicate because we also set this in lineController, refactor
+    public BtnInput hasDownwardsLink;
+    public BtnInput hasUpwardsLink;
+    public List<LineFunctions> Connections = new List<LineFunctions>();
+    InputController ic;
+    //refactors as Logic gate doesnt have any onclick events, only used for its references to value.
+
+    public enum RadixOptions { 
+        BalancedTernary,
+        UnbalancedTernary,
+        Binary,
+        SignedBinary,
+        Unknown
+    }
 
     public void RemoveConnection(int id)
     {
@@ -43,32 +66,8 @@ public class BtnInput : MonoBehaviour
             applicationmanager.ActiveCanvasElementStack[applicationmanager.abstractionLevel].Remove(go.gameObject);
             Destroy(go.gameObject);
         }
-            
+
     }
-
-    public Image wireColor; 
-    public static Color _colorTernary = new Color(255,0,211); 
-    public static Color _colorBinary = new Color(0, 214, 255);
-    int _minValue = 0;
-    int _maxValue = 0;
-    public TextMeshProUGUI label;
-    public int _portIndex = 0;
-    public TMP_Dropdown _Dropdown;
-    public bool isOutput = false; //duplicate because we also set this in lineController, refactor
-    public BtnInput hasDownwardsLink;
-    public BtnInput hasUpwardsLink;
-    public List<LineFunctions> Connections = new List<LineFunctions>();
-    InputController ic;
-    //refactors as Logic gate doesnt have any onclick events, only used for its references to value.
-
-    public enum RadixOptions { 
-        BalancedTernary,
-        UnbalancedTernary,
-        Binary,
-        SignedBinary,
-        Unknown
-    }
-
 
     public RadixOptions GetRadix()
     {
@@ -106,17 +105,34 @@ public class BtnInput : MonoBehaviour
         {
             if (change.options[change.value].text.Contains("Ter"))
             {
-                wireColor.color = _colorTernary;
-                _radix = change.options[change.value].text;
-                
-                //only change line color if not output
-                if (!tag.Equals("Output"))
+                if (change.options[change.value].text.Contains("Unbal"))
                 {
-                    foreach (var c in Connections)
+                    wireColor.color = _colorUnbalTernary;
+                    _radix = change.options[change.value].text;
+
+                    //only change line color if not output
+                    if (!tag.Equals("Output"))
                     {
-                        c.Redraw(_colorTernary, true);
+                        foreach (var c in Connections)
+                        {
+                            c.Redraw(_colorUnbalTernary, true);
+                        }
                     }
-                }                
+                }
+                else
+                {
+                    wireColor.color = _colorBalTernary;
+                    _radix = change.options[change.value].text;
+
+                    //only change line color if not output
+                    if (!tag.Equals("Output"))
+                    {
+                        foreach (var c in Connections)
+                        {
+                            c.Redraw(_colorBalTernary, true);
+                        }
+                    }
+                }
             }
             else
             {
@@ -163,9 +179,17 @@ public class BtnInput : MonoBehaviour
     {
         if (DropdownLabel != null && wireColor != null)
         {
-            if (
-                DropdownLabel.text.Contains("Ter"))
-                wireColor.color = _colorTernary;
+            if (DropdownLabel.text.Contains("Ter"))
+            {
+                if (DropdownLabel.text.Contains("Unbal"))
+                {
+                    wireColor.color = _colorUnbalTernary;
+                }
+                else
+                {
+                    wireColor.color = _colorBalTernary;
+                }    
+            }
             else
                 wireColor.color = _colorBinary;
         }
@@ -286,10 +310,6 @@ public class BtnInput : MonoBehaviour
     }
     public void OnClick(int amount)
     {
-        //reset simulation oscillation detection
-        SimulationManager.Instance.ResetCounters();
-        
-        
         RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
 
         //this function is not a conversion, but rather updates the value allowing cyclic behavior
@@ -340,43 +360,24 @@ public class BtnInput : MonoBehaviour
                 break;
         }
 
+        //hack: update label first so that we use that in debug info with new input states
+        RadixOptions radixTarget;
+        if (DropdownLabel == null) 
+            radixTarget = (RadixOptions)Enum.Parse(typeof(RadixOptions), _radix, true);
+        else
+            radixTarget = (RadixOptions)Enum.Parse(typeof(RadixOptions), DropdownLabel.text, true);
+        _value = RadixHelper.ConvertRadixFromTo(GetRadix(), radixTarget, _value);
+        label.text = _value.ToString();
+        //end hack
+
+        //reset simulation oscillation detection
+        SimulationManager.Instance.ResetCounters();
+        SimulationManager.Instance.SetSimulationTo(true);
+       
         SetValue(GetRadix(), _value, true);
-
-
-        //    //report back to counter to recount, which is the parent of this object;
-        //    var ic = gameObject.GetComponentInParent<InputController>();
-        //    ic.ComputeCounter();
-
-        //    //update connect
-        //    //go over connections and update next component, this code is duplicated in inputcontrollerlogicgate
-        //    if (Connections.Count > 0)
-        //    {
-        //        foreach (var c in Connections)
-        //        {
-        //            //determine if logic gate or output 
-        //            if (c.connection.endTerminal.tag.Equals("Output"))
-        //            {
-        //                var val = c.connection.endTerminal.SetValue(radixSource, _value,false);
-        //                c.connection.endTerminal.GetComponentInChildren<LEDtoggle>().SetLedColor(val);
-        //            }
-        //            else
-        //            {
-        //                if (c.connection.endTerminal.name.Contains("_saved"))
-        //                {
-        //                    c.connection.endTerminal.SetValue(GetRadix(), _value, true);
-        //                    c.connection.endTerminal.transform.parent.GetComponent<InputControllerSaved>().ComputeSavedComponentOutput();
-        //                }
-        //                else
-        //                {
-        //                    c.connection.endTerminal.transform.parent.parent.GetComponent<InputControllerLogicGate>().ComputeTruthTableOutput();
-        //                }
-        //            }
-        //        }
-        //    }
-        //} 
     }
 
-        //horrible api: set, transform and then get in one
+        //horrible api: set value, transform and then get in one
         public int SetValue(RadixOptions radixSource, int value, bool withPropagation)
     {
         RadixOptions radixTarget;

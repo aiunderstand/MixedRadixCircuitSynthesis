@@ -8,12 +8,17 @@ public class LineFunctions : MonoBehaviour
 {
     public Connection connection; //should probably rename this because now we have connection.connection which is weird
     public Transform _savedParent;
+    bool isActive = false;
+
     public void DestroyConnection()
     {
-        connection.startTerminal.RemoveConnection(connection.id);
-        connection.endTerminal.RemoveConnection(connection.id);
-        applicationmanager.ActiveCanvasElementStack[applicationmanager.abstractionLevel].Remove(this.gameObject);
-        Destroy(this.gameObject);
+        if (isActive)
+        {
+            connection.startTerminal.RemoveConnection(connection.id);
+            connection.endTerminal.RemoveConnection(connection.id);
+            applicationmanager.ActiveCanvasElementStack[applicationmanager.abstractionLevel].Remove(this.gameObject);
+            Destroy(this.gameObject);
+        }
     }
 
     private void DrawButtonSegment(int i, Color color, bool updateColor)
@@ -95,6 +100,12 @@ public class LineFunctions : MonoBehaviour
     {
         this.gameObject.SetActive(false);
         this.gameObject.transform.SetParent(_savedParent);
+    }
+
+    public void ActivateLineFunctions()
+    {
+        //currently only delete is listening to this
+        isActive = true;
     }
 }
 

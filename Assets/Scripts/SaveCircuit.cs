@@ -318,6 +318,7 @@ public class SaveCircuit : MonoBehaviour
 
         //responsible for the name and interaction, needs to be last due to awake funtion
         ListItemObject.GetComponent<DragDrop>().Stats = c.Stats;
+        ListItemObject.GetComponent<DragDrop>().SavedComponent = c;
         ListItemObject.GetComponent<DragDrop>().FullVersion.AddComponent<InputController>().Buttons = buttons;
         ListItemObject.GetComponent<DragDrop>().FullVersion.GetComponent<InputController>().savedComponent = c;
       

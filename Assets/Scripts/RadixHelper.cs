@@ -8,6 +8,7 @@ namespace ExtensionMethods
 {
     public static class RadixHelper
     {
+        //note that this conversion allows dont care symbols, meaning that value could be 1 higher than radix
        public static int ConvertRadixFromTo(RadixOptions source, RadixOptions target, int value)
         {
             int outputValue = 0;
@@ -27,11 +28,14 @@ namespace ExtensionMethods
                                 break;
                             case RadixOptions.UnbalancedTernary:
                                 {
-                                    //value 0 maps to 0 
                                     if (value == 0)
                                         outputValue = 0;
-                                    else //value 1 maps to 2
+
+                                    if (value == 1)
                                         outputValue = 2;
+
+                                    if (value == 2) // dont care x
+                                        outputValue = 3;
                                 }
                                 break;
                             case RadixOptions.BalancedTernary:
@@ -39,8 +43,12 @@ namespace ExtensionMethods
                                     //value 0 maps to -1
                                     if (value == 0)
                                         outputValue = -1;
-                                    else //value 1 maps to 1
+
+                                    if (value == 1)
                                         outputValue = 1;
+
+                                    if (value == 2)
+                                        outputValue = 2;
                                 }
                                 break;
                         }
@@ -54,10 +62,16 @@ namespace ExtensionMethods
                             case RadixOptions.SignedBinary:
                                 {
                                     //0 and 1 maps to 0
-                                    if (value < 2)
+                                    if ((value == 0) || (value == 1))
                                         outputValue = 0;
-                                    else //2 maps to 1
+
+                                    //2 maps to 1
+                                    if (value == 2)
                                         outputValue = 1;
+
+                                    //dont care maps to dont care
+                                    if (value == 3)
+                                        outputValue = 2;
                                 }
                                 break;
                             case RadixOptions.UnbalancedTernary:
@@ -84,11 +98,17 @@ namespace ExtensionMethods
                             case RadixOptions.Binary:
                             case RadixOptions.SignedBinary:
                                 {
-                                    //value -1 and 0 map to 0
-                                    if (value < 1)
+                                    //-1 and 0 maps to 0
+                                    if ((value == -1) || (value == 0))
                                         outputValue = 0;
-                                    else //value 1 map to 1
+
+                                    //1 maps to 1
+                                    if (value == 1)
                                         outputValue = 1;
+
+                                    //dont care maps to dont care
+                                    if (value == 2)
+                                        outputValue = 2;
                                 }
                                 break;
                             case RadixOptions.UnbalancedTernary:
@@ -108,37 +128,49 @@ namespace ExtensionMethods
 
                     }
                     break;
-                case RadixOptions.Unknown:
+                case RadixOptions.Unknown: //eg. often used for the initial condition, trying to fit the source into the target, so sanitizing input to min or max values of target radix, incl. dont care
                     {
                         switch (target)
                         {
                             case RadixOptions.Binary:
                             case RadixOptions.SignedBinary:
                                 {
-                                    if (value <1)
+                                    if (value <= 0)
                                         outputValue = 0;
-                                    else
+                                    if (value == 1)
                                         outputValue = 1;
+                                    if (value > 1) //dont care
+                                        outputValue = 2;
                                 }
                                 break;
                             case RadixOptions.UnbalancedTernary:
                                 {
-                                    if (value < 1)
+                                    if (value <= 0)
                                         outputValue = 0;
-                                    else if (value > 1)
-                                        outputValue = 2;
-                                    else
+
+                                    if (value == 1)
                                         outputValue = 1;
+
+                                    if (value == 2)
+                                        outputValue = 2;
+
+                                    if (value > 2) //dont care
+                                        outputValue = 3;
                                 }
                                 break;
                             case RadixOptions.BalancedTernary:
                                 {
-                                    if (value < 0)
+                                     if (value <= -1)
                                         outputValue = -1;
-                                    else if (value > 0)
-                                        outputValue = 1;
-                                    else
+
+                                    if (value == 0)
                                         outputValue = 0;
+
+                                    if (value == 1)
+                                        outputValue = 1;
+
+                                    if (value > 1) //dont care
+                                        outputValue = 2;
                                 }
                                 break;
                         }

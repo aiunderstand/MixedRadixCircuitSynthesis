@@ -3640,6 +3640,12 @@ MonoBehaviour:
   - {fileID: 4892120175542800624}
   CounterLabel: {fileID: 0}
   DropdownLabel: {fileID: 0}
+  A:
+  - {fileID: 4320261766207224703}
+  - {fileID: 4320261765801610469}
+  - {fileID: 4320261766502954205}
+  B: []
+  C: {fileID: 0}
 --- !u!1 &4320261765432998965
 GameObject:
   m_ObjectHideFlags: 0
@@ -4356,6 +4362,9 @@ MonoBehaviour:
   - {fileID: 4892120176208299137}
   CounterLabel: {fileID: 0}
   DropdownLabel: {fileID: 0}
+  A: []
+  B: []
+  C: {fileID: 0}
 --- !u!1 &4320261765623358748
 GameObject:
   m_ObjectHideFlags: 0
@@ -6894,7 +6903,6 @@ MonoBehaviour:
   - {fileID: 4320261766379682721}
   - {fileID: 4320261767116055686}
   DropdownLabel: {fileID: 4320261766852719536}
-  Arity: 2
 --- !u!1 &4320261766200887569
 GameObject:
   m_ObjectHideFlags: 0
@@ -6968,6 +6976,9 @@ MonoBehaviour:
   - {fileID: 4892120175461542308}
   CounterLabel: {fileID: 0}
   DropdownLabel: {fileID: 0}
+  A: []
+  B: []
+  C: {fileID: 0}
 --- !u!1 &4320261766207224701
 GameObject:
   m_ObjectHideFlags: 0
@@ -7389,6 +7400,15 @@ MonoBehaviour:
   - {fileID: 4892120176179635798}
   CounterLabel: {fileID: 0}
   DropdownLabel: {fileID: 0}
+  A:
+  - {fileID: 4320261767062438125}
+  - {fileID: 4320261766496107985}
+  - {fileID: 4320261766847447288}
+  B:
+  - {fileID: 4320261767073151654}
+  - {fileID: 4320261766106623524}
+  - {fileID: 4320261767037566259}
+  C: {fileID: 0}
 --- !u!1 &4320261766434547525
 GameObject:
   m_ObjectHideFlags: 0
@@ -12506,6 +12526,15 @@ MonoBehaviour:
   - {fileID: 4892120175731598333}
   CounterLabel: {fileID: 0}
   DropdownLabel: {fileID: 0}
+  A:
+  - {fileID: 3041550490609903206}
+  - {fileID: 3041550488834819880}
+  - {fileID: 3041550489848972982}
+  B:
+  - {fileID: 3041550489804777981}
+  - {fileID: 3041550489318852591}
+  - {fileID: 3041550489838628805}
+  C: {fileID: 4784715592312505775}
 --- !u!1 &4320261767134788855
 GameObject:
   m_ObjectHideFlags: 0
@@ -12707,6 +12736,9 @@ MonoBehaviour:
   - {fileID: 4892120175723824693}
   CounterLabel: {fileID: 0}
   DropdownLabel: {fileID: 0}
+  A: []
+  B: []
+  C: {fileID: 0}
 --- !u!1 &5499006396397898824
 GameObject:
   m_ObjectHideFlags: 0

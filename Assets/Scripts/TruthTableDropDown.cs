@@ -28,16 +28,33 @@ public class TruthTableDropDown : MonoBehaviour
     void DropdownValueChanged(TMP_Dropdown change)
     {
         string radixTarget = change.options[change.value].text;
-        int radix = 3;
+        int radixSymbols = 3;
 
         if (radixTarget.Contains("Binary"))
-            radix = 2;
-
-
+            radixSymbols = 2;
+       
         //reset the index dropdown to custom
         iclg.DropDownFunctionLabel.text = "";
 
         //DragExpandTableComponent to set the radix target
-        expandController.SetPanelSize(radix, expandController.Arity);
+        expandController.SetPanelSize(radixSymbols, iclg.GetArity());
+
+        //update labels if ternary and convert matrix values
+        if (radixSymbols == 3)
+        {
+            if (radixTarget.Contains("Unbal"))
+            {
+                iclg.activeIC.UpdateLabels(RadixOptions.UnbalancedTernary, iclg.GetArity());
+                iclg.activeIC.ConvertMatrix(iclg.GetRadix(), RadixOptions.UnbalancedTernary);
+            }
+            else
+            {
+                iclg.activeIC.UpdateLabels(RadixOptions.BalancedTernary, iclg.GetArity());
+                iclg.activeIC.ConvertMatrix(iclg.GetRadix(), RadixOptions.BalancedTernary);
+            }
+        }
+
+        //update radix in iclg
+        iclg.SetRadix((RadixOptions)Enum.Parse(typeof(RadixOptions), radixTarget, true));
     }
 }

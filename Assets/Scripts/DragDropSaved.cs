@@ -11,6 +11,6 @@ public class DragDropSaved : MonoBehaviour
     {
         var functionDropDown = GetComponentInChildren<AutoCompleteComboBox>();
         functionDropDown._mainInput.text = tempFunctions.ToString().ToLower();
-        functionDropDown.ToggleDropdownPanel();
+        functionDropDown.ShowDropdownPanel(false);
     }
 }

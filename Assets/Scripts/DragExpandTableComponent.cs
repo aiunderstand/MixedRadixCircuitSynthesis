@@ -18,11 +18,16 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
     float _startMouseHeight;
     int _computedHeight;
     bool _isBinary = false;
-    public int Arity = 2; //default 2
+    int Arity = 2; //default 2
     
     void Start()
     {
         _ddScript = GetComponentInParent<DragDrop>();
+    }
+
+    public int GetArity()
+    {
+        return Arity;
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -93,7 +98,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
     {
         InputControllerLogicGate iclg = transform.parent.parent.GetComponent<InputControllerLogicGate>();
 
-
+        
         //remove all possibl existing connections to it
         var allTerminals = transform.parent.transform.parent.GetComponentsInChildren<BtnInput>();
 
@@ -210,6 +215,9 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
                     }
                     break;
             }
+
+            //update labels
+            iclg.activeIC.UpdateLabels(iclg.GetRadix(), arity);
         }
 
         this.transform.parent.transform.parent.GetComponentInChildren<Matrix>().ComputeEmptyTruthTable(Arity, radix);

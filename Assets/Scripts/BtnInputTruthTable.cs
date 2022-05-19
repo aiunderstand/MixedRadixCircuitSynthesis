@@ -10,7 +10,7 @@ using UnityEngine.UI;
 public class BtnInputTruthTable : MonoBehaviour
 {
     int _value = 0;
-    public TextMeshProUGUI DropdownLabel;
+    public TextMeshProUGUI DropdownLabel; //not really needed, we can get this from the iclg
     int _minValue = 0;
     int _maxValue = 0;
     public TextMeshProUGUI label;
@@ -82,6 +82,46 @@ public class BtnInputTruthTable : MonoBehaviour
         this.transform.parent.parent.GetComponent<InputControllerLogicGate>().ComputeTruthTableOutput();
     }
 
+    public void SetValue(int v)
+    {
+        _value = v;
+
+        switch (DropdownLabel.text)
+        {
+            case "BalancedTernary":
+                {
+                    _minValue = -1;
+                    _maxValue = 2;
+                }
+                break;
+            case "UnbalancedTernary":
+                {
+                    _minValue = 0;
+                    _maxValue = 3;
+                }
+                break;
+            case "Binary":
+            case "SignedBinary":
+                {
+                    _minValue = 0;
+                    _maxValue = 3;
+                }
+                break;
+            default:
+                break;
+        }
+
+        if (_value < _minValue)
+            _value = _minValue;
+        
+        if (_value > _maxValue)
+            _value = _minValue;
+
+        if (_value == _maxValue)
+            label.text = "x";
+        else
+            label.text = _value.ToString();
+    }
     public void SetHeatmapColor(int frequency, int total)
     {
         if (frequency != 0)
@@ -234,6 +274,13 @@ public class BtnInputTruthTable : MonoBehaviour
         }
     }
 
+
+    public int GetValue()
+    {
+        return _value;
+    }
+
+    //THIS IS ALWAYS UNBALANCED OUTPUT
     public int GetValueAsMapped()
     {
         //NOTE: we want use Dont Care values (marked as "x"). We label them as value 3 and decode them in the c++ function. 

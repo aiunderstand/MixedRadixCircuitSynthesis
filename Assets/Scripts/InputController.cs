@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ExtensionMethods;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -13,6 +14,9 @@ public class InputController : MonoBehaviour
     public SavedComponent savedComponent; //only needed for saved components
     int _radix = 0;
     bool isInit = false;
+    public TextMeshProUGUI[] A;
+    public TextMeshProUGUI[] B;
+    public TMP_Dropdown C;
 
     private void Awake()
     {
@@ -86,6 +90,79 @@ public class InputController : MonoBehaviour
         }
     }
 
-   
+    public void ConvertMatrix(BtnInput.RadixOptions source, BtnInput.RadixOptions target)
+    {
+        //if binary to binary or ternary to ternary 
+        int newValue;
+        var tt = transform.parent.GetComponentInChildren<Matrix>().Truthtable;
+        
+        foreach (var t in tt)
+        {
+            newValue = RadixHelper.ConvertRadixFromTo(source, target, t.GetValue());
+            t.SetValue(newValue);
+        }
+
+        //if binary to ternary conversion or ternary to binary 
+
+        //we need to assign both binary and ternary game objects at start and during pull down or pull up
+
+
+
+        
+    }
+
+    public void UpdateLabels(BtnInput.RadixOptions radixType, int arity)
+    {
+        //if we change from radix A to radix B
+
+
+       if (radixType.Equals(BtnInput.RadixOptions.BalancedTernary))
+       {
+            A[0].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "-1";
+            A[1].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "0";
+            A[2].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "1";
+
+            if (B.Length >0)
+            {
+                B[0].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "1";
+                B[1].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "0";
+                B[2].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "-1";
+            }
+
+            if (arity == 3)
+            {
+                //update labels of C
+                C.options[0].text = "C: -1";
+                C.options[1].text = "C: 0";
+                C.options[2].text = "C: 1";
+
+                C.captionText.text = C.options[C.value].text;
+            }
+       }
+
+       if (radixType.Equals(BtnInput.RadixOptions.UnbalancedTernary))
+        {
+            A[0].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "0";
+            A[1].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "1";
+            A[2].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "2";
+
+            if (B.Length > 0)
+            {
+                B[0].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "2";
+                B[1].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "1";
+                B[2].transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = "0";
+            }
+
+            if (arity == 3)
+            {
+                //update labels of C
+                C.options[0].text = "C: 0";
+                C.options[1].text = "C: 1";
+                C.options[2].text = "C: 2";
+
+                C.captionText.text = C.options[C.value].text;
+            }
+        }
+    }
 }
 
