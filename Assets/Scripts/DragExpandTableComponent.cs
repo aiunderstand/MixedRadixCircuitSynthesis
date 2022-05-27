@@ -217,7 +217,7 @@ public class DragExpandTableComponent : MonoBehaviour, IBeginDragHandler, IDragH
             }
 
             //update labels
-            iclg.activeIC.UpdateLabels(iclg.GetRadix(), arity);
+            iclg.activeIC.UpdateLabels(iclg.GetRadixHack(), arity);
         }
 
         this.transform.parent.transform.parent.GetComponentInChildren<Matrix>().ComputeEmptyTruthTable(Arity, radix);

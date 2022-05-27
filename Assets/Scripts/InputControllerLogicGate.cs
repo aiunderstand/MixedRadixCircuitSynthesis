@@ -11,7 +11,6 @@ using static BtnInput;
 public class InputControllerLogicGate : MonoBehaviour
 {
     public InputField DropDownFunctionLabel;
-    TextMeshProUGUI _radixTarget; //or source if it is linked to a output
     public Color panelColorDefault;
     public Color panelColorActive;
     public string _optimizedFunction; //field is filled after a save
@@ -25,7 +24,7 @@ public class InputControllerLogicGate : MonoBehaviour
     int stateChangeCounter = 0;
     public static int stateChangeThreshold = 10;
     public InputController activeIC;
-    RadixOptions _radix;
+    RadixOptions _prevRadix;
 
     public void resetStateChangeCounter()
     {
@@ -39,6 +38,9 @@ public class InputControllerLogicGate : MonoBehaviour
             GetComponentInParent<DragDrop>().name = ";LogicGate;" + GetInstanceID().ToString();
             activeIC = GetComponentInChildren<InputController>();
         }
+
+  
+        
     }
 
     private void Start()
@@ -74,20 +76,25 @@ public class InputControllerLogicGate : MonoBehaviour
         return GetComponent<Matrix>().GetMatrixCells();
     }
 
-    public RadixOptions GetRadix()
+    public RadixOptions GetPrevRadix()
     {
-        return _radix;
+        return _prevRadix;
     }
 
-    public void SetRadix(RadixOptions radix)
+    public void SetPrevRadix(RadixOptions radix)
     {
-        _radix = radix;
+        _prevRadix = radix;
     }
 
+    //made because need to refactor order of loading
+    public RadixOptions GetRadixHack()
+    {
+        return (RadixOptions)Enum.Parse(typeof(RadixOptions), GetComponent<Matrix>().DropdownLabel.text, true);
+    }
     public async void ComputeTruthTableOutput()
     {
         bool stateChanged = false;
-        RadixOptions radixTarget = GetRadix();
+        RadixOptions radixTarget = GetRadixHack();
 
         bool allConnected = false;
 
@@ -237,7 +244,7 @@ public class InputControllerLogicGate : MonoBehaviour
             stateChangeCounter++;
 
             if (SimulationManager.Instance.DebugIsEnabled)
-                Debug.Log(this.name + " " + DropDownFunctionLabel.text + " changed output from: " + _prevOutput + " to: " + portD + ". Statechange counter: " + stateChangeCounter);
+                Debug.Log("[" +SimulationManager.Instance.FrameCounter +"] " + this.name + " " + DropDownFunctionLabel.text + " changed output from: " + _prevOutput + " to: " + portD + ". Statechange counter: " + stateChangeCounter);
             
             _prevOutput = portD;
         }
@@ -276,43 +283,45 @@ public class InputControllerLogicGate : MonoBehaviour
         //Step 5: Propagate output to its connections
         if ((outputPort != null) && (outputPort.Connections.Count > 0))
         {
-            foreach (var c in outputPort.Connections)
+            //only propagate when states have changed
+            if (stateChanged)
+            {
+                //Debug.Log("before: " + GetInstanceID());
+
+                //Debug.Log("after:" + GetInstanceID());
+                if ((stateChangeCounter < stateChangeThreshold) && SimulationManager.Instance.SimulationIsEnabled)
+                {
+
+                    foreach (var c in outputPort.Connections)
             {
                 //Debug.Log("LinkId: " + c.connection.id);
                 //determine if logic gate or output 
                 if (c.connection.endTerminal.tag.Equals("Output"))
                 {
-                    var val = c.connection.endTerminal.SetValue(GetRadix(), portD, false);
+                    var val = c.connection.endTerminal.SetValue(GetRadixHack(), portD, false);
                     c.connection.endTerminal.GetComponentInChildren<LEDtoggle>().SetLedColor(val);
                 }
                 else
                 {
-                    //only propagate when states have changed
-                    if (stateChanged)
+                    if (c.connection.endTerminal.name.Contains("_saved"))
                     {
-                        //Debug.Log("before: " + GetInstanceID());
-                       
-                        //Debug.Log("after:" + GetInstanceID());
-                        if ((stateChangeCounter < stateChangeThreshold) && SimulationManager.Instance.SimulationIsEnabled)
-                        {
-                            if (c.connection.endTerminal.name.Contains("_saved"))
-                            {
-                                c.connection.endTerminal.SetValue(GetRadix(), portD, false);
-                            }
-                            else
-                            {
-                                c.connection.endTerminal.transform.parent.parent.GetComponent<InputControllerLogicGate>().ComputeTruthTableOutput();
-                            }
-                        }
-                        else
-                        {
-                            if (SimulationManager.Instance.DebugIsEnabled)
-                                Debug.Log("Simulation stopped: unstable circuit detected");
-
-                            SimulationManager.Instance.SetSimulationTo(false);
-                            MessageManager.Instance.Show("Error","Simulation stopped: circuit did not reach stable output state after 10 changes");
-                        }
+                        c.connection.endTerminal.SetValue(GetRadixHack(), portD, false);
                     }
+                    else
+                    {
+                        c.connection.endTerminal.transform.parent.parent.GetComponent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                    }   
+                }
+            }
+
+                }
+                else
+                {
+                    if (SimulationManager.Instance.DebugIsEnabled)
+                        Debug.Log("Simulation stopped: unstable circuit detected");
+
+                    SimulationManager.Instance.SetSimulationTo(false);
+                    MessageManager.Instance.Show("Error", "Simulation stopped: circuit did not reach stable output state after 10 changes");
                 }
             }
         }

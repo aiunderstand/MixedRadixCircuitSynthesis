@@ -8,8 +8,11 @@ public class SimulationManager : Singleton<SimulationManager>
 {
     public bool SimulationIsEnabled = true; //this should be a flag and the states should be IsRunning or HasStopped or HasStoppedWithError
     public bool DebugIsEnabled = false;
+    public long FrameCounter = 0;
     public void ResetCounters()
     {
+        FrameCounter = 0;
+
         if (DebugIsEnabled)
             Debug.Log("------new sim------");
 
@@ -68,5 +71,10 @@ public class SimulationManager : Singleton<SimulationManager>
                 }
             }
         }
+    }
+
+    public void LateUpdate()
+    {
+        FrameCounter++;
     }
 }

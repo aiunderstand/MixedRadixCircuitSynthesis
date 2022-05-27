@@ -45,16 +45,16 @@ public class TruthTableDropDown : MonoBehaviour
             if (radixTarget.Contains("Unbal"))
             {
                 iclg.activeIC.UpdateLabels(RadixOptions.UnbalancedTernary, iclg.GetArity());
-                iclg.activeIC.ConvertMatrix(iclg.GetRadix(), RadixOptions.UnbalancedTernary);
+                iclg.activeIC.ConvertMatrix(iclg.GetPrevRadix(), RadixOptions.UnbalancedTernary);
             }
             else
             {
                 iclg.activeIC.UpdateLabels(RadixOptions.BalancedTernary, iclg.GetArity());
-                iclg.activeIC.ConvertMatrix(iclg.GetRadix(), RadixOptions.BalancedTernary);
+                iclg.activeIC.ConvertMatrix(iclg.GetPrevRadix(), RadixOptions.BalancedTernary);
             }
         }
 
         //update radix in iclg
-        iclg.SetRadix((RadixOptions)Enum.Parse(typeof(RadixOptions), radixTarget, true));
+        iclg.SetPrevRadix((RadixOptions)Enum.Parse(typeof(RadixOptions), radixTarget, true));
     }
 }

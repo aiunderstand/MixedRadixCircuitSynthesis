@@ -814,7 +814,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                 //parse into either 1 or 3 or 9 (arity 1, arity 2 or 3)
                 if (function.Length == 1 || function.Length == 3 || function.Length == 9)
                 {
-                    RadixOptions targetRadix = GetComponentInParent<InputControllerLogicGate>().GetRadix();
+                    RadixOptions targetRadix = GetComponentInParent<InputControllerLogicGate>().GetRadixHack();
                     int radix = 3;
                     if (targetRadix.ToString().Contains("Binary"))
                         radix = 2;
