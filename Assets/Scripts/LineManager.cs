@@ -130,15 +130,19 @@ public class LineManager : MonoBehaviour
 
                         //finalize
                         applicationmanager.ActiveCanvasElementStack[applicationmanager.abstractionLevel].Add(_tempLine);
-
-                        SimulationManager.Instance.ResetCounters();
-                        SimulationManager.Instance.SetSimulationTo(true);
-
-                        conn.startTerminal.SetValue(conn.startTerminal.GetRadix(), conn.startTerminal._value, true);
-
                         _tempLine.GetComponent<LineFunctions>().ActivateLineFunctions();
                         _tempLine = null;
                         _tempStartTerminal = null;
+
+                        //propagate if simulating
+                        if (SimulationManager.Instance.State == SimulationManager.SimulationStates.IsRunning)
+                        {
+                            //reset simulation if halted due to instability detector
+                            SimulationManager.Instance.ResetSimulator();
+
+                            conn.startTerminal.SetValue(conn.startTerminal.GetRadix(), conn.startTerminal._value, true);
+                        }
+
                     }
                     else
                     {
@@ -241,14 +245,17 @@ public class LineManager : MonoBehaviour
                 conn.startTerminal.Connections.Add(_tempLine.GetComponent<LineFunctions>());
                 conn.endTerminal.Connections.Add(_tempLine.GetComponent<LineFunctions>());
 
-                //reset simulation oscillation detection
-                SimulationManager.Instance.ResetCounters();
-                SimulationManager.Instance.SetSimulationTo(true);
-
-                //propagate value from connected circuit
-                conn.startTerminal.SetValue(conn.startTerminal.GetRadix(), conn.startTerminal._value, true);
-
                 _tempLine.gameObject.SetActive(false);
+
+                //propagate if simulating
+                if (SimulationManager.Instance.State == SimulationManager.SimulationStates.IsRunning)
+                {
+                    //reset simulation if halted due to instability detector
+                    SimulationManager.Instance.ResetSimulator();
+
+                    //propagate value from connected circuit
+                    conn.startTerminal.SetValue(conn.startTerminal.GetRadix(), conn.startTerminal._value, true);
+                }
             }
         }
 

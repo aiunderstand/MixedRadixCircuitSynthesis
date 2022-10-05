@@ -22,15 +22,21 @@ public class InputControllerLogicGate : MonoBehaviour
     int _prevOutput = -1; //initialize output at -1 (ground)
     int totalHeatmap = 0;
     int stateChangeCounter = 0;
-    public static int stateChangeThreshold = 10;
     public InputController activeIC;
     RadixOptions _prevRadix;
 
     public void resetStateChangeCounter()
     {
-        stateChangeCounter = 0;
+        stateChangeCounter = 0;        
     }
-    
+
+    public void ClearHeatmap()
+    {
+        Matrix m = GetComponent<Matrix>();
+        totalHeatmap = 0;
+        m.ClearHeatmap();
+    }
+
     private void Awake()
     {
         if (this.name.Equals("LogicGate"))
@@ -225,29 +231,21 @@ public class InputControllerLogicGate : MonoBehaviour
         //index 0 = A(row), index 1 = B (column), index 2 (depth)
         string label = m.Truthtable[inputs[0], inputs[1], inputs[2]].label.text;
 
-
-        //Step 3: Write cell value based on inputs to output port
-        if (label.Equals("x"))
-        {
-            //this should never happen, 2do generate a warning message
-            new NotImplementedException();
-        }
+        if (label.Equals("x")) //for simulation use a logical zero eg middle value when balanced ternary or lowest value when binary or unbalanced ternary. 
+            portD = 0;
         else
-        {
-            await Task.Yield(); //WAIT 1 FRAME AS EVERY COMPNENT IS 1 UNIT DELAY
             portD = int.Parse(label);
-        }
+
+        if (SimulationManager.Instance.EnableDebugConsoleOutput)
+            Debug.Log("[" + SimulationManager.Instance.FrameCounter + "] " + this.name + " " + DropDownFunctionLabel.text + " changed output from: " + _prevOutput + " to: " + portD + ". Statechange counter: " + stateChangeCounter);
 
         if (_prevOutput != portD)
         {
             stateChanged = true;
             stateChangeCounter++;
-
-            if (SimulationManager.Instance.DebugIsEnabled)
-                Debug.Log("[" +SimulationManager.Instance.FrameCounter +"] " + this.name + " " + DropDownFunctionLabel.text + " changed output from: " + _prevOutput + " to: " + portD + ". Statechange counter: " + stateChangeCounter);
-            
-            _prevOutput = portD;
         }
+        _prevOutput = portD;
+
 
         BtnInput outputPort = null;
         foreach (var p in ports)
@@ -279,49 +277,39 @@ public class InputControllerLogicGate : MonoBehaviour
 
         m.Heatmap[inputs[0], inputs[1], inputs[2]] = ++freq;
         m.UpdateHeatmap(totalHeatmap);
-           
+
+        await Task.Yield(); //WAIT 1 FRAME AS EVERY COMPNENT IS 1 UNIT DELAY
+
         //Step 5: Propagate output to its connections
         if ((outputPort != null) && (outputPort.Connections.Count > 0))
         {
-            //only propagate when states have changed
+            //only propagate when states have changed OR power up (count if input has been powerup trigerd)
             if (stateChanged)
             {
-                //Debug.Log("before: " + GetInstanceID());
-
-                //Debug.Log("after:" + GetInstanceID());
-                if ((stateChangeCounter < stateChangeThreshold) && SimulationManager.Instance.SimulationIsEnabled)
+                //Only propage when simulation is running and no unstability detected
+                if (SimulationManager.Instance.CheckForUnstabilty(stateChangeCounter))
                 {
-
                     foreach (var c in outputPort.Connections)
-            {
-                //Debug.Log("LinkId: " + c.connection.id);
-                //determine if logic gate or output 
-                if (c.connection.endTerminal.tag.Equals("Output"))
-                {
-                    var val = c.connection.endTerminal.SetValue(GetRadixHack(), portD, false);
-                    c.connection.endTerminal.GetComponentInChildren<LEDtoggle>().SetLedColor(val);
-                }
-                else
-                {
-                    if (c.connection.endTerminal.name.Contains("_saved"))
                     {
-                        c.connection.endTerminal.SetValue(GetRadixHack(), portD, false);
+                        //Debug.Log("LinkId: " + c.connection.id);
+                        //determine if logic gate or output 
+                        if (c.connection.endTerminal.tag.Equals("Output"))
+                        {
+                            var val = c.connection.endTerminal.SetValue(GetRadixHack(), portD, false);
+                            c.connection.endTerminal.GetComponentInChildren<LEDtoggle>().SetLedColor(val);
+                        }
+                        else
+                        {
+                            if (c.connection.endTerminal.name.Contains("_saved"))
+                            {
+                                c.connection.endTerminal.SetValue(GetRadixHack(), portD, false);
+                            }
+                            else
+                            {
+                                c.connection.endTerminal.transform.parent.parent.GetComponent<InputControllerLogicGate>().ComputeTruthTableOutput();
+                            }
+                        }
                     }
-                    else
-                    {
-                        c.connection.endTerminal.transform.parent.parent.GetComponent<InputControllerLogicGate>().ComputeTruthTableOutput();
-                    }   
-                }
-            }
-
-                }
-                else
-                {
-                    if (SimulationManager.Instance.DebugIsEnabled)
-                        Debug.Log("Simulation stopped: unstable circuit detected");
-
-                    SimulationManager.Instance.SetSimulationTo(false);
-                    MessageManager.Instance.Show("Error", "Simulation stopped: circuit did not reach stable output state after 10 changes");
                 }
             }
         }

@@ -272,6 +272,15 @@ public class BtnInputTruthTable : MonoBehaviour
              c.normalColor = new Color(1, (float)green / 255f, (float)blue / 255f);
             _button.colors = c;
         }
+        else
+        {
+            if (_button != null)
+            {
+                var c = _button.colors;
+                c.normalColor = Color.white;
+                _button.colors = c;
+            }
+        }
     }
 
 

@@ -370,11 +370,14 @@ public class BtnInput : MonoBehaviour
         label.text = _value.ToString();
         //end hack
 
-        //reset simulation oscillation detection
-        SimulationManager.Instance.ResetCounters();
-        SimulationManager.Instance.SetSimulationTo(true);
-       
-        SetValue(GetRadix(), _value, true);
+        //propage if simulating
+        if (SimulationManager.Instance.State == SimulationManager.SimulationStates.IsRunning)
+        {
+            //reset simulation if halted due to instability detector
+            SimulationManager.Instance.ResetSimulator();
+
+            SetValue(GetRadix(), _value, true);
+        }
     }
 
         //horrible api: set value, transform and then get in one

@@ -16,6 +16,8 @@ public class applicationmanager : Singleton<applicationmanager>
     LineManager lm;
     public static List<GameObject> InitHack; //we need to fix this in a much nicer way. When dragging a saved component onto canvas we instantiate it with all being active to initialize properly (so we can use getcomponentinchildren/parent. If we remove these with fixed paths, which are all known, we dont need this ugly hack
     public static bool clearInitHack = false;
+    Camera canvasCamera;
+
     public IEnumerator CompleteInitHack()
     {
         yield return StartCoroutine(WaitFor.Frames(1)); // wait for 1 frame
@@ -35,8 +37,10 @@ public class applicationmanager : Singleton<applicationmanager>
 
     public void Awake()
     {
+        Application.targetFrameRate = 60;
         ActiveCanvasElementStack.Add(applicationmanager.ActiveCanvasElementStack.Count, new List<GameObject>());
         lm = GameObject.FindObjectOfType<LineManager>();
+        canvasCamera = Camera.main;
     }
 
     public static bool UseBigEndianForLogicGates()
@@ -149,126 +153,141 @@ public class applicationmanager : Singleton<applicationmanager>
             StartCoroutine(CompleteInitHack());
         }  
        
-        if (scrollEnabled)
+
+
+        if (scrollEnabled) 
         {
             float scrollDelta = Input.mouseScrollDelta.y;
+            bool isLeftBtnPressed = Input.GetMouseButton(0);
+            bool isRightBtnPressed = Input.GetMouseButton(1);
+            bool isMiddleBtnPressed = Input.GetMouseButton(2);
 
-            if (scrollDelta > 0)
+            //Zoom in/out hierarchy when scrolling without a button pressed. Requires a component to be selected first
+            if (!isLeftBtnPressed && !isRightBtnPressed && !isMiddleBtnPressed)
             {
-                if (abstractionLevel < (ActiveCanvasElementStack.Count - 1)) //we are going one level deeper (so towards level where elementary logic gates are)
+                if (scrollDelta > 0)
                 {
-                    //reset position for the coordinate system to work
-                    curSelectedComponent.GetComponent<DragDrop>().storedPosition = curSelectedComponent.transform.localPosition;
-                    curSelectedComponent.transform.localPosition = Vector3.zero;
-
-                    //remove selection
-                    curSelectedComponent.GetComponent<DragDrop>().DeSelect();
-                    curSelectedComponent = null;
-
-                    //move connections from line canvas to container object
-                    var length = lm.transform.childCount;
-                    for (int j = 0; j < length; j++)
-                        lm.transform.GetChild(0).transform.GetComponent<LineFunctions>().RestoreLocationInHierarchy();
-                    
-                    //disable current elements
-                    for (int i = 0; i < ActiveCanvasElementStack[abstractionLevel].Count; i++)
+                    if (abstractionLevel < (ActiveCanvasElementStack.Count - 1)) //we are going one level deeper (so towards level where elementary logic gates are)
                     {
-                        if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>() != null)
-                        {
-                            ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().FullVersion.SetActive(false);
+                        //reset position for the coordinate system to work
+                        curSelectedComponent.GetComponent<DragDrop>().storedPosition = curSelectedComponent.transform.localPosition;
+                        curSelectedComponent.transform.localPosition = Vector3.zero;
 
-                            if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion != null)
-                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion.SetActive(true);                            
+                        //remove selection
+                        curSelectedComponent.GetComponent<DragDrop>().DeSelect();
+                        curSelectedComponent = null;
+
+                        //move connections from line canvas to container object
+                        var length = lm.transform.childCount;
+                        for (int j = 0; j < length; j++)
+                            lm.transform.GetChild(0).transform.GetComponent<LineFunctions>().RestoreLocationInHierarchy();
+
+                        //disable current elements
+                        for (int i = 0; i < ActiveCanvasElementStack[abstractionLevel].Count; i++)
+                        {
+                            if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>() != null)
+                            {
+                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().FullVersion.SetActive(false);
+
+                                if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion != null)
+                                    ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion.SetActive(true);
+                            }
+                        }
+
+                        //increase abstraction level index
+                        abstractionLevel++;
+
+                        //enable new elements
+                        for (int i = 0; i < ActiveCanvasElementStack[abstractionLevel].Count; i++)
+                        {
+                            if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>() != null)
+                            {
+                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().FullVersion.SetActive(true);
+
+                                if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion != null)
+                                    ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion.SetActive(false);
+                            }
+                            else //it is a connection that needs to be moved to the active hierarchy
+                            {
+                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<LineFunctions>()._savedParent = ActiveCanvasElementStack[abstractionLevel][i].transform.parent;
+                                ActiveCanvasElementStack[abstractionLevel][i].transform.SetParent(lm.transform);
+                                ActiveCanvasElementStack[abstractionLevel][i].gameObject.SetActive(true);
+                                ActiveCanvasElementStack[abstractionLevel][i].transform.localScale = Vector3.one;
+                                ActiveCanvasElementStack[abstractionLevel][i].transform.position = Vector3.zero;
+                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<LineFunctions>().Redraw();
+                            }
                         }
                     }
 
-                    //increase abstraction level index
-                    abstractionLevel++;
-
-                    //enable new elements
-                    for (int i = 0; i < ActiveCanvasElementStack[abstractionLevel].Count; i++)
-                    {
-                        if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>() != null)
-                        {
-                            ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().FullVersion.SetActive(true);
-
-                            if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion != null)
-                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion.SetActive(false);                            
-                        }
-                        else //it is a connection that needs to be moved to the active hierarchy
-                        {
-                            ActiveCanvasElementStack[abstractionLevel][i].GetComponent<LineFunctions>()._savedParent = ActiveCanvasElementStack[abstractionLevel][i].transform.parent;
-                            ActiveCanvasElementStack[abstractionLevel][i].transform.SetParent(lm.transform);
-                            ActiveCanvasElementStack[abstractionLevel][i].gameObject.SetActive(true);
-                            ActiveCanvasElementStack[abstractionLevel][i].transform.localScale = Vector3.one;
-                            ActiveCanvasElementStack[abstractionLevel][i].transform.position = Vector3.zero;
-                            ActiveCanvasElementStack[abstractionLevel][i].GetComponent<LineFunctions>().Redraw();                            
-                        }
-                    }
                 }
-               
+
+                if (scrollDelta < 0)
+                {
+                    if (abstractionLevel > 0) //we are going one level higher (so towards level where highest abstraction is)
+                    {
+                        //remove selection
+                        if (curSelectedComponent != null)
+                        {
+                            curSelectedComponent.GetComponent<DragDrop>().DeSelect();
+                            TryRemoveOfAbstractionStack();
+                            curSelectedComponent = null;
+                        }
+
+                        //move connections from line canvas to container object
+                        var length = lm.transform.childCount;
+                        for (int j = 0; j < length; j++)
+                            lm.transform.GetChild(0).transform.GetComponent<LineFunctions>().RestoreLocationInHierarchy();
+
+                        //disable current elements
+                        for (int i = 0; i < ActiveCanvasElementStack[abstractionLevel].Count; i++)
+                        {
+                            if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>() != null)
+                            {
+                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().FullVersion.SetActive(false);
+
+                                if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion != null)
+                                    ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion.SetActive(true);
+                            }
+                        }
+
+                        //remove elements from stack
+                        ActiveCanvasElementStack.Remove(abstractionLevel);
+
+                        //increase abstraction level index
+                        abstractionLevel--;
+
+                        //enable new elements
+                        for (int i = 0; i < ActiveCanvasElementStack[abstractionLevel].Count; i++)
+                        {
+                            if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>() != null)
+                            {
+                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().FullVersion.SetActive(true);
+
+                                if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion != null)
+                                    ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion.SetActive(false);
+
+                                if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().transform.localPosition == Vector3.zero)
+                                    ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().transform.localPosition = ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().storedPosition;
+                            }
+                            else
+                            {
+                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<LineFunctions>()._savedParent = ActiveCanvasElementStack[abstractionLevel][i].transform.parent;
+                                ActiveCanvasElementStack[abstractionLevel][i].transform.SetParent(lm.transform);
+                                ActiveCanvasElementStack[abstractionLevel][i].gameObject.SetActive(true);
+                                ActiveCanvasElementStack[abstractionLevel][i].transform.localScale = Vector3.one;
+                                ActiveCanvasElementStack[abstractionLevel][i].transform.position = Vector3.zero;
+                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<LineFunctions>().Redraw();
+                            }
+                        }
+                    }
+
+                }
             }
 
-            if (scrollDelta < 0)
+            //Zoom in/out canvas when scrolling with right button pressed
+            if (isRightBtnPressed)
             {
-                if (abstractionLevel > 0) //we are going one level higher (so towards level where highest abstraction is)
-                {
-                    //remove selection
-                    if (curSelectedComponent != null)
-                    {
-                        curSelectedComponent.GetComponent<DragDrop>().DeSelect();
-                        TryRemoveOfAbstractionStack();
-                        curSelectedComponent = null;
-                    }
-
-                    //move connections from line canvas to container object
-                    var length = lm.transform.childCount;
-                    for (int j = 0; j < length; j++)
-                        lm.transform.GetChild(0).transform.GetComponent<LineFunctions>().RestoreLocationInHierarchy();
-
-                    //disable current elements
-                    for (int i = 0; i < ActiveCanvasElementStack[abstractionLevel].Count; i++)
-                    {
-                        if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>() != null)
-                        {
-                            ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().FullVersion.SetActive(false);
-
-                            if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion != null)
-                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion.SetActive(true);
-                        }
-                    }
-
-                    //remove elements from stack
-                    ActiveCanvasElementStack.Remove(abstractionLevel);
-
-                    //increase abstraction level index
-                    abstractionLevel--;
-
-                    //enable new elements
-                    for (int i = 0; i < ActiveCanvasElementStack[abstractionLevel].Count; i++)
-                    {
-                        if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>() != null)
-                        {
-                            ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().FullVersion.SetActive(true);
-
-                            if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion != null)
-                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().LowerAbstractionVersion.SetActive(false);
-
-                            if (ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().transform.localPosition == Vector3.zero)
-                                ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().transform.localPosition = ActiveCanvasElementStack[abstractionLevel][i].GetComponent<DragDrop>().storedPosition;
-                        }
-                        else
-                        {
-                            ActiveCanvasElementStack[abstractionLevel][i].GetComponent<LineFunctions>()._savedParent = ActiveCanvasElementStack[abstractionLevel][i].transform.parent;
-                            ActiveCanvasElementStack[abstractionLevel][i].transform.SetParent(lm.transform);
-                            ActiveCanvasElementStack[abstractionLevel][i].gameObject.SetActive(true);
-                            ActiveCanvasElementStack[abstractionLevel][i].transform.localScale = Vector3.one;
-                            ActiveCanvasElementStack[abstractionLevel][i].transform.position = Vector3.zero;
-                            ActiveCanvasElementStack[abstractionLevel][i].GetComponent<LineFunctions>().Redraw();
-                        }
-                    }  
-                }
-               
+                
             }
         }
     }
