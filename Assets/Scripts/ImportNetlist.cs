@@ -7,7 +7,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using SFB;
 using System.IO;
-using System.IO.Compression;
+using ICSharpCode.SharpZipLib.Zip;
 using static BtnInput;
 using System;
 
@@ -70,8 +70,9 @@ public class ImportNetlist : MonoBehaviour, IPointerDownHandler
         System.IO.File.WriteAllBytes(extractPath + "upload.zip", loader.bytes);
                 
         //extract
-        ZipFile.ExtractToDirectory(extractPath + "upload.zip", extractPath);
-
+        FastZip fastZip = new FastZip();
+        fastZip.ExtractZip(extractPath + "upload.zip", extractPath, "");
+    
         //check amount of circuits found
         var directories = System.IO.Directory.GetDirectories(extractPath, "*", SearchOption.TopDirectoryOnly);
         Debug.Log("Found for import: " + directories.Length.ToString());
@@ -94,7 +95,7 @@ public class ImportNetlist : MonoBehaviour, IPointerDownHandler
             }
 
             //needed?
-            Application.ExternalEval("_JS_FileSystem_Sync();");
+            //Application.ExternalEval("_JS_FileSystem_Sync();");
             
             DirectoryCopy(directories[i], generatedPath, true);
          
@@ -122,8 +123,9 @@ public class ImportNetlist : MonoBehaviour, IPointerDownHandler
         System.IO.File.WriteAllBytes(extractPath + "upload.zip", loader.bytes);
 
         //extract
-        ZipFile.ExtractToDirectory(extractPath + "upload.zip", extractPath);
-
+        FastZip fastZip = new FastZip();
+        fastZip.ExtractZip(extractPath + "upload.zip", extractPath, "");
+        
         //check amount of circuits found
         var directories = System.IO.Directory.GetDirectories(extractPath, "*", SearchOption.TopDirectoryOnly);
 

@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
+using ICSharpCode.SharpZipLib.Zip;
 using UnityEngine;
 using TMPro;
 using System.Text;
@@ -31,20 +31,38 @@ public class ExportNetlist : MonoBehaviour
 
     public void ExportAll()
     {
-        string netlistPath = Application.persistentDataPath + "/User/Generated/";
-        string filePath = Application.persistentDataPath + "/User/Share/MRCS_ExportAll.zip";
-        Export(netlistPath, filePath, false);
+        string netlistPath = Application.persistentDataPath + "/User/Generated/" ;
+        string filePath = Application.persistentDataPath + "/User/Share/MRCS_Export_Library.zip";
+        Export("Library", netlistPath, filePath, true);
     }
 
     public void ExportSelected()
     {
         string folderName = selectedNetlist.options[selectedNetlist.value].text;
         string netlistPath = Application.persistentDataPath + "/User/Generated/" + folderName;
-        string filePath = Application.persistentDataPath + "/User/Share/MRCS_" + folderName  + ".zip";
-        Export(netlistPath, filePath, true);
+
+        //create temp dir
+        string tempFolder = Application.persistentDataPath + "/Temp/" + folderName;
+        string tempPath = Application.persistentDataPath + "/Temp/";
+        Directory.CreateDirectory(tempFolder);
+
+        //copy selected folder
+        var dir = new DirectoryInfo(netlistPath);
+        foreach (FileInfo file in dir.GetFiles())
+        {
+            string targetFilePath = Path.Combine(tempFolder, file.Name);
+            file.CopyTo(targetFilePath);
+        }
+
+        //export
+        string filePath = Application.persistentDataPath + "/User/Share/MRCS_Export_" + folderName  + ".zip";
+        Export(folderName, tempPath, filePath, true);
+
+        //remove temp folder
+        Directory.Delete(tempPath,true);
     }
 
-    public void Export(string sourcePath, string targetPath, bool topLevel)
+    public void Export(string foldername, string sourcePath, string targetPath, bool recursive)
     {
         if (File.Exists(targetPath))
         {
@@ -53,7 +71,17 @@ public class ExportNetlist : MonoBehaviour
         }
 
         System.IO.Directory.CreateDirectory(Application.persistentDataPath + "/User/Share/");
-        ZipFile.CreateFromDirectory(sourcePath, targetPath, System.IO.Compression.CompressionLevel.Optimal, topLevel, Encoding.UTF8);
+        try
+        {
+            //we previously used system.io.compression, but since U2022 there seems to be a bug in the deflate zstream constructor
+            FastZip fastZip = new FastZip();
+            fastZip.CreateEmptyDirectories = false;
+            fastZip.CreateZip(targetPath, sourcePath, true, "");
+   }
+        catch (IOException e)
+        {
+            Debug.LogException(e);
+        }
 
 #if UNITY_WEBGL && !UNITY_EDITOR
             //we need to flush the result to disk
@@ -62,7 +90,8 @@ public class ExportNetlist : MonoBehaviour
             
             var bytes = System.IO.File.ReadAllBytes(targetPath);
             var callBack = FindObjectOfType<applicationmanager>();
-            DownloadFile(callBack.name, "OnFileDownload", "MRCS_export.zip", bytes, bytes.Length);
+            var filename = "MRCS_export_" + foldername + ".zip";
+            DownloadFile(callBack.name, "OnFileDownload", filename, bytes, bytes.Length);
 #endif
     }
 }
