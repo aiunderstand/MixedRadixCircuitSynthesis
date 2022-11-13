@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-
+using TMPro;
 
 //Adapted from https://stackoverflow.com/questions/37473802/unity3d-ui-calculation-for-position-dragging-an-item/37473953#37473953
 [RequireComponent(typeof(EventTrigger))]
@@ -22,6 +22,7 @@ public class DragDrop : MonoBehaviour,
     public GameObject LowerAbstractionVersion; //view 2     
     public Stats Stats;
     public SavedComponent SavedComponent;
+    public TMP_Dropdown defaultRadixDropdown;
     public Vector3 storedPosition;
     Color panelColorDefault;
     Color panelColorActive = new Color(255/255,82/255,45/255);
@@ -87,7 +88,7 @@ public class DragDrop : MonoBehaviour,
             if (this.MenuVersion.GetComponent<ComponentGenerator>() == null)
             {
                 GameObject go = null;
-                switch (this.name)
+                switch (this.name.Substring(0, this.name.Length -7))
                 {
                     case "Input":
                         go = GameObject.Instantiate(CircuitGenerator.InputPrefab);
@@ -98,6 +99,10 @@ public class DragDrop : MonoBehaviour,
                     case "LogicGate":
                         go = GameObject.Instantiate(CircuitGenerator.LogicGatePrefab);
                         break;
+                    case "Clock":
+                        go = GameObject.Instantiate(CircuitGenerator.ClockPrefab);
+                        break;
+
                 }
 
                 go.transform.SetParent(this.transform.parent, false);

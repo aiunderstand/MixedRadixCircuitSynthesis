@@ -7,7 +7,7 @@ using System;
 
 public class TruthTableDropDown : MonoBehaviour
 {
-    TMP_Dropdown _Dropdown;
+    public TMP_Dropdown _Dropdown;
     InputControllerLogicGate iclg;
     DragExpandTableComponent expandController;
     // Start is called before the first frame update

@@ -8,6 +8,7 @@ using UnityEngine.UI.Extensions;
 using ExtensionMethods;
 using static BtnInput;
 using System.Collections.Specialized;
+using System.IO;
 
 //see this presentation about marshalling data from c++ to C# and inverse
 //https://www.slideshare.net/unity3d/adding-love-to-an-api-or-how-to-expose-c-in-unity
@@ -970,6 +971,203 @@ public class TruthtableFunctionHelper : MonoBehaviour
                 }
             }
         }
+    }
+
+    public static void CreateFile(string path, string[] lines)
+    {
+        try
+        {
+            // Create the file, or overwrite if the file exists.
+            using (StreamWriter sw = File.CreateText(path))
+            {
+                foreach (var line in lines)
+                    sw.WriteLine (line);
+            }
+        }
+
+        catch (Exception ex)
+        {
+           Debug.Log(ex.ToString());
+        }
+    }
+
+    public static void CreateVerilogLogicGates(string path, string optimizedTTIndex, int[] optimizedTT, RadixOptions radix, int arity)
+    {
+        //check if folder for verilog/logicgates has been created
+        string dirPath = path + "Verilog/LogicGates";
+        if (!System.IO.Directory.Exists(dirPath))
+            System.IO.Directory.CreateDirectory(dirPath);
+
+        //create if logicgate exist, else create
+        string filePath = dirPath + optimizedTTIndex + ".v";
+        if (!File.Exists(filePath))
+        {
+            string[] lines = ConvertTTtoVerilogModule(optimizedTTIndex, optimizedTT, radix, arity);
+            CreateFile(filePath, lines);
+        }
+    }
+
+    private static string[] ConvertTTtoVerilogModule(string optimizedTTIndex, int[] optimizedTT, RadixOptions radix, int arity)
+    {
+        List<string> lines = new List<string>(); 
+
+        lines.Add("module " + optimizedTTIndex + " (");
+
+        //based on arity we have 1, 2, 3 input
+        switch (arity) {
+            case 1: 
+                lines.Add("     input a,"); 
+                lines.Add("     output out");
+                lines.Add("     );");
+                lines.Add("");
+                break;
+            case 2: 
+                lines.Add("     input a,"); 
+                lines.Add("     input b,"); 
+                lines.Add("     output out");
+                lines.Add("     );");
+                lines.Add("");
+                break;
+            case 3: 
+                lines.Add("     input a,"); 
+                lines.Add("     input b,"); 
+                lines.Add("     input c,"); 
+                lines.Add("     output out");
+                lines.Add("     );");
+                lines.Add("");
+                break;
+        }
+
+        //convert TT to SumOfProduct form
+        lines.Add("     assign out = " + Convert_TT_to_SumOfProduct(radix, arity, optimizedTT) + ";");
+
+        lines.Add("endmodule");
+
+        return lines.ToArray();
+    }
+
+    private static string Convert_TT_to_SumOfProduct(RadixOptions radix, int arity, int[] optimizedTT)
+    {
+        string result = "";
+
+        //Sum of Product are the conditions for when inputs are equal to 1
+        List<string> SumOfProduct = new List<string>();
+        switch (radix)
+        {
+            case RadixOptions.Binary:
+                {
+                    switch (arity) {
+                        case 1:
+                            if (optimizedTT[0] == 2)
+                            {
+                                SumOfProduct.Add("(a == 0)");
+                                SumOfProduct.Add(" | ");
+                            }
+
+                            if (optimizedTT[2] == 2)
+                            {
+                                SumOfProduct.Add("(a == 1)");
+                                SumOfProduct.Add(" | ");
+                            }
+                            break;
+                        case 2:
+                            if (optimizedTT[0] == 2)
+                            {
+                                SumOfProduct.Add("(a == 0 & b == 0)");
+                                SumOfProduct.Add(" | ");
+                            }
+
+                            if (optimizedTT[2] == 2)
+                            {
+                                SumOfProduct.Add("(a == 0 & b == 1)");
+                                SumOfProduct.Add(" | ");
+                            }
+
+                            if (optimizedTT[6] == 2)
+                            {
+                                SumOfProduct.Add("(a == 1 & b == 0)");
+                                SumOfProduct.Add(" | ");
+                            }
+
+                            if (optimizedTT[8] == 2)
+                            {
+                                SumOfProduct.Add("(a == 1 & b == 1)");
+                                SumOfProduct.Add(" | ");
+                            }
+                            break;
+                        case 3:
+                            if (optimizedTT[0] == 2)
+                            {
+                                SumOfProduct.Add("(a == 0 & b == 0 & c == 0)");
+                                SumOfProduct.Add(" | ");
+                            }
+
+                            if (optimizedTT[2] == 2)
+                            {
+                                SumOfProduct.Add("(a == 0 & b == 1 & c == 0)");
+                                SumOfProduct.Add(" | ");
+                            }
+
+                            if (optimizedTT[6] == 2)
+                            {
+                                SumOfProduct.Add("(a == 1 & b == 0 & c == 0)");
+                                SumOfProduct.Add(" | ");
+                            }
+
+                            if (optimizedTT[8] == 2)
+                            {
+                                SumOfProduct.Add("(a == 1 & b == 1 & c == 0)");
+                                SumOfProduct.Add(" | ");
+                            }
+
+                            if (optimizedTT[18] == 2)
+                            {
+                                SumOfProduct.Add("(a == 0 & b == 0 & c == 1)");
+                                SumOfProduct.Add(" | ");
+                            }
+
+                            if (optimizedTT[20] == 2)
+                            {
+                                SumOfProduct.Add("(a == 0 & b == 1 & c == 1)");
+                                SumOfProduct.Add(" | ");
+                            }
+
+                            if (optimizedTT[24] == 2)
+                            {
+                                SumOfProduct.Add("(a == 1 & b == 0 & c == 1)");
+                                SumOfProduct.Add(" | ");
+                            }
+
+                            if (optimizedTT[26] == 2)
+                            {
+                                SumOfProduct.Add("(a == 1 & b == 1 & c == 1)");
+                                SumOfProduct.Add(" | ");
+                            }
+                            break;
+                    }
+                  
+                } 
+                break;
+            case RadixOptions.BalancedTernary:
+                {
+                    result = "not implemented";
+                }
+                break;
+            case RadixOptions.UnbalancedTernary:
+                {
+                    result = "not implemented";
+                }
+                break;
+        }
+
+        for (int i = 0; i < SumOfProduct.Count - 1; i++)
+            result += SumOfProduct[i];
+
+        //final check, if empty sum of product (so no terms lead to a 1), assign a zero.
+        if (result.Equals(""))
+            result = "0";
+
+        return result;
     }
 
     public int ConvertHeptavintimalEncodingToArity2TableIndex(string hepCode)

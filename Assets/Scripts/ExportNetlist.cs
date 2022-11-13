@@ -17,6 +17,7 @@ public class ExportNetlist : MonoBehaviour
 #endif
 
     public TMP_Dropdown selectedNetlist;
+    public TMP_Dropdown selectedFormat;
 
     public void OnEnable()
     {

@@ -11,6 +11,7 @@ public class Settings : MonoBehaviour
     public static bool loadingDone = false;
     public static string settingsPath;
     public static OrderedDictionary savedComponents = new OrderedDictionary();
+    public GameObject ContentContainerMenuItems;
 
     [HideInInspector]
     public SaveCircuit saveCircuit;
@@ -33,7 +34,39 @@ public class Settings : MonoBehaviour
             LoadSavedComponents();
        
         loadingDone = true;
-     
+
+        GenerateMenuItems();
+    }
+
+
+    public void GenerateMenuItems()
+    {
+        ClearMenuItems();
+
+        var input = GameObject.Instantiate(CircuitGenerator.InputPrefab);
+        var output = GameObject.Instantiate(CircuitGenerator.OutputPrefab);
+        var clock = GameObject.Instantiate(CircuitGenerator.ClockPrefab);
+        var gate = GameObject.Instantiate(CircuitGenerator.LogicGatePrefab);
+
+        input.transform.SetParent(ContentContainerMenuItems.transform);
+        input.transform.localScale = new Vector3(1f, 1f, 1f);
+        output.transform.SetParent(ContentContainerMenuItems.transform);
+        output.transform.localScale = new Vector3(1f, 1f, 1f);
+        clock.transform.SetParent(ContentContainerMenuItems.transform);
+        clock.transform.localScale = new Vector3(1f, 1f, 1f);
+        gate.transform.SetParent(ContentContainerMenuItems.transform);
+        gate.transform.localScale = new Vector3(1f, 1f, 1f);
+    }
+
+    private void ClearMenuItems()
+    {
+        var gos = ContentContainerMenuItems.GetComponentsInChildren<DragDrop>();
+
+        for (int i = 0; i < gos.Length; i++)
+          {
+            var go = gos[i].gameObject;
+            Destroy(go);
+        }
     }
 
     private void LoadSavedComponents()

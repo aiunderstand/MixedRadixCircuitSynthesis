@@ -19,12 +19,16 @@ public class CircuitGenerator : MonoBehaviour
     public GameObject _inputPrefab;
     public static GameObject OutputPrefab;
     public GameObject _outputPrefab;
-    
+    public static GameObject ClockPrefab;
+    public GameObject _clockPrefab;
+
+
     private void Awake()
     {
         LogicGatePrefab = _logicGatePrefab;
         InputPrefab = _inputPrefab;
         OutputPrefab = _outputPrefab;
+        ClockPrefab = _clockPrefab;
     }
     //end
 
@@ -216,18 +220,25 @@ public class CircuitGenerator : MonoBehaviour
                     var controller = c.GetComponentInChildren<InputControllerLogicGate>();
                     int[] tt = controller.GetTruthTable();
                     int arity = controller.GetArity();
+                    var radix = controller.GetRadixHack();
                     arityArray.Add(arity);
 
                 //we should just create a c++ data structure and marshall this. Now it is important that we first call create netlist!
-                int mode = (int)TruthtableFunctionHelper.HardwareMappingModes.variantA_woBody; //variantB_wBodyDividersTransistors;
+                    
+                    //Netlist format
+                    int mode = (int)TruthtableFunctionHelper.HardwareMappingModes.variantA_woBody; //variantB_wBodyDividersTransistors;
                     stats.transistorCount += TruthtableFunctionHelper.CreateNetlist(mode,path, tt, arity); //from unoptimized tt
                     int[] optimizedTT = TruthtableFunctionHelper.GetOptimizedTT(arity);
                     string optimizedTTindex = TruthtableFunctionHelper.ConvertTTtoHeptEncoding(optimizedTT);
                     ttIndices.Add(optimizedTTindex);
                     logicgateIndicesLOT.Add(controller.GetInstanceID().ToString(), "lg_" + optimizedTTindex);
-                  
+
+                    //Verilog format
+                    TruthtableFunctionHelper.CreateVerilogLogicGates(path, optimizedTTindex, optimizedTT, radix, arity);
 
 
+
+                    
                     int[] tempInvArray = TruthtableFunctionHelper.GetAndConvertInvArrayFormat(arity);
 
                     for (int i = 0; i < 9; i++) //always 9
