@@ -23,10 +23,18 @@ public class TruthTableDropDown : MonoBehaviour
         {
             DropdownValueChanged(_Dropdown);
         });
+
+        //do not initialize calling dropdownvaluechanged here for it will break connections 
     }
 
-    void DropdownValueChanged(TMP_Dropdown change)
+    public void DropdownValueChanged(TMP_Dropdown change)
     {
+        if (iclg == null)
+            iclg = transform.parent.GetComponent<InputControllerLogicGate>();
+
+        if(expandController == null)
+            expandController = iclg.GetComponentInChildren<DragExpandTableComponent>();
+
         string radixTarget = change.options[change.value].text;
         int radixSymbols = 3;
 

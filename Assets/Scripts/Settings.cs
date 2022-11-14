@@ -34,8 +34,6 @@ public class Settings : MonoBehaviour
             LoadSavedComponents();
        
         loadingDone = true;
-
-        GenerateMenuItems();
     }
 
 
@@ -48,12 +46,19 @@ public class Settings : MonoBehaviour
         var clock = GameObject.Instantiate(CircuitGenerator.ClockPrefab);
         var gate = GameObject.Instantiate(CircuitGenerator.LogicGatePrefab);
 
+        input.name = input.name.Substring(0, input.name.Length - 7);
         input.transform.SetParent(ContentContainerMenuItems.transform);
         input.transform.localScale = new Vector3(1f, 1f, 1f);
+
+        output.name = output.name.Substring(0, output.name.Length - 7);
         output.transform.SetParent(ContentContainerMenuItems.transform);
         output.transform.localScale = new Vector3(1f, 1f, 1f);
+
+        clock.name = clock.name.Substring(0, clock.name.Length - 7);
         clock.transform.SetParent(ContentContainerMenuItems.transform);
         clock.transform.localScale = new Vector3(1f, 1f, 1f);
+
+        gate.name = gate.name.Substring(0, gate.name.Length - 7);
         gate.transform.SetParent(ContentContainerMenuItems.transform);
         gate.transform.localScale = new Vector3(1f, 1f, 1f);
     }

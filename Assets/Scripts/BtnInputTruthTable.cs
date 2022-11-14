@@ -124,6 +124,9 @@ public class BtnInputTruthTable : MonoBehaviour
     }
     public void SetHeatmapColor(int frequency, int total)
     {
+        if (_button == null)
+            _button = GetComponent<Button>();
+
         if (frequency != 0)
         {
             //white R 255, G 255, B 255 = not used

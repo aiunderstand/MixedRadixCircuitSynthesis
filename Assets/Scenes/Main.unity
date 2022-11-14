@@ -2760,7 +2760,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 204054392}
   m_HandleRect: {fileID: 204054391}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -5456,8 +5456,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -399.5, y: 95}
-  m_SizeDelta: {x: 122, y: 180}
+  m_AnchoredPosition: {x: -399.5, y: 110}
+  m_SizeDelta: {x: 122, y: 147}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &499329199
 MonoBehaviour:
@@ -14189,6 +14189,7 @@ GameObject:
   - component: {fileID: 1504794275}
   - component: {fileID: 1504794274}
   - component: {fileID: 1504794273}
+  - component: {fileID: 1504794276}
   m_Layer: 5
   m_Name: UserMode
   m_TagString: Untagged
@@ -14275,7 +14276,19 @@ MonoBehaviour:
       m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1504794276}
+        m_TargetAssemblyTypeName: UserModeDropdown, Assembly-CSharp
+        m_MethodName: UpdateUserMode
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_AlphaFadeSpeed: 0.15
 --- !u!114 &1504794274
 MonoBehaviour:
@@ -14315,6 +14328,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1504794271}
   m_CullTransparentMesh: 0
+--- !u!114 &1504794276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1504794271}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3339d564d92bba04ebc44e96067d160f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  usermodeDropdown: {fileID: 0}
 --- !u!1001 &1514268755
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -15870,7 +15896,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 580246278}
   m_HandleRect: {fileID: 580246277}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

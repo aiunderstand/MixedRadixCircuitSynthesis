@@ -234,7 +234,7 @@ public class CircuitGenerator : MonoBehaviour
                     logicgateIndicesLOT.Add(controller.GetInstanceID().ToString(), "lg_" + optimizedTTindex);
 
                     //Verilog format
-                    TruthtableFunctionHelper.CreateVerilogLogicGates(path, optimizedTTindex, optimizedTT, radix, arity);
+                    TruthtableFunctionHelper.CreateVerilogLogicGates(path, "f_" + optimizedTTindex, optimizedTT, radix, arity);
 
 
 
@@ -793,7 +793,33 @@ public class CircuitGenerator : MonoBehaviour
                         writer.WriteLine(lines[i]);
                     }
                 }
-            }
+
+
+            //Build Verilog circuit
+            //TruthtableFunctionHelper.CreateVerilogCircuit(
+            //    path,
+            //    fileName,
+            //    inputNames,
+            //    outputNames,
+            //    ttIndices,
+            //    arityArray,
+            //    connectionArray,
+            //    invArray,
+            //    positionArray,
+            //    savedCircuitNames,
+            //    connectionIndexArray,
+            //    functionRadixTypeArray,
+            //    inputComponents,
+            //    outputComponents,
+            //    ioRadixTypeArray,
+            //    inputOutputSizeArray,
+            //    ioPositionArray,
+            //    connectionPairArray,
+            //    idArray
+            //    );
+
+
+        }
             else
             {
                 stats.success = false;
@@ -806,7 +832,6 @@ public class CircuitGenerator : MonoBehaviour
     public Stats SaveComponent(string name)
     {
         Stats stats = GenerateCircuit(name +"/", "c_" + name);
-
         return stats;
     }
 }

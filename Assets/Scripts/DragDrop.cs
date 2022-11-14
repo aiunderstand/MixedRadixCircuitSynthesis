@@ -88,7 +88,7 @@ public class DragDrop : MonoBehaviour,
             if (this.MenuVersion.GetComponent<ComponentGenerator>() == null)
             {
                 GameObject go = null;
-                switch (this.name.Substring(0, this.name.Length -7))
+                switch (this.name)
                 {
                     case "Input":
                         go = GameObject.Instantiate(CircuitGenerator.InputPrefab);
@@ -114,7 +114,7 @@ public class DragDrop : MonoBehaviour,
                 var saveCircuit = GameObject.FindObjectOfType<SaveCircuit>();
 
                 var go = saveCircuit.GenerateMenuItem(SavedComponent, saveCircuit.ContentContainer.transform);
-
+                go.name = this.name;
                 go.GetComponent<DragDrop>().MenuVersion.SetActive(true);
                 go.GetComponent<DragDrop>().SavedComponent = SavedComponent;
                 go.transform.SetSiblingIndex(this.transform.GetSiblingIndex());

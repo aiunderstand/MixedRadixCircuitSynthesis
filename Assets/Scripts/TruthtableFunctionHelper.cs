@@ -994,7 +994,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
     public static void CreateVerilogLogicGates(string path, string optimizedTTIndex, int[] optimizedTT, RadixOptions radix, int arity)
     {
         //check if folder for verilog/logicgates has been created
-        string dirPath = path + "Verilog/LogicGates";
+        string dirPath = path + "Verilog/LogicGates/";
         if (!System.IO.Directory.Exists(dirPath))
             System.IO.Directory.CreateDirectory(dirPath);
 

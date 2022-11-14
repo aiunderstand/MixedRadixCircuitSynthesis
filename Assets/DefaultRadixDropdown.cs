@@ -7,11 +7,12 @@ using System;
 
 public class DefaultRadixDropdown : MonoBehaviour
 {
-    TMP_Dropdown defaultRadixDropDown;
+    public TMP_Dropdown defaultRadixDropDown;
 
     public void Start()
     {
         defaultRadixDropDown = GetComponent<TMP_Dropdown>();
+        UpdateDefaultRadix();
     }
     public void UpdateDefaultRadix()
     {
@@ -23,8 +24,7 @@ public class DefaultRadixDropdown : MonoBehaviour
         CircuitGenerator.OutputPrefab.GetComponent<DragDrop>().FullVersion.GetComponentInChildren<InputController>().DropdownLabel.transform.parent.GetComponent<TMP_Dropdown>().value = defaultRadixDropDown.value;
         CircuitGenerator.ClockPrefab.GetComponent<DragDrop>().FullVersion.GetComponentInChildren<InputController>().DropdownLabel.transform.parent.GetComponent<TMP_Dropdown>().value = defaultRadixDropDown.value;
         CircuitGenerator.LogicGatePrefab.GetComponent<DragDrop>().FullVersion.GetComponentInChildren<TruthTableDropDown>().GetComponent<TMP_Dropdown>().value = defaultRadixDropDown.value;
-
-
+        CircuitGenerator.LogicGatePrefab.GetComponent<DragDrop>().FullVersion.GetComponentInChildren<TruthTableDropDown>().DropdownValueChanged(defaultRadixDropDown);
 
         //remove prefabs in menu and regenerate menu items with new prefabs
         Settings Settings = FindObjectOfType<Settings>();
