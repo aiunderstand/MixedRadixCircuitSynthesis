@@ -973,6 +973,11 @@ public class TruthtableFunctionHelper : MonoBehaviour
         }
     }
 
+    internal static void CreateVerilogCircuit(string path, string fileName, List<string> inputNames, List<string> outputNames, List<string> ttIndices, List<string> connectionArray, List<int> inputOutputSizeArray, List<string> connectionPairArray, List<string> idArray)
+    {
+        //throw new NotImplementedException();
+    }
+
     public static void CreateFile(string path, string[] lines)
     {
         try
@@ -1016,32 +1021,33 @@ public class TruthtableFunctionHelper : MonoBehaviour
         //based on arity we have 1, 2, 3 input
         switch (arity) {
             case 1: 
-                lines.Add("     input a,"); 
-                lines.Add("     output out");
+                lines.Add("     input wire in_0,"); 
+                lines.Add("     output wire out_0");
                 lines.Add("     );");
                 lines.Add("");
                 break;
             case 2: 
-                lines.Add("     input a,"); 
-                lines.Add("     input b,"); 
-                lines.Add("     output out");
+                lines.Add("     input wire in_0,"); 
+                lines.Add("     input wire in_1,"); 
+                lines.Add("     output wire out_0");
                 lines.Add("     );");
                 lines.Add("");
                 break;
             case 3: 
-                lines.Add("     input a,"); 
-                lines.Add("     input b,"); 
-                lines.Add("     input c,"); 
-                lines.Add("     output out");
+                lines.Add("     input wire in_0,"); 
+                lines.Add("     input wire in_1,"); 
+                lines.Add("     input wire in_2,"); 
+                lines.Add("     output wire out_0");
                 lines.Add("     );");
                 lines.Add("");
                 break;
         }
 
         //convert TT to SumOfProduct form
-        lines.Add("     assign out = " + Convert_TT_to_SumOfProduct(radix, arity, optimizedTT) + ";");
+        lines.Add("     assign out_0 = " + Convert_TT_to_SumOfProduct(radix, arity, optimizedTT) + ";");
 
         lines.Add("endmodule");
+        lines.Add(""); //spacing between modules
 
         return lines.ToArray();
     }
@@ -1050,6 +1056,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
     {
         string result = "";
 
+        //gate_in_0 = A, gate_in_1 = B, gate_in_2 = C
         //Sum of Product are the conditions for when inputs are equal to 1
         List<string> SumOfProduct = new List<string>();
         switch (radix)
@@ -1060,87 +1067,87 @@ public class TruthtableFunctionHelper : MonoBehaviour
                         case 1:
                             if (optimizedTT[0] == 2)
                             {
-                                SumOfProduct.Add("(a == 0)");
+                                SumOfProduct.Add("(in_0 == 0)");
                                 SumOfProduct.Add(" | ");
                             }
 
                             if (optimizedTT[2] == 2)
                             {
-                                SumOfProduct.Add("(a == 1)");
+                                SumOfProduct.Add("(in_0 == 1)");
                                 SumOfProduct.Add(" | ");
                             }
                             break;
                         case 2:
                             if (optimizedTT[0] == 2)
                             {
-                                SumOfProduct.Add("(a == 0 & b == 0)");
+                                SumOfProduct.Add("(in_0 == 0 & in_1 == 0)");
                                 SumOfProduct.Add(" | ");
                             }
 
                             if (optimizedTT[2] == 2)
                             {
-                                SumOfProduct.Add("(a == 0 & b == 1)");
+                                SumOfProduct.Add("(in_0 == 0 & in_1 == 1)");
                                 SumOfProduct.Add(" | ");
                             }
 
                             if (optimizedTT[6] == 2)
                             {
-                                SumOfProduct.Add("(a == 1 & b == 0)");
+                                SumOfProduct.Add("(in_0 == 1 & in_1 == 0)");
                                 SumOfProduct.Add(" | ");
                             }
 
                             if (optimizedTT[8] == 2)
                             {
-                                SumOfProduct.Add("(a == 1 & b == 1)");
+                                SumOfProduct.Add("(in_0 == 1 & in_1 == 1)");
                                 SumOfProduct.Add(" | ");
                             }
                             break;
                         case 3:
                             if (optimizedTT[0] == 2)
                             {
-                                SumOfProduct.Add("(a == 0 & b == 0 & c == 0)");
+                                SumOfProduct.Add("(in_0 == 0 & in_1 == 0 & in_2 == 0)");
                                 SumOfProduct.Add(" | ");
                             }
 
                             if (optimizedTT[2] == 2)
                             {
-                                SumOfProduct.Add("(a == 0 & b == 1 & c == 0)");
+                                SumOfProduct.Add("(in_0 == 0 & in_1 == 1 & in_2 == 0)");
                                 SumOfProduct.Add(" | ");
                             }
 
                             if (optimizedTT[6] == 2)
                             {
-                                SumOfProduct.Add("(a == 1 & b == 0 & c == 0)");
+                                SumOfProduct.Add("(in_0 == 1 & in_1 == 0 & in_2 == 0)");
                                 SumOfProduct.Add(" | ");
                             }
 
                             if (optimizedTT[8] == 2)
                             {
-                                SumOfProduct.Add("(a == 1 & b == 1 & c == 0)");
+                                SumOfProduct.Add("(in_0 == 1 & in_1 == 1 & in_2 == 0)");
                                 SumOfProduct.Add(" | ");
                             }
 
                             if (optimizedTT[18] == 2)
                             {
-                                SumOfProduct.Add("(a == 0 & b == 0 & c == 1)");
+                                SumOfProduct.Add("(in_0 == 0 & in_1 == 0 & in_2 == 1)");
                                 SumOfProduct.Add(" | ");
                             }
 
                             if (optimizedTT[20] == 2)
                             {
-                                SumOfProduct.Add("(a == 0 & b == 1 & c == 1)");
+                                SumOfProduct.Add("(in_0 == 0 & in_1 == 1 & in_2 == 1)");
                                 SumOfProduct.Add(" | ");
                             }
 
                             if (optimizedTT[24] == 2)
                             {
-                                SumOfProduct.Add("(a == 1 & b == 0 & c == 1)");
+                                SumOfProduct.Add("(in_0 == 1 & in_1 == 0 & in_2 == 1)");
                                 SumOfProduct.Add(" | ");
                             }
 
                             if (optimizedTT[26] == 2)
                             {
-                                SumOfProduct.Add("(a == 1 & b == 1 & c == 1)");
+                                SumOfProduct.Add("(in_0 == 1 & in_1 == 1 & in_2 == 1)");
                                 SumOfProduct.Add(" | ");
                             }
                             break;
@@ -1160,7 +1167,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
                 break;
         }
 
-        for (int i = 0; i < SumOfProduct.Count - 1; i++)
+        for (int i = 0; i < SumOfProduct.Count - 1; i++) //note the -1 such that the last piping symbol is not included
             result += SumOfProduct[i];
 
         //final check, if empty sum of product (so no terms lead to a 1), assign a zero.
