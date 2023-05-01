@@ -48,22 +48,33 @@ public class SaveCircuit : MonoBehaviour
     {
         if (fulfillsSaveConditions)
         {
-            Stats stats = cGen.SaveComponent(Label.text); //generate netlist
+            //if resave (regenerate) we remove the tag such that it is ignored when processing 
+            if (DragDropArea.transform.childCount == 1 && (DragDropArea.transform.GetChild(0).name.Contains("SavedGate")))
+            {
+                DragDropArea.transform.GetChild(0).tag = "Untagged";
+
+                //find old menu item (note we dont delete the files, only the menu reference for the case something goes wrong)
+                var menuItem = ContentContainer.transform.Find(Label.text);
+                DestroyImmediate(menuItem.gameObject);
+            }
+
+
+            Stats stats = cGen.SaveComponent(Label.text);  //generate netlist
 
             if (stats.success)
             {
+                //we need to regenerate the component because it has children now
+                //save to settings file
+                tempComponentStructure.Stats = stats;
+                tempComponentStructure.ComponentName = Label.text;
+                tempComponentStructure.ComponentNetlistPath = Application.persistentDataPath + "/User/Generated/" + Label.text + "/HSPICE/" + "c_" + Label.text + ".sp";
+
                 if (SaveAsLibraryComponent.isOn)
                 {
-                    //we need to regenerate the component because it has children now
-                    //save to settings file
-                    tempComponentStructure.Stats = stats;
-                    tempComponentStructure.ComponentName = Label.text;
-                    tempComponentStructure.ComponentNetlistPath = Application.persistentDataPath + "/User/Generated/" + Label.text + "/" + "c_" + Label.text + ".sp";
-
                     var go = GenerateMenuItem(tempComponentStructure, ContentContainer.transform);
                     go.GetComponent<DragDrop>().MenuVersion.SetActive(true);
                     go.GetComponent<DragDrop>().SavedComponent = tempComponentStructure;
-                  
+
                     //Unity bug where it will auto default to wrong anchor position when part of layout group (sets it to top left). Probably due to some awake script. Set it to center here.
                     go.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
                     go.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.5f);
@@ -75,13 +86,19 @@ public class SaveCircuit : MonoBehaviour
 
                 //show statistics
                 StatisticsScreen.ShowSimple(stats, tempComponentStructure);
-               
+
+                if (DragDropArea.transform.childCount == 1 && (DragDropArea.transform.GetChild(0).name.Contains("SavedGate")))
+                {
+                    DestroyImmediate(DragDropArea.transform.GetChild(0).gameObject);
+                    
+                }
+
                 //clear canvas, we clear the preview with a call in the unity btn handler
                 applicationmanager.ClearCanvas();
+                
                 Label.text = "";
             }
         }
-       
     }
 
 
@@ -104,11 +121,14 @@ public class SaveCircuit : MonoBehaviour
         List<string> outputLabels = new List<string>();
         Dictionary<int, float> inputOrder = new Dictionary<int, float>(); //needed for ordering the labels from low to high (using transform.position.y)
         Dictionary<int, float> outputOrder = new Dictionary<int, float>();
-        
+
         foreach (var c in components)
         {
-            //only save top abstraction level at this moment, not the lower one if they have been changed
-            if (c.transform.parent.transform == DragDropArea.transform)
+            //this is an important feature to be improved: saving changes to a component or resaving when the technoloyg mapping generator is updated
+
+            //Currently: re-generate (re-save) a saved component if there is only 1 in the hierarchy. Careful here, if does not resave hierarically!!!  
+            //else, only save top abstraction level at this moment, not the lower one if they have been changed
+            if (DragDropArea.transform.childCount == 1 && (DragDropArea.transform.GetChild(0).name.Contains("SavedGate")))
             {
                 if (c.name.Contains("Input"))
                 {
@@ -119,13 +139,13 @@ public class SaveCircuit : MonoBehaviour
                     {
                         var bi = inputControler.Buttons[i].GetComponent<BtnInput>();
 
-                        if (bi.Connections.Count > 0)
-                        {
-                            inputOrder.Add(inputs.Count, bi.transform.position.y);
-                            RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), bi.DropdownLabel.text, true);
-                            inputs.Add(radixSource);
-                            inputLabels.Add(bi.transform.GetChild(3).GetComponent<TMP_InputField>().text);
-                        }
+                        //if (bi.Connections.Count > 0)
+                        //{
+                        inputOrder.Add(inputs.Count, bi.transform.position.y);
+                        RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), bi.DropdownLabel.text, true);
+                        inputs.Add(radixSource);
+                        inputLabels.Add(bi.transform.GetChild(3).GetComponent<TMP_InputField>().text);
+                        //}
                     }
                 }
 
@@ -138,17 +158,63 @@ public class SaveCircuit : MonoBehaviour
                     {
                         var bi = inputControler.Buttons[i].GetComponent<BtnInput>();
 
-                        if (bi.Connections.Count > 0)
+                        //if (bi.Connections.Count > 0)
+                        //{
+                        outputOrder.Add(outputs.Count, bi.transform.position.y);
+                        RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), bi.DropdownLabel.text, true);
+                        outputs.Add(radixSource);
+                        outputLabels.Add(bi.transform.GetComponentInChildren<TMP_InputField>().text);
+                        //}
+                    }
+                }
+
+                Label.text = DragDropArea.transform.GetChild(0).GetComponent<DragDrop>().MenuVersion.transform.GetChild(1).GetComponent<TMP_Text>().text;
+            }
+            else
+            {
+                if (c.transform.parent.transform == DragDropArea.transform)
+                {
+                    if (c.name.Contains("Input"))
+                    {
+                        var inputControler = c.GetComponentInChildren<InputController>();
+                        string id = inputControler.GetInstanceID().ToString();
+
+                        for (int i = 0; i < inputControler.Buttons.Count; i++)
                         {
+                            var bi = inputControler.Buttons[i].GetComponent<BtnInput>();
+
+                            //if (bi.Connections.Count > 0)
+                            //{
+                            inputOrder.Add(inputs.Count, bi.transform.position.y);
+                            RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), bi.DropdownLabel.text, true);
+                            inputs.Add(radixSource);
+                            inputLabels.Add(bi.transform.GetChild(3).GetComponent<TMP_InputField>().text);
+                            //}
+                        }
+                    }
+
+                    if (c.name.Contains("Output"))
+                    {
+                        var inputControler = c.GetComponentInChildren<InputController>();
+                        string id = inputControler.GetInstanceID().ToString();
+
+                        for (int i = 0; i < inputControler.Buttons.Count; i++)
+                        {
+                            var bi = inputControler.Buttons[i].GetComponent<BtnInput>();
+
+                            //if (bi.Connections.Count > 0)
+                            //{
                             outputOrder.Add(outputs.Count, bi.transform.position.y);
                             RadixOptions radixSource = (RadixOptions)Enum.Parse(typeof(RadixOptions), bi.DropdownLabel.text, true);
                             outputs.Add(radixSource);
                             outputLabels.Add(bi.transform.GetComponentInChildren<TMP_InputField>().text);
+                            //}
                         }
                     }
                 }
             }
         }
+     
 
 
         ////reorder the labels

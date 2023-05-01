@@ -32,7 +32,7 @@ public class ExportNetlist : MonoBehaviour
 
     public void ExportAll()
     {
-        string netlistPath = Application.persistentDataPath + "/User/Generated/" ;
+        string netlistPath = Application.persistentDataPath + "/User/Generated/";
         string filePath = Application.persistentDataPath + "/User/Share/MRCS_Export_Library.zip";
         Export("Library", netlistPath, filePath, true);
     }

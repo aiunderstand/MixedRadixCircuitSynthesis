@@ -17,6 +17,13 @@ public class applicationmanager : Singleton<applicationmanager>
     public static List<GameObject> InitHack; //we need to fix this in a much nicer way. When dragging a saved component onto canvas we instantiate it with all being active to initialize properly (so we can use getcomponentinchildren/parent. If we remove these with fixed paths, which are all known, we dont need this ugly hack
     public static bool clearInitHack = false;
     Camera canvasCamera;
+    public static TechnologyMappings curSeletectedTech = TechnologyMappings.ternaryCNTFET;
+
+    public enum TechnologyMappings
+    {
+        binaryCMOS,
+        ternaryCNTFET
+    }
 
     public IEnumerator CompleteInitHack()
     {

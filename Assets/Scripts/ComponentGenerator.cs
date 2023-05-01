@@ -202,7 +202,7 @@ public class ComponentGenerator : MonoBehaviour
             if (n.type.Equals(NetlistComponentType.savedcomponent))
             {
                 //create a saved component
-                string path = Application.persistentDataPath + "/User/Generated/" + n.id.Substring(2) + "/" + n.id + ".sp";
+                string path = Application.persistentDataPath + "/User/Generated/" + n.id.Substring(2) + "/HSPICE/" + n.id + ".sp";
                 var result1 = FindComponentsInNetlist(path, n.id.Substring(2));
                 var go = saveCircuit.GenerateItem(result1.savedComponent, root.transform, true);
 

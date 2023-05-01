@@ -8,7 +8,7 @@ using static BtnInput;
 
 public static class ReaderCSV
 {
-    public static List<Test> Tests = new List<Test>(); 
+    public static List<Test> Tests = new List<Test>();
     public static void ReadCSV(string path)
     {
         //init variables
@@ -17,20 +17,13 @@ public static class ReaderCSV
         if (!File.Exists(path))
         {
             Debug.Log("file not found");
-            return;            
+            return;
         }
 
         int limit = 1000;
         var lineCount = 0;
         string line;
-        int id =0;
-        int n = 0;
-        string testResult="";
-        TestPart input = new TestPart();
-        TestPart output = new TestPart();
-        TestPart groundtruth = new TestPart();
-        int decimalValue = 0;
-        string headerLine ="";
+        string headerLine = "";
 
         //read the file
         using (StreamReader reader = new StreamReader(path))
@@ -39,263 +32,51 @@ public static class ReaderCSV
             {
                 if (lineCount == 0)
                     headerLine = line;
-
-                if (lineCount > 0 && lineCount < limit) //skip header
+                else
                 {
-                    var attr = line.Split(',');
-
-                    if (attr.Length > 0) // skip empty lines
+                    if (lineCount < limit) //skip header
                     {
-                        //example data: 
-                        //id  type	        n	id_n	id_n-1	...	    id0	    radix_n     radix_n-1       ...	             radix_0	        value_n	value_n-1	...	value_0	decimal	test_result
-                        //0   input         4   b0      b1      b2      b3      binary      binary          binary           binary             0   0   0   0   0   na
-                        //0   groundtruth   4   t0      t1      t2      t3      bal.Ternary bal. Ternary    bal. Ternary     bal. Ternary       0   0   0   0   0   na
-                        //0   output        4   t0      t1      t2      t3      bal.Ternary bal. Ternary    bal. Ternary     bal. Ternary       0   0   0   0   0   not_tested
+                        //MST: most significant trit
+                        //symbol meaning: - = -1, 0 = 0, + = 1
 
-                        //parse general attributes to datatypes
-                        id = int.Parse(attr[0]);
-                        n = int.Parse(attr[2]);
+                        //data format: 
+                        //i_0..i_n;o_0..o_n;comment_0; .. ; comment_n 
 
-                        //parse specific attributes to datatypes
-                        List<string> ioNames = new List<string>();
-                        for (int i = 3; i < 3 + n; i++)
+                        //BTM2 (2 input balanced ternary multiplication) block example:
+                        //input x1 x0 is -0 (MST from left to right) = -3
+                        //input y1 y0 is +0 (MST from left to right) = +3
+                        //output s0 s1 s2 s3 (MST from left to right) = -9
+                        //data format is thus: -0+0;0-00; (optional) comments
+
+                        //split into input output comments
+                        var attr = line.Split(';');
+
+                        if (attr.Length >= 2) // skip empty lines or incomplete lines
                         {
-                            ioNames.Add(attr[i]);
+                            Test test = new Test(lineCount - 1, attr[0], attr[1]);
+                            Tests.Add(test);
                         }
-                        List<RadixOptions> ioRadixTypes = new List<RadixOptions>();
-                        for (int i = 3 + n; i < 3 + 2 * n; i++)
-                        {
-                            ioRadixTypes.Add((RadixOptions)Enum.Parse(typeof(RadixOptions), attr[i]));
-                        }
-                        List<int> ioValues = new List<int>();
-                        for (int i = 3 + 2 * n; i < 3 + 3 * n; i++)
-                        {
-                            ioValues.Add(int.Parse(attr[i]));
-                        }
-
-                        decimalValue = int.Parse(attr[attr.Length-2]);
-
-                        //create testParts
-                        ioType type = (ioType)Enum.Parse(typeof(ioType), attr[1]);
-                        switch (type)
-                        {
-                            case ioType.input:
-                                {
-                                    input = new TestPart(ioNames,ioRadixTypes,ioValues, decimalValue);     
-                                }
-                                break;
-                            case ioType.output:
-                                {
-                                    output = new TestPart(ioNames, ioRadixTypes, ioValues, decimalValue);
-                                    testResult = attr[attr.Length - 1];
-                                }
-                                break;
-
-                            case ioType.groundtruth:
-                                {
-                                    groundtruth = new TestPart(ioNames, ioRadixTypes, ioValues, decimalValue);
-                                }
-                                break;
-                        }
-                    }
-
-                    if (lineCount % 3 == 0)
-                    {
-                        Test test = new Test(id, n, input, output, groundtruth, testResult);
-                        Tests.Add(test);
                     }
                 }
                 lineCount++;
             }
 
             Debug.Log("Finished reading: " + path + ". Total tests: " + Tests.Count);
-
-            
-
-
-
-        }
-
-        //do the processing
-        //find inputs and outpus, note output can be ambiguious as port outputs are also output tags. We should refactor this
-        GameObject[] inputGO = GameObject.FindGameObjectsWithTag("Input");
-        GameObject[] outputGO = GameObject.FindGameObjectsWithTag("Output");
-
-        Transform dragdropContainer = GameObject.FindObjectOfType<SaveCircuit>()._DragDropArea.transform;
-        List<GameObject> inputs = new List<GameObject>();
-        List<GameObject> outputs = new List<GameObject>();
-
-        for (int i = 0; i < inputGO.Length; i++)
-        {
-            if (inputGO[i].transform.parent.parent.parent.parent.Equals(dragdropContainer))
-                inputs.Add(inputGO[i]);
-        }
-
-        for (int i = 0; i < outputGO.Length; i++)
-        {
-            if (outputGO[i].transform.parent.parent.parent.parent.Equals(dragdropContainer))
-                outputs.Add(outputGO[i]);
-        }
-
-        //only select ones that are on the top level
-        inputs.Reverse();
-        outputs.Reverse();
-        GameObject[] inputGOs = inputs.ToArray();
-        GameObject[] outputGOs = outputs.ToArray();
-
-
-        for (int t=0; t< Tests.Count; t++)
-        {
-            //we first need to find the correct input
-            Test test = Tests[t];
-            
-            string status ="pass";
-            string debugIO = "in ";
-            for (int j = 0; j < inputGOs.Length; j++)
-            {
-                var v =inputGOs[j].GetComponent<BtnInput>().SetValue(test.Input.IoRadixTypes[j], test.Input.IoValues[j], true);
-                debugIO += v.ToString() + " ";
-            }
-           
-            debugIO += " out ";
-            //read output
-            for (int j = 0; j < outputGOs.Length; j++)
-            {
-                test.Output.IoValues[j] = int.Parse(outputGOs[j].GetComponent<BtnInput>().label.text);
-                debugIO += test.Output.IoValues[j].ToString();
-            }
-
-            //compare to groundtruth
-            test.Output.DecimalValue = int.Parse(outputGOs[0].GetComponent<BtnInput>().transform.GetComponentInParent<InputController>().CounterLabel.text);
-
-            if (test.Output.DecimalValue != test.Groundtruth.DecimalValue)
-                status = "fail";
-
-
-
-          //  Debug.Log("IO: " + debugIO);
-          //  Debug.Log("t: " + t + " " + status + " Decimal: " + test.Output.DecimalValue + " Groundtruth: " + test.Groundtruth.DecimalValue);
-            test.TestResult = status;
-        }
-    
-        //write to file
-        using (StreamWriter writer = new StreamWriter(path,false))
-        {
-            writer.WriteLine(headerLine);
-            foreach (var test in Tests)
-            {
-                //example data: 
-                //id  type	        n	id_n	id_n-1	...	    id0	    radix_n     radix_n-1       ...	             radix_0	        value_n	value_n-1	...	value_0	decimal	test_result
-                //0   input         4   b0      b1      b2      b3      binary      binary          binary           binary             0   0   0   0   0   na
-                //0   groundtruth   4   t0      t1      t2      t3      bal.Ternary bal. Ternary    bal. Ternary     bal. Ternary       0   0   0   0   0   na
-                //0   output        4   t0      t1      t2      t3      bal.Ternary bal. Ternary    bal. Ternary     bal. Ternary       0   0   0   0   0   not_tested
-                
-                //write inputline
-                line = test.Id.ToString() + ",";
-                line += "input,";
-                line += test.N.ToString() +",";
-                for (int i = test.N-1; i >= 0; i--)
-                {
-                    line += test.Input.IoNames[i] + ",";
-                }
-                for (int i = test.N - 1; i >= 0; i--)
-                {
-                    line += test.Input.IoRadixTypes[i].ToString() + ",";
-                }
-                for (int i = test.N - 1; i >= 0; i--)
-                {
-                    line += test.Input.IoValues[i].ToString() + ",";
-                }
-                line += test.Input.DecimalValue + ",";
-                line += "na";
-                writer.WriteLine(line);
-
-                //write groundtruth line
-                line = test.Id.ToString() + ",";
-                line += "groundtruth,";
-                line += test.N.ToString() + ",";
-                for (int i = test.N - 1; i >= 0; i--)
-                {
-                    line += test.Groundtruth.IoNames[i] + ",";
-                }
-                for (int i = test.N - 1; i >= 0; i--)
-                {
-                    line += test.Groundtruth.IoRadixTypes[i].ToString() + ",";
-                }
-                for (int i = test.N - 1; i >= 0; i--)
-                {
-                    line += test.Groundtruth.IoValues[i].ToString() + ",";
-                }
-                line += test.Groundtruth.DecimalValue +",";
-                line += "na";
-                writer.WriteLine(line);
-
-                //write outputline
-                line = test.Id.ToString() + ",";
-                line += "output,";
-                line += test.N.ToString() + ",";
-                for (int i = test.N - 1; i >= 0; i--)
-                {
-                    line += test.Output.IoNames[i] + ",";
-                }
-                for (int i = test.N - 1; i >= 0; i--)
-                {
-                    line += test.Output.IoRadixTypes[i].ToString() + ",";
-                }
-                for (int i = test.N - 1; i >= 0; i--)
-                {
-                    line += test.Output.IoValues[i].ToString() + ",";
-                }
-                line += test.Output.DecimalValue + ",";
-                line += test.TestResult;
-                writer.WriteLine(line);
-            }
         }
     }
-
 }
 
 public class Test
 {
     public int Id;
-    public int N;
-    public TestPart Input;
-    public TestPart Output;
-    public TestPart Groundtruth;
-    public string TestResult;
+    public string Input;
+    public string Output;
+    public string TestResult = "";
 
-    public Test(int id, int n, TestPart input, TestPart output, TestPart groundtruth, string testResult)
+    public Test(int id, string input, string output)
     {
         Id = id;
-        N = n;
         Input = input;
         Output = output;
-        Groundtruth = groundtruth;
-        TestResult = testResult;
     }
 }
-
-public class TestPart
-{
-    public List<string> IoNames;
-    public List<RadixOptions> IoRadixTypes;
-    public List<int> IoValues;
-    public int DecimalValue;
-    
-    public TestPart() { }
-    public TestPart(List<string> ioNames, List<RadixOptions> ioRadixTypes, List<int> ioValues, int decimalValue)
-    {
-        IoNames = ioNames;
-        IoRadixTypes = ioRadixTypes;
-        IoValues = ioValues;
-        DecimalValue = decimalValue;
-    }
-}
-
-public enum ioType
-{
-    input,
-    output,
-    groundtruth
-}
-

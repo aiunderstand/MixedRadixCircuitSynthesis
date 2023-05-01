@@ -181,6 +181,12 @@ public class LineManager : MonoBehaviour
                     startName = startTerminal.transform.parent.parent.parent.parent.gameObject.GetComponent<DragDrop>().name;
                 }
 
+                if (startName.Contains("New"))
+                {
+                    startName = startTerminal.transform.parent.parent.name;
+                }
+
+
                 _tempLine.name = startName + ";" +
                                  startTerminal._portIndex +
                                  "; --> ";
@@ -233,6 +239,11 @@ public class LineManager : MonoBehaviour
                     endName = endTerminal.transform.parent.parent.parent.gameObject.GetComponent<DragDrop>().name;
                 else
                     endName = endTerminal.transform.parent.parent.parent.parent.gameObject.GetComponent<DragDrop>().name;
+
+                if (endName.Contains("New"))
+                {
+                    endName = endTerminal.transform.parent.parent.name;
+                }
 
 
                 _tempLine.name = conn.id.ToString() + " = " + _tempLine.name +

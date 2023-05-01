@@ -172,7 +172,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 125, y: 100}
+  m_SizeDelta: {x: 125, y: 115}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &6891116464606230181
 CanvasRenderer:
@@ -500,7 +500,7 @@ MonoBehaviour:
   panelColorDefault: {r: 0, g: 0, b: 0, a: 1}
   panelColorActive: {r: 0.1911776, g: 1, b: 0, a: 1}
   _optimizedFunction: 
-  activeIC: {fileID: 4320261767143978415}
+  activeIC: {fileID: 4320261766379682724}
 --- !u!1 &3041550489318852589
 GameObject:
   m_ObjectHideFlags: 0
@@ -7365,7 +7365,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &4320261766379682722
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8298,7 +8298,7 @@ MonoBehaviour:
   m_Placeholder: {fileID: 0}
   m_ItemText: {fileID: 4320261766940820655}
   m_ItemImage: {fileID: 0}
-  m_Value: 2
+  m_Value: 0
   m_Options:
     m_Options:
     - m_Text: BalancedTernary
@@ -10362,7 +10362,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Binary
+  m_text: BalancedTernary
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -12707,7 +12707,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &4320261767143978413
 RectTransform:
   m_ObjectHideFlags: 0

@@ -15,10 +15,12 @@ public class UserModeDropdown : MonoBehaviour
     public void UpdateUserMode()
     {
         if (usermodeDropdown.options[usermodeDropdown.value].text.Equals("TinyTapeout 2"))
-        { 
+        {
+            //set technology mapping to binary-CMOS
+            applicationmanager.curSeletectedTech = applicationmanager.TechnologyMappings.binaryCMOS;
+
             //set defaultradix to binary
             FindObjectOfType<DefaultRadixDropdown>().defaultRadixDropDown.value = 2;
-
 
             //add verilog ip cell library: problem cannot create netlist since HDL
             //load single .v file with verilog modules, create new verilog type savedcomponent tht cannot be spice simulated/create netlist from
@@ -28,6 +30,9 @@ public class UserModeDropdown : MonoBehaviour
         }
         else
         {
+            //set technology mapping to binary-CMOS
+            applicationmanager.curSeletectedTech = applicationmanager.TechnologyMappings.ternaryCNTFET;
+
             //set defaultradix to balanced ternary
             FindObjectOfType<DefaultRadixDropdown>().defaultRadixDropDown.value = 0;
 

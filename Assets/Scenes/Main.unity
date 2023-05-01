@@ -2760,7 +2760,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 204054392}
   m_HandleRect: {fileID: 204054391}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -13965,7 +13965,7 @@ MonoBehaviour:
   EnableDebugConsoleOutput: 0
   FrameCounter: 0
   stateChangeThreshold: 10
-  AllowUnstableCircuits: 0
+  AllowUnstableCircuits: 1
 --- !u!1 &1485106242
 GameObject:
   m_ObjectHideFlags: 0
@@ -17110,7 +17110,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4836f749183119742a25bc6332214552, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  csvFile: test_4b4t.csv
+  csvFile: test_2btm.csv
+  start: 0
 --- !u!1 &1739283558
 GameObject:
   m_ObjectHideFlags: 0

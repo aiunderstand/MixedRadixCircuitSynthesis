@@ -84,6 +84,11 @@ public class Settings : MonoBehaviour
 
             if (version.Contains("1.0"))
             {
+                Debug.Log("Using Version 1.0, create a github issue for porting assistance");
+            }
+
+            if (version.Contains("2.0"))
+            {
                 //read library entries
                 while ((line = reader.ReadLine()) != null)
                 {
@@ -93,7 +98,7 @@ public class Settings : MonoBehaviour
                     Debug.Log("Load :" + name);
 
                     string generatedPath = Application.persistentDataPath + "/User/Generated/" + name;
-                    string generatedFilePath = generatedPath + "/c_" + name + ".sp";
+                    string generatedFilePath = generatedPath + "/HSPICE/c_" + name + ".sp";
 
                     var result = ComponentGenerator.FindComponentsInNetlist(generatedFilePath, name);
                  
@@ -129,7 +134,7 @@ public class Settings : MonoBehaviour
         using (StreamWriter writer = new StreamWriter(settingsPath, false))
         {
             //version
-            writer.WriteLine("Library version: 1.0;");
+            writer.WriteLine("Library version: 2.0;");
 
             //library entries
             foreach (DictionaryEntry sc in savedComponents)

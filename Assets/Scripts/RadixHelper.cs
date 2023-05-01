@@ -47,7 +47,7 @@ namespace ExtensionMethods
                                     if (value == 1)
                                         outputValue = 1;
 
-                                    if (value == 2)
+                                    if (value == 2) // dont care x
                                         outputValue = 2;
                                 }
                                 break;
@@ -61,12 +61,12 @@ namespace ExtensionMethods
                             case RadixOptions.Binary:
                             case RadixOptions.SignedBinary:
                                 {
-                                    //0 and 1 maps to 0
-                                    if ((value == 0) || (value == 1))
+                                    //0 maps to 0
+                                    if ((value == 0))
                                         outputValue = 0;
 
-                                    //2 maps to 1
-                                    if (value == 2)
+                                    //1 and 2 maps to 1
+                                    if (value == 1 || value == 2)
                                         outputValue = 1;
 
                                     //dont care maps to dont care
@@ -98,12 +98,12 @@ namespace ExtensionMethods
                             case RadixOptions.Binary:
                             case RadixOptions.SignedBinary:
                                 {
-                                    //-1 and 0 maps to 0
-                                    if ((value == -1) || (value == 0))
+                                    //-1 maps to 0
+                                    if (value == -1)
                                         outputValue = 0;
 
-                                    //1 maps to 1
-                                    if (value == 1)
+                                    //0 and 1 maps to 1
+                                    if (value == 0 || value == 1)
                                         outputValue = 1;
 
                                     //dont care maps to dont care

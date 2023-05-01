@@ -214,7 +214,7 @@ public class BtnInput : MonoBehaviour
                         case RadixOptions.Binary:
                         case RadixOptions.SignedBinary:
                             {
-                                if (_value  <1)
+                                if (_value  == -1) //one state for 0, two for 1
                                     outputValue = 0;
                                 else
                                     outputValue = 1;
@@ -227,7 +227,7 @@ public class BtnInput : MonoBehaviour
                             break;
                         case RadixOptions.BalancedTernary:
                             {
-                                outputValue = _value + 1;
+                                outputValue = _value + 1; //these are index values, hence must be positive
                             }
                             break;
 
@@ -242,7 +242,7 @@ public class BtnInput : MonoBehaviour
                         case RadixOptions.Binary:
                         case RadixOptions.SignedBinary:
                             {
-                                if (_value < 2)
+                                if (_value == 0)  //one states for 0, two for 1
                                     outputValue = 0;
                                 else
                                     outputValue = 1;
@@ -284,10 +284,10 @@ public class BtnInput : MonoBehaviour
                             break;
                         case RadixOptions.BalancedTernary:
                             {
-                                if (_value == 0)
+                                if (_value == 0) 
                                     outputValue = 0;
                                 else
-                                    outputValue = 2;
+                                    outputValue = 2; //these are index values, hence must be positive
                             }
                             break;
                     }
@@ -349,7 +349,6 @@ public class BtnInput : MonoBehaviour
                     _minValue = 0;
                     _maxValue = 1;
 
-                    //no need to look at amount, just toggle
                     if (_value == 0)
                         _value = 1;
                     else

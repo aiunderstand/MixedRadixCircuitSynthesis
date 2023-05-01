@@ -79,102 +79,147 @@ public class StatisticsUI : MonoBehaviour
 
     private void UpdateDrawingWithActiveTransistors(DragDrop dd)
     {
-        //get all transistors
+        //get all transistors from the previously drawn canvas. Note that only the transistors for a specific logic gate are rendered.
         var allTs = GameObject.FindGameObjectsWithTag("Transistor");
 
         //get all btnInputs from the logic gate. Add them in order (eg. C, B, A in arity 3)
-        dd.LowerAbstractionVersion.gameObject.SetActive(true);
         List<BtnInput> inputs = new List<BtnInput>();
-        foreach (Transform child in dd.LowerAbstractionVersion.gameObject.transform)
+
+        //find the logic gate that is currently shown. There could be multiple instances of this logic gate, only the first is shown. future version might have the option to show the transistors for each instance.
+        DragDrop gate =  FindGate(dd, gateName.text);
+
+        //add the inputs of the gate
+        var iclg = gate.FullVersion.transform.GetChild(0).GetComponent<InputControllerLogicGate>();
+
+        foreach (var btn in iclg.activeIC.Buttons)
         {
-            GameObject go = child.gameObject;
-            if (go.name.Contains("LogicGate"))
-            {
-                if (go.GetComponent<DragDrop>()) //only drag drop components, not wires
-                {
-                    var iclg = go.GetComponent<DragDrop>().FullVersion.transform.GetChild(0).GetComponent<InputControllerLogicGate>();
-
-                    foreach (var btn in iclg.activeIC.Buttons)
-                    {
-                        inputs.Add(btn.GetComponent<BtnInput>());
-                    }
-                }   
-            }
+            inputs.Add(btn.GetComponent<BtnInput>());
         }
-
-        dd.LowerAbstractionVersion.gameObject.SetActive(false);
+       
+       
 
         //update label of each transistor with: inverter (optional) bntInput label and value in format p:?n:?"" +label + [state]
         //check each row of each network and set its color ON (colored) or OFF (grayscalish).
         //blue NMOS/PMOS are OFF (HIGH) ON (MED) ON (LOW)
         //red  NMOS/PMOS are OFF (HIGH) OFF (MED) ON (LOW)
-
-        foreach (var t in allTs)
+        Debug.Log("Inputs: " + inputs.Count);
+        if (inputs.Count > 0)
         {
-            VisualTransistor vt = t.GetComponent<VisualTransistor>();
-
-            //parse label to find port, which is always the second symbol (eg. i0_p)
-            if (vt.origLabel != "") //skip empty (eg. voltage dividers)
+            foreach (var t in allTs)
             {
-                int port = int.Parse(vt.origLabel.Substring(1,1));
-                var parsedLabel = vt.origLabel.Split('_');
+                VisualTransistor vt = t.GetComponent<VisualTransistor>();
 
-                string value = inputs[port]._value.ToString();
-                if (parsedLabel.Length == 2)
+                //parse label to find port, which is always the second symbol (eg. i0_p)
+                if (vt.origLabel != "") //skip empty (eg. voltage dividers)
                 {
-                    if (parsedLabel[1].Equals("p"))
-                        value = InvertValueP(value);
-                    else
-                        value = InvertValueN(value);
-                }
+                    int port = int.Parse(vt.origLabel.Substring(1, 1));
+                    var parsedLabel = vt.origLabel.Split('_');
 
-                string lbl = inputs[port].label.text + " [" + value + "]";
-                string newLabel = parsedLabel.Length == 2 ? parsedLabel[1] + ":" + lbl : lbl;
-                vt.label.text = newLabel;
+                    string value = inputs[port]._value.ToString();
+                    if (parsedLabel.Length == 2)
+                    {
+                        if (parsedLabel[1].Equals("p"))
+                            value = InvertValueP(value);
+                        else
+                            value = InvertValueN(value);
+                    }
 
-                //determine color based on if transistor is ON or OFF
-                bool isOn = false;
-                switch (value)
-                {
-                    case "-1":
-                        if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.PMOS_BodyToSource))
-                            isOn = true;
-                       
-                        if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.NMOS_BodyToSource))
-                            isOn = false;
-                        break;
-                    case "0":
-                        if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.PMOS_BodyToSource))
-                        {
-                            if (vt.GetDiameter().Equals(19))
+                    string lbl = inputs[port].label.text + " [" + value + "]";
+                    string newLabel = parsedLabel.Length == 2 ? parsedLabel[1] + ":" + lbl : lbl;
+                    vt.label.text = newLabel;
+
+                    //determine color based on if transistor is ON or OFF
+                    bool isOn = false;
+                    switch (value)
+                    {
+                        case "-1":
+                            if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.PMOS_BodyToSource))
                                 isOn = true;
-                            else
-                                isOn = false;
-                        }
 
-                        if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.NMOS_BodyToSource))
-                        {
-                            if (vt.GetDiameter().Equals(19))
+                            if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.NMOS_BodyToSource))
+                                isOn = false;
+                            break;
+                        case "0":
+                            if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.PMOS_BodyToSource))
+                            {
+                                if (vt.GetDiameter().Equals(19))
+                                    isOn = true;
+                                else
+                                    isOn = false;
+                            }
+
+                            if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.NMOS_BodyToSource))
+                            {
+                                if (vt.GetDiameter().Equals(19))
+                                    isOn = true;
+                                else
+                                    isOn = false;
+                            }
+                            break;
+                        case "1":
+                            if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.PMOS_BodyToSource))
+                                isOn = false;
+
+                            if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.NMOS_BodyToSource))
                                 isOn = true;
-                            else
-                                isOn = false;
-                        }
-                        break;
-                    case "1":
-                        if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.PMOS_BodyToSource))
-                            isOn = false;
+                            break;
+                    }
 
-                        if (vt.GetTransistorType().Equals(VisualTransistor.TransistorTypes.NMOS_BodyToSource))
-                            isOn = true;
-                        break;
+                    vt.SetActivationLevel(isOn);
                 }
-
-                vt.SetActivationLevel(isOn);
             }
         }
         
-        
 
+    }
+
+    private DragDrop FindGate(DragDrop dd, string gateQuery)
+    {
+        //for each child check if logic gate or saved gate
+        //if logic gate compare to query else go to lower abstraction for each saved gate until found
+        bool isFound = false;
+        DragDrop gate = null;
+
+        dd.LowerAbstractionVersion.gameObject.SetActive(true);
+
+        foreach (Transform child in dd.LowerAbstractionVersion.gameObject.transform)
+        {
+            if (isFound == false)
+            { 
+                GameObject go = child.gameObject;
+                if (go.tag == "DnDComponent")
+                {
+                    if (go.name.Contains("LogicGate"))
+                    {
+                        var iclg = child.GetComponent<DragDrop>().FullVersion.transform.GetChild(0).GetComponent<InputControllerLogicGate>();
+
+
+                        if (iclg._optimizedFunction == gateQuery)
+                        {
+                            gate = go.GetComponent<DragDrop>();
+                            isFound = true;
+                        }
+                    }
+
+                    if (go.name.Contains("SavedGate"))
+                    {
+                        DragDrop result;
+                        result = FindGate(child.GetComponent<DragDrop>(), gateQuery);
+                      
+                        if (result != null) //found
+                        {
+                            gate = result;
+                            isFound = true;
+                        }
+                    }
+                }   
+            }
+        }
+
+
+        dd.LowerAbstractionVersion.gameObject.SetActive(false);
+
+        return gate;
     }
 
     private string InvertValueP(string value)

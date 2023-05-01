@@ -996,23 +996,36 @@ public class TruthtableFunctionHelper : MonoBehaviour
         }
     }
 
+
+    //THIS METHOD CREATED BINARY VERILOG WHATEVER THE RADIX
     public static void CreateVerilogLogicGates(string path, string optimizedTTIndex, int[] optimizedTT, RadixOptions radix, int arity)
     {
         //check if folder for verilog/logicgates has been created
-        string dirPath = path + "Verilog/LogicGates/";
+        string dirPath = path + "LogicGates/";
         if (!System.IO.Directory.Exists(dirPath))
             System.IO.Directory.CreateDirectory(dirPath);
 
         //create if logicgate exist, else create
-        string filePath = dirPath + optimizedTTIndex + ".v";
+        string filePath;
+        if (radix == RadixOptions.Binary)
+            filePath = dirPath + optimizedTTIndex + ".v";
+        else
+            filePath = dirPath + optimizedTTIndex + "_bet" + ".v";
+        
         if (!File.Exists(filePath))
         {
-            string[] lines = ConvertTTtoVerilogModule(optimizedTTIndex, optimizedTT, radix, arity);
+            string[] lines = new string[0];
+            if (radix == RadixOptions.Binary)
+                lines = ConvertTTtoBinaryVerilogModule(optimizedTTIndex, optimizedTT, radix, arity);
+             
+            if (radix == RadixOptions.BalancedTernary || radix == RadixOptions.UnbalancedTernary)
+                lines = ConvertTTtoTernaryVerilogModule(optimizedTTIndex, optimizedTT, radix, arity);
+            
             CreateFile(filePath, lines);
-        }
+        }        
     }
 
-    private static string[] ConvertTTtoVerilogModule(string optimizedTTIndex, int[] optimizedTT, RadixOptions radix, int arity)
+    private static string[] ConvertTTtoBinaryVerilogModule(string optimizedTTIndex, int[] optimizedTT, RadixOptions radix, int arity)
     {
         List<string> lines = new List<string>(); 
 
@@ -1021,7 +1034,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
         //based on arity we have 1, 2, 3 input
         switch (arity) {
             case 1: 
-                lines.Add("     input wire in_0,"); 
+                lines.Add("     input wire in_0,");
                 lines.Add("     output wire out_0");
                 lines.Add("     );");
                 lines.Add("");
@@ -1044,7 +1057,159 @@ public class TruthtableFunctionHelper : MonoBehaviour
         }
 
         //convert TT to SumOfProduct form
-        lines.Add("     assign out_0 = " + Convert_TT_to_SumOfProduct(radix, arity, optimizedTT) + ";");
+        lines.Add("     assign out_0 = ");
+        var sop = Convert_TT_to_BinarySumOfProduct(radix, arity, optimizedTT);
+        for (int i = 0; i < sop.Length; i++)
+            lines.Add(sop[i]);
+           
+        lines.Add("endmodule");
+        lines.Add(""); //spacing between modules
+
+        return lines.ToArray();
+    }
+
+    private static string[] Convert_TT_to_BinarySumOfProduct(RadixOptions radix, int arity, int[] optimizedTT)
+    {
+        //gate_in_0 = A, gate_in_1 = B, gate_in_2 = C
+        //Sum of Product are the conditions for when inputs are equal to 1 (= 2 since the general TT is unbal. ternary)
+        List<string> SumOfProduct = new List<string>();
+
+        switch (arity)
+        {
+            case 1:
+                if (optimizedTT[0] == 2)
+                {
+                    SumOfProduct.Add("(in_0 == 0)");
+                    SumOfProduct.Add(" | ");
+                }
+
+                if (optimizedTT[2] == 2)
+                {
+                    SumOfProduct.Add("(in_0 == 1)");
+                    SumOfProduct.Add(" | ");
+                }
+                break;
+            case 2:
+                if (optimizedTT[0] == 2)
+                {
+                    SumOfProduct.Add("(in_0 == 0 & in_1 == 0)");
+                    SumOfProduct.Add(" | ");
+                }
+
+                if (optimizedTT[2] == 2)
+                {
+                    SumOfProduct.Add("(in_0 == 0 & in_1 == 1)");
+                    SumOfProduct.Add(" | ");
+                }
+
+                if (optimizedTT[6] == 2)
+                {
+                    SumOfProduct.Add("(in_0 == 1 & in_1 == 0)");
+                    SumOfProduct.Add(" | ");
+                }
+
+                if (optimizedTT[8] == 2)
+                {
+                    SumOfProduct.Add("(in_0 == 1 & in_1 == 1)");
+                    SumOfProduct.Add(" | ");
+                }
+                break;
+            case 3:
+                if (optimizedTT[0] == 2)
+                {
+                    SumOfProduct.Add("(in_0 == 0 & in_1 == 0 & in_2 == 0)");
+                    SumOfProduct.Add(" | ");
+                }
+
+                if (optimizedTT[2] == 2)
+                {
+                    SumOfProduct.Add("(in_0 == 0 & in_1 == 1 & in_2 == 0)");
+                    SumOfProduct.Add(" | ");
+                }
+
+                if (optimizedTT[6] == 2)
+                {
+                    SumOfProduct.Add("(in_0 == 1 & in_1 == 0 & in_2 == 0)");
+                    SumOfProduct.Add(" | ");
+                }
+
+                if (optimizedTT[8] == 2)
+                {
+                    SumOfProduct.Add("(in_0 == 1 & in_1 == 1 & in_2 == 0)");
+                    SumOfProduct.Add(" | ");
+                }
+
+                if (optimizedTT[18] == 2)
+                {
+                    SumOfProduct.Add("(in_0 == 0 & in_1 == 0 & in_2 == 1)");
+                    SumOfProduct.Add(" | ");
+                }
+
+                if (optimizedTT[20] == 2)
+                {
+                    SumOfProduct.Add("(in_0 == 0 & in_1 == 1 & in_2 == 1)");
+                    SumOfProduct.Add(" | ");
+                }
+
+                if (optimizedTT[24] == 2)
+                {
+                    SumOfProduct.Add("(in_0 == 1 & in_1 == 0 & in_2 == 1)");
+                    SumOfProduct.Add(" | ");
+                }
+
+                if (optimizedTT[26] == 2)
+                {
+                    SumOfProduct.Add("(in_0 == 1 & in_1 == 1 & in_2 == 1)");
+                    SumOfProduct.Add(" | ");
+                }
+                break;
+        }
+
+        if (SumOfProduct.Count == 0)
+            SumOfProduct.Add("0;");
+        else
+            SumOfProduct[SumOfProduct.Count - 1] = ";"; //overwrite the last symbol (a piping symbol) with a ;
+
+        return SumOfProduct.ToArray();
+    }
+
+    private static string[] ConvertTTtoTernaryVerilogModule(string optimizedTTIndex, int[] optimizedTT, RadixOptions radix, int arity)
+    {
+        List<string> lines = new List<string>();
+
+        lines.Add("module " + optimizedTTIndex + "_bet (");
+
+        //based on arity we have 1, 2, 3 input
+        switch (arity)
+        {
+            case 1:
+                lines.Add("     input wire[1:0] in_0,");
+                lines.Add("     output wire[1:0] out_0");
+                lines.Add("     );");
+                lines.Add("");
+                break;
+            case 2:
+                lines.Add("     input wire[1:0] in_0,");
+                lines.Add("     input wire[1:0] in_1,");
+                lines.Add("     output wire[1:0] out_0");
+                lines.Add("     );");
+                lines.Add("");
+                break;
+            case 3:
+                lines.Add("     input wire[1:0] in_0,");
+                lines.Add("     input wire[1:0] in_1,");
+                lines.Add("     input wire[1:0] in_2,");
+                lines.Add("     output wire[1:0] out_0");
+                lines.Add("     );");
+                lines.Add("");
+                break;
+        }
+
+        //convert TT to SumOfProduct form
+        lines.Add("     assign out_0 = ");
+        var sop = Convert_TT_to_TernaryEncodedBinarySumOfProduct(radix, arity, optimizedTT);
+        for (int i = 0; i < sop.Length; i++)
+            lines.Add(sop[i]);
 
         lines.Add("endmodule");
         lines.Add(""); //spacing between modules
@@ -1052,127 +1217,74 @@ public class TruthtableFunctionHelper : MonoBehaviour
         return lines.ToArray();
     }
 
-    private static string Convert_TT_to_SumOfProduct(RadixOptions radix, int arity, int[] optimizedTT)
+    private static string[] Convert_TT_to_TernaryEncodedBinarySumOfProduct(RadixOptions radix, int arity, int[] optimizedTT)
     {
-        string result = "";
-
         //gate_in_0 = A, gate_in_1 = B, gate_in_2 = C
         //Sum of Product are the conditions for when inputs are equal to 1
-        List<string> SumOfProduct = new List<string>();
-        switch (radix)
+        List<string> SumOfProduct = new List<string>(); //REMOVE IS TEMP
+
+        int cellIndex = 0;
+        switch (arity)
         {
-            case RadixOptions.Binary:
+            case 1:
+                for (int inputA = 0; inputA < 3; inputA++)
                 {
-                    switch (arity) {
-                        case 1:
-                            if (optimizedTT[0] == 2)
-                            {
-                                SumOfProduct.Add("(in_0 == 0)");
-                                SumOfProduct.Add(" | ");
-                            }
+                    SumOfProduct.Add("(in_0 == 2'b" + TerToBet(inputA) + ") ? 2'b" + TerToBet(optimizedTT[cellIndex]) + " :");
+                    cellIndex++;
+                }
+                SumOfProduct.Add("2'b00;"); //add the error state as else case
 
-                            if (optimizedTT[2] == 2)
-                            {
-                                SumOfProduct.Add("(in_0 == 1)");
-                                SumOfProduct.Add(" | ");
-                            }
-                            break;
-                        case 2:
-                            if (optimizedTT[0] == 2)
-                            {
-                                SumOfProduct.Add("(in_0 == 0 & in_1 == 0)");
-                                SumOfProduct.Add(" | ");
-                            }
-
-                            if (optimizedTT[2] == 2)
-                            {
-                                SumOfProduct.Add("(in_0 == 0 & in_1 == 1)");
-                                SumOfProduct.Add(" | ");
-                            }
-
-                            if (optimizedTT[6] == 2)
-                            {
-                                SumOfProduct.Add("(in_0 == 1 & in_1 == 0)");
-                                SumOfProduct.Add(" | ");
-                            }
-
-                            if (optimizedTT[8] == 2)
-                            {
-                                SumOfProduct.Add("(in_0 == 1 & in_1 == 1)");
-                                SumOfProduct.Add(" | ");
-                            }
-                            break;
-                        case 3:
-                            if (optimizedTT[0] == 2)
-                            {
-                                SumOfProduct.Add("(in_0 == 0 & in_1 == 0 & in_2 == 0)");
-                                SumOfProduct.Add(" | ");
-                            }
-
-                            if (optimizedTT[2] == 2)
-                            {
-                                SumOfProduct.Add("(in_0 == 0 & in_1 == 1 & in_2 == 0)");
-                                SumOfProduct.Add(" | ");
-                            }
-
-                            if (optimizedTT[6] == 2)
-                            {
-                                SumOfProduct.Add("(in_0 == 1 & in_1 == 0 & in_2 == 0)");
-                                SumOfProduct.Add(" | ");
-                            }
-
-                            if (optimizedTT[8] == 2)
-                            {
-                                SumOfProduct.Add("(in_0 == 1 & in_1 == 1 & in_2 == 0)");
-                                SumOfProduct.Add(" | ");
-                            }
-
-                            if (optimizedTT[18] == 2)
-                            {
-                                SumOfProduct.Add("(in_0 == 0 & in_1 == 0 & in_2 == 1)");
-                                SumOfProduct.Add(" | ");
-                            }
-
-                            if (optimizedTT[20] == 2)
-                            {
-                                SumOfProduct.Add("(in_0 == 0 & in_1 == 1 & in_2 == 1)");
-                                SumOfProduct.Add(" | ");
-                            }
-
-                            if (optimizedTT[24] == 2)
-                            {
-                                SumOfProduct.Add("(in_0 == 1 & in_1 == 0 & in_2 == 1)");
-                                SumOfProduct.Add(" | ");
-                            }
-
-                            if (optimizedTT[26] == 2)
-                            {
-                                SumOfProduct.Add("(in_0 == 1 & in_1 == 1 & in_2 == 1)");
-                                SumOfProduct.Add(" | ");
-                            }
-                            break;
+                break;
+            case 2:
+                for (int inputA = 0; inputA < 3; inputA++) //in arity 2 input B iterate first over B then over A
+                {
+                    for (int inputB = 0; inputB < 3; inputB++)
+                    {
+                        SumOfProduct.Add("(in_0 == 2'b" + TerToBet(inputA) + ") & (in_1 == 2'b" + TerToBet(inputB) + ") ? 2'b" + TerToBet(optimizedTT[cellIndex]) + " :");
+                        cellIndex++;
                     }
-                  
-                } 
-                break;
-            case RadixOptions.BalancedTernary:
-                {
-                    result = "not implemented";
                 }
+                SumOfProduct.Add("2'b00;"); //add the error state as else case
+
                 break;
-            case RadixOptions.UnbalancedTernary:
+            case 3:
+                for (int inputC = 0; inputC < 3; inputC++) //in arity 2 input B iterate first over B then over A then C
                 {
-                    result = "not implemented";
+                    for (int inputA = 0; inputA < 3; inputA++)
+                    {
+                        for (int inputB = 0; inputB < 3; inputB++)
+                        {
+                            SumOfProduct.Add("(in_0 == 2'b" + TerToBet(inputA) + ") & (in_1 == 2'b" + TerToBet(inputB) + ") & (in_2 == 2'b" + TerToBet(inputC) + ") ? 2'b" + TerToBet(optimizedTT[cellIndex]) + " :");
+                            cellIndex++;
+                        }
+                    }
                 }
+                SumOfProduct.Add("2'b00;"); //add the error state as else case
                 break;
         }
 
-        for (int i = 0; i < SumOfProduct.Count - 1; i++) //note the -1 such that the last piping symbol is not included
-            result += SumOfProduct[i];
+        return SumOfProduct.ToArray();
+    }
 
-        //final check, if empty sum of product (so no terms lead to a 1), assign a zero.
-        if (result.Equals(""))
-            result = "0";
+    private static string TerToBet(int i)
+    {
+        string result = "00";
+
+        switch (i)
+        {
+            case 0:
+                result = "01";
+                break;
+            case 1:
+                result = "11";
+                break;
+            case 2:
+                result = "10";
+                break;
+            default:            
+                result = "00";
+                break;
+        }
 
         return result;
     }

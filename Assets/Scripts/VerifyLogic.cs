@@ -10,6 +10,7 @@ using System.IO;
 using System.IO.Compression;
 using static BtnInput;
 using System;
+using static ReaderCSV;
 
 [RequireComponent(typeof(Button))]
 public class VerifyLogic : MonoBehaviour, IPointerDownHandler
@@ -69,6 +70,8 @@ public class VerifyLogic : MonoBehaviour, IPointerDownHandler
 
         System.IO.File.WriteAllBytes(fullPath, loader.bytes);
         ReaderCSV.ReadCSV(fullPath);
+        GameObject.FindObjectOfType<LogicTestRunner>().RunTests();
+
 
     }
 }
