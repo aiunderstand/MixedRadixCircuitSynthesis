@@ -307,10 +307,23 @@ public class ComponentGenerator : MonoBehaviour
             InputController input = componentList[inputId];
             InputController output = componentList[outputId];
 
-            BtnInput startTerminal = input.Buttons[inputPort].GetComponent<BtnInput>();
+            BtnInput startTerminal = null; 
             BtnInput endTerminal = null;
 
-            bool isFound = false;
+            bool isFoundS = false;
+            bool isFoundT = false;
+            for (int i = 0; i < input.Buttons.Count; i++)
+            {
+                int p = input.Buttons[i].GetComponent<BtnInput>()._portIndex;
+
+                if (p == inputPort)
+                {
+                    startTerminal = input.Buttons[i].GetComponent<BtnInput>();
+                    isFoundS = true;
+                }
+            }
+
+
             for (int i = 0; i < output.Buttons.Count; i++)
             {
                 int p = output.Buttons[i].GetComponent<BtnInput>()._portIndex;
@@ -318,16 +331,16 @@ public class ComponentGenerator : MonoBehaviour
                 if (p == outputPort)
                 {
                     endTerminal = output.Buttons[i].GetComponent<BtnInput>();
-                    isFound = true;
+                    isFoundT = true;
                 }
             }
 
-            if (!isFound)
-                Debug.Log("A connection could not be made");
+            if (isFoundS&&isFoundT)
+                lm.NewConnection(startTerminal, endTerminal, root.transform);            
             else
-                lm.NewConnection(startTerminal, endTerminal, root.transform);
+                Debug.Log("A connection could not be made");
 
-           // yield return null;
+            // yield return null;
         }
 
     }

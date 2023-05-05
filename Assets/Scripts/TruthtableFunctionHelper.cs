@@ -1034,30 +1034,30 @@ public class TruthtableFunctionHelper : MonoBehaviour
         //based on arity we have 1, 2, 3 input
         switch (arity) {
             case 1: 
-                lines.Add("     input wire in_0,");
-                lines.Add("     output wire out_0");
+                lines.Add("     input wire portA,");
+                lines.Add("     output wire out");
                 lines.Add("     );");
                 lines.Add("");
                 break;
             case 2: 
-                lines.Add("     input wire in_0,"); 
-                lines.Add("     input wire in_1,"); 
-                lines.Add("     output wire out_0");
+                lines.Add("     input wire portB,"); 
+                lines.Add("     input wire portA,"); 
+                lines.Add("     output wire out");
                 lines.Add("     );");
                 lines.Add("");
                 break;
             case 3: 
-                lines.Add("     input wire in_0,"); 
-                lines.Add("     input wire in_1,"); 
-                lines.Add("     input wire in_2,"); 
-                lines.Add("     output wire out_0");
+                lines.Add("     input wire portC,"); 
+                lines.Add("     input wire portB,"); 
+                lines.Add("     input wire portA,"); 
+                lines.Add("     output wire out");
                 lines.Add("     );");
                 lines.Add("");
                 break;
         }
 
         //convert TT to SumOfProduct form
-        lines.Add("     assign out_0 = ");
+        lines.Add("     assign out = ");
         var sop = Convert_TT_to_BinarySumOfProduct(radix, arity, optimizedTT);
         for (int i = 0; i < sop.Length; i++)
             lines.Add(sop[i]);
@@ -1070,97 +1070,50 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
     private static string[] Convert_TT_to_BinarySumOfProduct(RadixOptions radix, int arity, int[] optimizedTT)
     {
-        //gate_in_0 = A, gate_in_1 = B, gate_in_2 = C
         //Sum of Product are the conditions for when inputs are equal to 1 (= 2 since the general TT is unbal. ternary)
         List<string> SumOfProduct = new List<string>();
 
+        int cellIndex = 0;
         switch (arity)
         {
             case 1:
-                if (optimizedTT[0] == 2)
+                for (int inputA = 0; inputA < 2; inputA++)
                 {
-                    SumOfProduct.Add("(in_0 == 0)");
-                    SumOfProduct.Add(" | ");
-                }
+                    if (optimizedTT[cellIndex] == 2)
+                        SumOfProduct.Add("    (portA == " + inputA.ToString() + ") |");
 
-                if (optimizedTT[2] == 2)
-                {
-                    SumOfProduct.Add("(in_0 == 1)");
-                    SumOfProduct.Add(" | ");
+                    cellIndex+= 2;
                 }
                 break;
             case 2:
-                if (optimizedTT[0] == 2)
+                for (int inputA = 0; inputA < 2; inputA++)
                 {
-                    SumOfProduct.Add("(in_0 == 0 & in_1 == 0)");
-                    SumOfProduct.Add(" | ");
-                }
+                    for (int inputB = 0; inputB < 2; inputB++)
+                    {
+                        if (optimizedTT[cellIndex] == 2)
+                            SumOfProduct.Add("    (portB == " + inputB.ToString() + " & portA == " + inputA.ToString() + ") |");
 
-                if (optimizedTT[2] == 2)
-                {
-                    SumOfProduct.Add("(in_0 == 0 & in_1 == 1)");
-                    SumOfProduct.Add(" | ");
-                }
-
-                if (optimizedTT[6] == 2)
-                {
-                    SumOfProduct.Add("(in_0 == 1 & in_1 == 0)");
-                    SumOfProduct.Add(" | ");
-                }
-
-                if (optimizedTT[8] == 2)
-                {
-                    SumOfProduct.Add("(in_0 == 1 & in_1 == 1)");
-                    SumOfProduct.Add(" | ");
+                        cellIndex += 2;
+                    }
+                    cellIndex += 2;
                 }
                 break;
             case 3:
-                if (optimizedTT[0] == 2)
+                for (int inputC = 0; inputC < 2; inputC++) //note the weird input C A B encoding due to the TT (legacy bug)
                 {
-                    SumOfProduct.Add("(in_0 == 0 & in_1 == 0 & in_2 == 0)");
-                    SumOfProduct.Add(" | ");
-                }
+                    for (int inputA = 0; inputA < 2; inputA++)
+                    {
+                        for (int inputB = 0; inputB < 2; inputB++)
+                        {
+                            Debug.Log(cellIndex);
+                            if (optimizedTT[cellIndex] == 2)
+                                SumOfProduct.Add("    (portC == " + inputC.ToString() + " & portB == " + inputB.ToString() + " & portA == " + inputA.ToString() + ") |");
 
-                if (optimizedTT[2] == 2)
-                {
-                    SumOfProduct.Add("(in_0 == 0 & in_1 == 1 & in_2 == 0)");
-                    SumOfProduct.Add(" | ");
-                }
-
-                if (optimizedTT[6] == 2)
-                {
-                    SumOfProduct.Add("(in_0 == 1 & in_1 == 0 & in_2 == 0)");
-                    SumOfProduct.Add(" | ");
-                }
-
-                if (optimizedTT[8] == 2)
-                {
-                    SumOfProduct.Add("(in_0 == 1 & in_1 == 1 & in_2 == 0)");
-                    SumOfProduct.Add(" | ");
-                }
-
-                if (optimizedTT[18] == 2)
-                {
-                    SumOfProduct.Add("(in_0 == 0 & in_1 == 0 & in_2 == 1)");
-                    SumOfProduct.Add(" | ");
-                }
-
-                if (optimizedTT[20] == 2)
-                {
-                    SumOfProduct.Add("(in_0 == 0 & in_1 == 1 & in_2 == 1)");
-                    SumOfProduct.Add(" | ");
-                }
-
-                if (optimizedTT[24] == 2)
-                {
-                    SumOfProduct.Add("(in_0 == 1 & in_1 == 0 & in_2 == 1)");
-                    SumOfProduct.Add(" | ");
-                }
-
-                if (optimizedTT[26] == 2)
-                {
-                    SumOfProduct.Add("(in_0 == 1 & in_1 == 1 & in_2 == 1)");
-                    SumOfProduct.Add(" | ");
+                            cellIndex += 2;
+                        }
+                        cellIndex += 2;
+                    }
+                    cellIndex += 6;
                 }
                 break;
         }
@@ -1168,8 +1121,10 @@ public class TruthtableFunctionHelper : MonoBehaviour
         if (SumOfProduct.Count == 0)
             SumOfProduct.Add("0;");
         else
-            SumOfProduct[SumOfProduct.Count - 1] = ";"; //overwrite the last symbol (a piping symbol) with a ;
-
+        {
+            var tempString = SumOfProduct[SumOfProduct.Count - 1]; //overwrite the last symbol (a piping symbol) with a ;
+            SumOfProduct[SumOfProduct.Count - 1] = tempString.Replace('|',' ').TrimEnd() + ";";
+        }
         return SumOfProduct.ToArray();
     }
 
@@ -1183,30 +1138,30 @@ public class TruthtableFunctionHelper : MonoBehaviour
         switch (arity)
         {
             case 1:
-                lines.Add("     input wire[1:0] in_0,");
-                lines.Add("     output wire[1:0] out_0");
+                lines.Add("     input wire[1:0] portA,");
+                lines.Add("     output wire[1:0] out");
                 lines.Add("     );");
                 lines.Add("");
                 break;
             case 2:
-                lines.Add("     input wire[1:0] in_0,");
-                lines.Add("     input wire[1:0] in_1,");
-                lines.Add("     output wire[1:0] out_0");
+                lines.Add("     input wire[1:0] portB,");
+                lines.Add("     input wire[1:0] portA,");
+                lines.Add("     output wire[1:0] out");
                 lines.Add("     );");
                 lines.Add("");
                 break;
             case 3:
-                lines.Add("     input wire[1:0] in_0,");
-                lines.Add("     input wire[1:0] in_1,");
-                lines.Add("     input wire[1:0] in_2,");
-                lines.Add("     output wire[1:0] out_0");
+                lines.Add("     input wire[1:0] portC,");
+                lines.Add("     input wire[1:0] portB,");
+                lines.Add("     input wire[1:0] portA,");
+                lines.Add("     output wire[1:0] out");
                 lines.Add("     );");
                 lines.Add("");
                 break;
         }
 
         //convert TT to SumOfProduct form
-        lines.Add("     assign out_0 = ");
+        lines.Add("     assign out = ");
         var sop = Convert_TT_to_TernaryEncodedBinarySumOfProduct(radix, arity, optimizedTT);
         for (int i = 0; i < sop.Length; i++)
             lines.Add(sop[i]);
@@ -1219,9 +1174,8 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
     private static string[] Convert_TT_to_TernaryEncodedBinarySumOfProduct(RadixOptions radix, int arity, int[] optimizedTT)
     {
-        //gate_in_0 = A, gate_in_1 = B, gate_in_2 = C
         //Sum of Product are the conditions for when inputs are equal to 1
-        List<string> SumOfProduct = new List<string>(); //REMOVE IS TEMP
+        List<string> SumOfProduct = new List<string>(); 
 
         int cellIndex = 0;
         switch (arity)
@@ -1229,37 +1183,43 @@ public class TruthtableFunctionHelper : MonoBehaviour
             case 1:
                 for (int inputA = 0; inputA < 3; inputA++)
                 {
-                    SumOfProduct.Add("(in_0 == 2'b" + TerToBet(inputA) + ") ? 2'b" + TerToBet(optimizedTT[cellIndex]) + " :");
+                    if (optimizedTT[cellIndex] != 1)
+                        SumOfProduct.Add("    (portA == 2'b" + TerToBet(inputA) + ") ? 2'b" + TerToBet(optimizedTT[cellIndex]) + " :");
+                    
                     cellIndex++;
                 }
-                SumOfProduct.Add("2'b00;"); //add the error state as else case
+                SumOfProduct.Add("     2'b11;"); //add the logical zero ('11')state as default case. '00' is not possible
 
                 break;
             case 2:
-                for (int inputA = 0; inputA < 3; inputA++) //in arity 2 input B iterate first over B then over A
+                for (int inputA = 0; inputA < 3; inputA++) 
                 {
                     for (int inputB = 0; inputB < 3; inputB++)
                     {
-                        SumOfProduct.Add("(in_0 == 2'b" + TerToBet(inputA) + ") & (in_1 == 2'b" + TerToBet(inputB) + ") ? 2'b" + TerToBet(optimizedTT[cellIndex]) + " :");
+                        if (optimizedTT[cellIndex] != 1)
+                            SumOfProduct.Add("    (portB == 2'b" + TerToBet(inputB) + ") & (portA == 2'b" + TerToBet(inputA) + ") ? 2'b" + TerToBet(optimizedTT[cellIndex]) + " :");
+                    
                         cellIndex++;
                     }
                 }
-                SumOfProduct.Add("2'b00;"); //add the error state as else case
+                SumOfProduct.Add("     2'b11;"); //add the logical zero ('11')state as default case. '00' is not possible
 
                 break;
             case 3:
-                for (int inputC = 0; inputC < 3; inputC++) //in arity 2 input B iterate first over B then over A then C
+                for (int inputC = 0; inputC < 3; inputC++) //note the weird input C A B encoding due to the TT (legacy bug)
                 {
                     for (int inputA = 0; inputA < 3; inputA++)
                     {
                         for (int inputB = 0; inputB < 3; inputB++)
                         {
-                            SumOfProduct.Add("(in_0 == 2'b" + TerToBet(inputA) + ") & (in_1 == 2'b" + TerToBet(inputB) + ") & (in_2 == 2'b" + TerToBet(inputC) + ") ? 2'b" + TerToBet(optimizedTT[cellIndex]) + " :");
+                            if (optimizedTT[cellIndex] != 1)
+                                SumOfProduct.Add("    (portC == 2'b" + TerToBet(inputC) + ") & (portB == 2'b" + TerToBet(inputB) + ") & (portA == 2'b" + TerToBet(inputA) + ") ? 2'b" + TerToBet(optimizedTT[cellIndex]) + " :");
+
                             cellIndex++;
                         }
                     }
                 }
-                SumOfProduct.Add("2'b00;"); //add the error state as else case
+                SumOfProduct.Add("     2'b11;"); //add the logical zero ('11')state as default case. '00' is not possible
                 break;
         }
 

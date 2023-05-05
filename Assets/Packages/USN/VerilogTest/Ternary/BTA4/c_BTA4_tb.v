@@ -17,19 +17,26 @@ module test;
     //00 illegal / undefined
   initial begin
   //sum: -4 + -4 = -8
-  //outcome: input (55) -> outcome (b7)
-      io_in[7] = 0; //01: y0 = -1      
-      io_in[6] = 1; 
-      io_in[5] = 0; //01 y1 = -1
-      io_in[4] = 1;
-      io_in[3] = 0; //01 x0 = -1
-      io_in[2] = 1;
-      io_in[1] = 0; //01 x1 = -1     
-      io_in[0] = 1;
+  //outcome: input (55) -> outcome (de)
+  
+      io_in[7:6] = 2'b01; //x1 = -1      
+      io_in[5:4] = 2'b01; //x0 = -1      
+      
+      io_in[3:2] = 2'b01; //y1 = -1      
+      io_in[1:0] = 2'b01; //y0 = -1      
      
       #delayNs;
+ 
+  //sum: -3 + 2 = -1
+  //outcome: input (79) -> outcome (fd)
   
-    
+      io_in[7:6] = 2'b01; //x1 = -1      
+      io_in[5:4] = 2'b11; //x0 = 0 
+           
+      io_in[3:2] = 2'b10; //y1 = 1      
+      io_in[1:0] = 2'b01; //y0 = -1      
+     
+      #delayNs;
   end
 
   /* Make a regular pulsing clock. */

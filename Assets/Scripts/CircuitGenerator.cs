@@ -40,6 +40,7 @@ public class CircuitGenerator : MonoBehaviour
         List<int> invArray = new List<int>();
         List<string> connectionArray = new List<string>();
         List<string> inputNames = new List<string>();
+        List<string> inputNamesVerilog = new List<string>();
         List<string> outputNames = new List<string>();
         List<string> positionArray = new List<string>();
         List<string> inputRadix = new List<string>();
@@ -112,10 +113,65 @@ public class CircuitGenerator : MonoBehaviour
         }
 
 
-        //PASS 1: input names with semantic names
-        int uniquePortId = 0; //see Verilog section to reason for this extra mapping
+        //PASS 0b: reorder components based on vertical position in order to make virtual Most Significant Bits order (top is MSB)
+        ////reorder the labels
+        Dictionary<int, float> componentHeights = new Dictionary<int, float>();
+        List<GameObject> tempComponents = new List<GameObject>();
 
+        for (int i = 0; i < components.Length; i++)
+            componentHeights.Add(i, components[i].transform.position.y);
+        
+        //sort inputOrder
+        var sorted = componentHeights.OrderByDescending(key => key.Value); //bottom input components first (ascending order)
+
+        //assign tempLabels in correct order
+        foreach (var item in sorted)
+            tempComponents.Add(components[item.Key]);          
+        
+        components = tempComponents.ToArray();
+
+
+        //PASS 0c: calculate how many binary inputs and outputs pins are needed for ternary encoded binary in verilog
+        int totalInputs = -1;
+        int totalOutputs = -1;
+
+        foreach (var c in components)
+        {
+            if (c.name.Contains("Input"))
+            {
+                var inputControler = c.GetComponentInChildren<InputController>();
+
+                for (int i = 0; i < inputControler.Buttons.Count; i++)
+                {
+                    var bi = inputControler.Buttons[i].GetComponent<BtnInput>();
+                    if (bi.DropdownLabel.text.Contains("Binary"))
+                        totalInputs += 1;
+                    else
+                        totalInputs += 2;
+                }
+            }
+
+            if (c.name.Contains("Output"))
+            {
+                var inputControler = c.GetComponentInChildren<InputController>();
+
+                for (int i = 0; i < inputControler.Buttons.Count; i++)
+                {
+                    var bi = inputControler.Buttons[i].GetComponent<BtnInput>();
+                    if (bi.DropdownLabel.text.Contains("Binary"))
+                        totalOutputs += 1;
+                    else
+                        totalOutputs += 2;
+                }
+            }
+        }
+
+
+
+
+        //PASS 1: input names with semantic names
         Dictionary<int, float> inputOrder = new Dictionary<int, float>(); //needed for ordering the labels from low to high (using transform.position.y)
+    
         foreach (var c in components)
         {
             int validButtons = 0;
@@ -159,16 +215,17 @@ public class CircuitGenerator : MonoBehaviour
                             uid++;
                             inputRadix.Add(bi.DropdownLabel.text);
                             radixLookup.Add(portIndex + "_" + id, bi.DropdownLabel.text);
-                            if (bi.DropdownLabel.text.Contains("Binary"))
-                            {
-                                portLookup.Add(portIndex + "_" + id, uniquePortId);
-                                uniquePortId += 1;
-                            }
-                            else
-                            {
-                                portLookup.Add(portIndex + "_" + id, uniquePortId);
-                                uniquePortId += 2;
-                            }
+
+                    if (bi.DropdownLabel.text.Contains("Binary"))
+                    {
+                        portLookup.Add(portIndex + "_" + id, totalInputs);
+                        totalInputs -= 1;
+                    }
+                    else
+                    {
+                        portLookup.Add(portIndex + "_" + id, totalInputs-1);
+                        totalInputs -= 2;
+                    }
                 }
 
                 if (validButtons > 0)
@@ -183,26 +240,38 @@ public class CircuitGenerator : MonoBehaviour
                 }
             }
         }
+        //PASS 1b: reorder inputs one more time such that they are MSB first in verilog
+        ////reorder the labels
+        //componentHeights.Clear();
+        //tempComponents.Clear();
 
-        ////reorder the input labels to get correct interface order
-        //List<string> tempinputNames = new List<string>();
-        //List<string> tempInputRadix = new List<string>();
-
-        ////sort inputOrder
-        //var sorted = inputOrder.OrderBy(key => key.Value);
-
-        ////assign tempLabels in correct order
-        //foreach (var item in sorted)
+        //for (int i = 0; i < components.Length; i++)
         //{
-        //    tempinputNames.Add(inputNames[item.Key]);
-        //    tempInputRadix.Add(inputRadix[item.Key]);
+        //    if (components[i].name.Contains("Input"))
+        //        componentHeights.Add(i, components[i].transform.position.y);
         //}
 
-        //inputNames = tempinputNames;
-        //inputRadix = tempInputRadix;
+        ////sort inputOrder
+        //sorted = componentHeights.OrderByDescending(key => key.Value); //top input components first (descending order)
 
+        ////assign tempLabels in correct order (add the sorted inputs to the rest)
+        //foreach (var item in sorted)
+        //{
+        //    var inputControler = components[item.Key].GetComponentInChildren<InputController>();
+        //    string id = inputControler.GetInstanceID().ToString();
+
+        //    for (int i = 0; i < inputControler.Buttons.Count; i++)
+        //    {
+        //        var bi = inputControler.Buttons[i].GetComponent<BtnInput>();
+        //        int portIndex = bi._portIndex;
+
+        //        string name = (string) inputLOT[portIndex + "_" + id];
+        //        inputNamesVerilog.Add(name);
+        //    }
+        //}
+          
         int uidInput = uid;
-        uniquePortId = 0;
+  
         //PASS 2: output names with semantic names
         OrderedDictionary outputLOT = new OrderedDictionary();
         //create output names OrderedDictionary/hashtable, this code section is solely for adding the output label to an logic gate terminal, refactor?
@@ -233,17 +302,17 @@ public class CircuitGenerator : MonoBehaviour
                         outputRadix.Add(bi.DropdownLabel.text);
                         uid++;
                         radixLookup.Add(portIndex + "_" + id, bi.DropdownLabel.text);
+
                     if (bi.DropdownLabel.text.Contains("Binary"))
                     {
-                        portLookup.Add(portIndex + "_" + id, uniquePortId);
-                        uniquePortId += 1;
+                        portLookup.Add(portIndex + "_" + id, totalOutputs);
+                        totalOutputs -= 1;
                     }
                     else
                     {
-                        portLookup.Add(portIndex + "_" + id, uniquePortId);
-                        uniquePortId += 2;
-                    }
-                    //}
+                        portLookup.Add(portIndex + "_" + id, totalOutputs - 1);
+                        totalOutputs -= 2;
+                    }           
                 }
 
                 if (validButtons > 0)
@@ -907,19 +976,6 @@ public class CircuitGenerator : MonoBehaviour
             int lg_uid = 0;
             for (int i = inputComponents + outputComponents; i < (inputComponents + outputComponents +ttIndices.Count); i++)
             {
-                ////I dont like C# dictionaries anymore. No error is given when assigning to a non existing ID and instead it is added to the dictionary whilst not using the .Add function. Dangerous
-                ////find all keys in idLOT that contains idArray[i]. There can be multiple as the input and outputs of a logic gate are not named but have unique ports
-                //List<string> keys = new List<string>();
-                //foreach (DictionaryEntry id in nodesLOT)
-                //{
-                //    if (id.Key.ToString().Contains(idArray[i])) //match identifier of component
-                //        keys.Add(id.Key.ToString());
-                //}
-
-                ////update the value since we cannot do that during enumeration
-                //foreach (var key in keys)                
-                //    nodesLOT[key] = "f_" + ttIndices[i - inputComponents - outputComponents] + "_" + lg_uid.ToString();
-
                 ////we need to add "target" keys as well, since in netlist format source and target are the same name and thus only make source keys
                 foreach (var conn in connectionPairArray)
                 {
@@ -1020,24 +1076,7 @@ public class CircuitGenerator : MonoBehaviour
                 componentLOT.Add(idArray[i], new MRCS_Component(idArray[i], type, name, radix));
             }
 
-
-            //build components from connections
-            //we need to build the nets a little bit better by integating the order of inputs such that
-            //connection order should be irrelevant. For readability it should always start with 0,1,2,3 for input and ends with n-1, n for output
-            //in addition if a node has fanout>1 it should be consecutive. We use a linked list structure to insert fanout in between
-
-            //PASS 1: first find how many connections are direct input-output connections
-            //int inputoutputEqual = 0;
-            //for (int i = 0; i < connectionPairArray.Count; i++)
-            //{
-            //    var connParts = connectionPairArray[i].Split(' ');
-            //    MRCS_Component tempSrc = (MRCS_Component)componentLOT[connParts[0]];
-            //    MRCS_Component tempTgt = (MRCS_Component)componentLOT[connParts[2]];
-            //    if (tempSrc.Type.Equals("Input") && tempTgt.Type.Equals("Output"))
-            //        inputoutputEqual++;
-            //}
-
-            //PASS 2: second, reorder connections such that nodes with fanout >1 are below eachother
+            //reorder connections such that nodes with fanout >1 are below eachother
             //Parse again connectionpairarray and build a temparray with correct order (MRCS uses MSB first order for both input and output) from the 
             //For each fanout > 1 of input component node or fanout > 1 of logic gate/saved gate output node add them
             //
@@ -1147,6 +1186,7 @@ public class CircuitGenerator : MonoBehaviour
 
                 componentLOT[connParts[0]] = temp;
 
+
                 //Target 
                 temp = (MRCS_Component)componentLOT[connParts[2]];
              
@@ -1165,8 +1205,6 @@ public class CircuitGenerator : MonoBehaviour
                 if (radixSource.Contains("Ternary") && radixTarget.Contains("Binary"))
                     netName = "tnet_" + i.ToString() + "[1]";
 
-
-
                 if (temp.Type.Equals("Output"))
                     temp.OutputNodes.Add(new Node(connParts[2], connParts[3], (string)"out_" + connParts[3], netName, radixTarget));
                 else
@@ -1176,20 +1214,27 @@ public class CircuitGenerator : MonoBehaviour
             }
 
             //Hacky pass to correct the label_uid of output nodes as they start with an offset
+            //also used to get the interface details of the gate
             for (int i = 0; i < componentLOT.Count; i++)
             {
                 MRCS_Component c = (MRCS_Component) componentLOT[i];
                 if (c.Type.Equals("LogicGate") || c.Type.Equals("SavedGate"))
                 {
+                    c.NumInputPorts = c.InputNodes.Count;
+
                     for (int j = 0; j < c.OutputNodes.Count; j++)
                     {
-                        var parts = c.OutputNodes[j].Label_uid.Split('_');
+                        var parts = c.OutputNodes[j].Label_uid.Split('_'); //isnt .Port the easier?
                         var portWithOffset = parts[1];
                         int portAsInt = int.Parse(portWithOffset);
 
                         //subtract offset
                         portAsInt = portAsInt - c.InputNodes.Count;
                         c.OutputNodes[j].Label_uid = "out_" + portAsInt.ToString();
+
+                        //find largest port number
+                        if (portAsInt+1 > c.NumOutputPorts)
+                            c.NumOutputPorts = portAsInt+1; //since ports start at zero, number is plus 1
                     }
                 }
             }
@@ -1210,29 +1255,6 @@ public class CircuitGenerator : MonoBehaviour
             }
             verilines.Add("     input [" + (inputPorts - 1) + ":0] io_in,");
 
-            //int index = 0;
-            //foreach (DictionaryEntry id in componentLOT)
-            //{
-            //    var c = (MRCS_Component) id.Value;
-
-            //    if (c.Type.Equals("Input"))
-            //    {
-            //        Dictionary<string, string> fanoutLOT = new Dictionary<string, string>();
-
-            //foreach (var n in c.InputNodes)
-            //{
-            //    //prevent multiple definitions if a single input has fanout >1 
-            //    if (!fanoutLOT.ContainsKey(n.Label_uid))
-            //    { 
-            //        fanoutLOT.Add(n.Label_uid, n.Net);
-            //        //verilines.Add("     input [" + index.ToString() + ":" + index.ToString() + "] " + n.Label_uid + ",");
-            //        verilines.Add("     input [0:0] in_" + n.Port + ",");
-            //        index++;
-            //    }                       
-            //}
-            //    }   
-            //}
-
             //process outputs
             int outputPorts = 0;
             foreach (var or in outputRadix)
@@ -1243,27 +1265,7 @@ public class CircuitGenerator : MonoBehaviour
                     outputPorts += 2;
             }
             verilines.Add("     output [" + (outputPorts-1) + ":0] io_out");
-            
-            //index = 0;
-            //foreach (DictionaryEntry id in componentLOT)
-            //{
-            //    var c = (MRCS_Component)id.Value;
-
-            //    if (c.Type.Equals("Output"))
-            //    {
-            //        foreach (var n in c.OutputNodes)
-            //        {
-            //            //verilines.Add("     output [" + index.ToString() + ":" + index.ToString() + "] " + n.Label_uid + ",");
-            //            verilines.Add("     output [0:0] out_" + n.Port + ",");
-            //            index++;
-            //        }
-            //    }
-            //}
-
-            //we need to remove the last comma
-            //var templine = verilines[verilines.Count - 1];
-            //templine = templine.Substring(0, templine.Length - 1); //remove the last symbol which is a comma
-            //verilines[verilines.Count - 1] = templine;
+           
             var templine = "";
             verilines.Add(");");
             verilines.Add("");
@@ -1283,6 +1285,8 @@ public class CircuitGenerator : MonoBehaviour
                         //keep track of used input so that we can assign wires when fanout >1 
                         if (fanoutLOT.ContainsKey(n.Label_uid))
                         {
+                            n.isFanout = true;
+
                             if (n.Radix == "Binary")
                                 verilines.Add("wire " + n.Net + " = " + fanoutLOT[n.Label_uid].Net + ";");
                             else
@@ -1293,10 +1297,14 @@ public class CircuitGenerator : MonoBehaviour
                             fanoutLOT.Add(n.Label_uid, n);
                             var temp_uid = n.Label_uid.Split('_');
 
+                            string namePartsRaw = (string) inputLOT[(string)(n.Port + "_" + n.ComponentId)];
+                            var nameParts = namePartsRaw.Split("_");
+                            string comment = nameParts[1];
+
                             if (n.Radix == "Binary")
-                                verilines.Add("wire " + n.Net + " = io_in[" + (int) portLookup[(string)(n.Port + "_" + n.ComponentId)] + "];");
+                                verilines.Add("wire " + n.Net + " = io_in[" + (int) portLookup[(string)(n.Port + "_" + n.ComponentId)] + "]; //" + comment); 
                             else
-                                verilines.Add("wire [1:0] " + n.Net + " = io_in[" +((int)portLookup[n.Port + "_" + n.ComponentId] +1) + ":" + (int)portLookup[n.Port + "_" + n.ComponentId] + "];");
+                                verilines.Add("wire [1:0] " + n.Net + " = io_in[" +((int)portLookup[n.Port + "_" + n.ComponentId] +1) + ":" + (int)portLookup[n.Port + "_" + n.ComponentId] + "]; //" + comment);
                         }
 
                         curNet = int.Parse(n.Net.Substring(5));
@@ -1321,6 +1329,8 @@ public class CircuitGenerator : MonoBehaviour
                         //keep track of used output so that we can assign wires when fanout >1 
                         if (fanoutLOT.ContainsKey(n.Label_uid))
                         {
+                            n.isFanout = true;
+
                             if (n.Radix == "Binary")
                                 tempLines.Add(int.Parse(n.Net.Substring(5)), "wire " + n.Net + " = " + fanoutLOT[n.Label_uid].Net + ";");
                             else
@@ -1355,10 +1365,14 @@ public class CircuitGenerator : MonoBehaviour
                     {
                         var temp_uid = n.Label_uid.Split('_');
 
+                        string namePartsRaw = (string)outputLOT[(string)(n.Port + "_" + n.ComponentId)];
+                        var nameParts = namePartsRaw.Split("_");
+                        string comment = nameParts[1];
+
                         if (n.Radix == "Binary")
-                            verilines.Add("assign io_out[" + (int)portLookup[(string)(n.Port + "_" + n.ComponentId)] + "] = " + n.Net + ";");
+                            verilines.Add("assign io_out[" + (int)portLookup[(string)(n.Port + "_" + n.ComponentId)] + "] = " + n.Net + "; //" + comment);
                         else
-                            verilines.Add("assign io_out[" + ((int)portLookup[(string)(n.Port + "_" + n.ComponentId)] + 1) + ":" + (int)portLookup[(string)(n.Port + "_" + n.ComponentId)] + "] = " + n.Net + ";");
+                            verilines.Add("assign io_out[" + ((int)portLookup[(string)(n.Port + "_" + n.ComponentId)] + 1) + ":" + (int)portLookup[(string)(n.Port + "_" + n.ComponentId)] + "] = " + n.Net + "; //" + comment);
                     }
 
                 }
@@ -1368,8 +1382,6 @@ public class CircuitGenerator : MonoBehaviour
             foreach (DictionaryEntry id in componentLOT)
             {
                 var c = (MRCS_Component)id.Value;
-
-                Dictionary<string, string> fanoutLOT = new Dictionary<string, string>();
 
                 if (c.Type.Equals("LogicGate"))
                 {
@@ -1381,64 +1393,42 @@ public class CircuitGenerator : MonoBehaviour
                     else
                         verilines.Add(labelParts[0] + "_" + labelParts[1] + "_bet"  + " LogicGate_" + labelParts[2] + " (");
 
-                    //This is a annoying bug that is extra problematic in verilog, the arity affets the order of ports (originates from an old discussion between Halvor and me at the very start of MRCS)
-                    //for arity 1 and 2 port 0 is 0 and port 1 is 1, but for arity 3 port 0 is 1, port 1 is 0 and port 2 is 2
-                    //with port 0 being the lowest significant bit. With saved components the order does not have this weird order, but then port 0 is the MSB :(
+                    switch (c.InputNodes.Count)
+                    {
+                        case 1:
+                                verilines.Add(".portA(" + c.InputNodes[0].Net + "),"); 
+                            break;
+                        case 2:
+                            for (int i = 0; i < c.InputNodes.Count; i++)
+                            {
+                                if (c.InputNodes[i].Port == "1")
+                                    verilines.Add(".portB(" + c.InputNodes[i].Net + "),");
+                                if (c.InputNodes[i].Port == "0")
+                                    verilines.Add(".portA(" + c.InputNodes[i].Net + "),");
+                            }   
+                            break;
+                        case 3:
+                            for (int i = 0; i < c.InputNodes.Count; i++)
+                            {
+                                if (c.InputNodes[i].Port == "2")
+                                    verilines.Add(".portC(" + c.InputNodes[i].Net + "),");
+                                if (c.InputNodes[i].Port == "1")
+                                    verilines.Add(".portB(" + c.InputNodes[i].Net + "),");
+                                if (c.InputNodes[i].Port == "0")
+                                    verilines.Add(".portA(" + c.InputNodes[i].Net + "),");                                
+                            }
+                            break;
+                    }
+                
 
-                    //We can actually fix this more elegantly by using named input/outputs in a refactor, see SavedGates
-                    int[] sortHelp = new int[c.InputNodes.Count];
-                    for (int i = 0; i < c.InputNodes.Count; i++)
-                    {
-                        sortHelp[int.Parse(c.InputNodes[i].Port)] = i;
-                    }
-
-                    //note the gates are mapped slightly differently internally due to a legacy bug.
-                    //Future implementation of both the spice netlist and verilog and both binary and ternary should have a straightforward implementation of port 0 being input A for both radii
-                    if (c.Radix == "Binary")
-                    {
-                        switch (c.InputNodes.Count)
-                        {
-                            case 1:
-                                verilines.Add(".in_0(" + c.InputNodes[sortHelp[0]].Net + "),"); //Input A
-                                break;
-                            case 2:
-                                verilines.Add(".in_1(" + c.InputNodes[sortHelp[1]].Net + "),"); //Input B
-                                verilines.Add(".in_0(" + c.InputNodes[sortHelp[0]].Net + "),"); //Input A
-                                break;
-                            case 3:
-                                verilines.Add(".in_2(" + c.InputNodes[sortHelp[2]].Net + "),"); //Input C
-                                verilines.Add(".in_1(" + c.InputNodes[sortHelp[0]].Net + "),"); //Input B
-                                verilines.Add(".in_0(" + c.InputNodes[sortHelp[1]].Net + "),"); //Input A
-                                break;
-                        }
-                    }
-                    else //ternary
-                    {
-                        switch (c.InputNodes.Count)
-                        {
-                            case 1:
-                                verilines.Add(".in_0(" + c.InputNodes[sortHelp[0]].Net + "),"); //Input A
-                                break;
-                            case 2:
-                                verilines.Add(".in_1(" + c.InputNodes[sortHelp[0]].Net + "),"); //Input B
-                                verilines.Add(".in_0(" + c.InputNodes[sortHelp[1]].Net + "),"); //Input A
-                                break;
-                            case 3:
-                                verilines.Add(".in_2(" + c.InputNodes[sortHelp[2]].Net + "),"); //Input C
-                                verilines.Add(".in_1(" + c.InputNodes[sortHelp[0]].Net + "),"); //Input B
-                                verilines.Add(".in_0(" + c.InputNodes[sortHelp[1]].Net + "),"); //Input A
-                                break;
-                        }
-                    }
 
                     //we do not need to order the outputs on the port since there is only one port
                     for (int i = 0; i < c.OutputNodes.Count; i++)
                     {
-                       //only add outputs once if there fanout is larger than 1 (fanout assignment is fixed in wire section)
-                        if (!fanoutLOT.ContainsKey(c.OutputNodes[i].Label_uid))
+                       //only take the port that can drive the wire (not a fanout)
+                        if (c.OutputNodes[i].isFanout == false)
                         {
-                            fanoutLOT.Add(c.OutputNodes[i].Label_uid, c.OutputNodes[i].Net);
-                            verilines.Add(".out_0" + "(" + c.OutputNodes[i].Net + "),");
+                            verilines.Add(".out" + "(" + c.OutputNodes[i].Net + "),");
                         }
                     }
 
@@ -1455,8 +1445,6 @@ public class CircuitGenerator : MonoBehaviour
             foreach (DictionaryEntry id in componentLOT)
             {
                 var c = (MRCS_Component)id.Value;
-
-                Dictionary<string, string> fanoutLOT = new Dictionary<string, string>();
 
                 if (c.Type.Equals("SavedGate"))
                 {
@@ -1477,8 +1465,9 @@ public class CircuitGenerator : MonoBehaviour
                     }
 
 
-                    for (int i = c.InputNodes.Count -1; i >= 0 ; i--) //LSB first (highest port)
+                    for (int i = 0; i < c.InputNodes.Count; i++) //MSB first (highest port)
                     {
+
                         orderedInputBitSlices += c.InputNodes[sortHelp[i]].Net;
                         orderedInputBitSlices += ",";
                     }
@@ -1490,23 +1479,21 @@ public class CircuitGenerator : MonoBehaviour
 
                     string orderedOutputBitSlices = "";
 
-                    sortHelp = new int[c.OutputNodes.Count];
+
+                    //filter the output nodes to only fanout ones AND sort them in order MSB first
+                    sortHelp = new int[c.NumOutputPorts];
+                    
                     for (int i = 0; i < c.OutputNodes.Count; i++)
                     {
-                        //we need to subtract input ports
-                        sortHelp[int.Parse(c.OutputNodes[i].Port) - c.InputNodes.Count] = i;
+                        //we need to subtract input ports and only check non-fanout ports since we need to drive the wire
+                        if (c.OutputNodes[i].isFanout == false)
+                            sortHelp[int.Parse(c.OutputNodes[i].Port) - c.InputNodes.Count] = i;
                     }
 
-                    for (int i = c.OutputNodes.Count -1; i >= 0; i--) //LSB first
+                    for (int i = 0 ; i < sortHelp.Length; i++) //MSB first
                     {
-                        //only add outputs once if there fanout is larger than 1 (fanout assignment is fixed in wire section)
-                        if (!fanoutLOT.ContainsKey(c.OutputNodes[sortHelp[i]].Label_uid))
-                        {
-                            fanoutLOT.Add(c.OutputNodes[sortHelp[i]].Label_uid, c.OutputNodes[sortHelp[i]].Net);
-
-                            orderedOutputBitSlices += c.OutputNodes[sortHelp[i]].Net;
-                            orderedOutputBitSlices += ",";
-                        }
+                        orderedOutputBitSlices += c.OutputNodes[sortHelp[i]].Net;
+                        orderedOutputBitSlices += ",";
                     }
 
                     //remove last ,
@@ -1641,9 +1628,11 @@ public class MRCS_Component
     public string Id;
     public string Name;
     public string Radix;
-    public List<Node> OutputNodes = new List<Node>();
-    public List<Node> InputNodes = new List<Node>();
-
+    public List<Node> OutputNodes = new List<Node>(); //this includes fanout
+    public List<Node> InputNodes = new List<Node>(); // no fan-in supported yet
+    public int NumInputPorts = 0;
+    public int NumOutputPorts = 0;
+  
     public MRCS_Component(string id, string type, string name, string radix)
     {
         Id = id;
@@ -1660,6 +1649,7 @@ public class Node
     public string Label_uid;
     public string Net;
     public string Radix;
+    public bool isFanout;
 
     public Node(string componentId, string port, string label_uid, string net, string radix)
     {
@@ -1668,6 +1658,7 @@ public class Node
         Label_uid = label_uid;
         Net = net;
         Radix = radix;
+        isFanout = false;
     }
 }
 

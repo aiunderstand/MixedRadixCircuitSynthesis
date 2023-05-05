@@ -214,41 +214,41 @@ public class SaveCircuit : MonoBehaviour
                 }
             }
         }
-     
+
 
 
         ////reorder the labels
-        //List<string> tempLabels = new List<string>();
-        //List<RadixOptions> tempRadixSource = new List<RadixOptions>();
+        List<string> tempLabels = new List<string>();
+        List<RadixOptions> tempRadixSource = new List<RadixOptions>();
 
-        ////sort inputOrder
-        //var sorted = inputOrder.OrderBy(key => key.Value);
+        //sort inputOrder
+        var sorted = inputOrder.OrderByDescending(key => key.Value);
 
-        ////assign tempLabels in correct order
-        //foreach (var item in sorted)
-        //{
-        //    tempLabels.Add(inputLabels[item.Key]);
-        //    tempRadixSource.Add(inputs[item.Key]);
-        //}
-        
-        //inputLabels = tempLabels;
-        //inputs = tempRadixSource;
+        //assign tempLabels in correct order
+        foreach (var item in sorted)
+        {
+            tempLabels.Add(inputLabels[item.Key]);
+            tempRadixSource.Add(inputs[item.Key]);
+        }
 
-        //List<string> tempLabels1 = new List<string>();
-        //List<RadixOptions> tempRadixSource1 = new List<RadixOptions>();
+        inputLabels = tempLabels;
+        inputs = tempRadixSource;
 
-        ////do the same for outputLabels
-        //sorted = outputOrder.OrderBy(key => key.Value);
+        List<string> tempLabels1 = new List<string>();
+        List<RadixOptions> tempRadixSource1 = new List<RadixOptions>();
 
-        ////assign tempLabels in correct order
-        //foreach (var item in sorted)
-        //{
-        //    tempLabels1.Add(outputLabels[item.Key]);
-        //    tempRadixSource1.Add(outputs[item.Key]);
-        //}
-        
-        //outputLabels = tempLabels1;
-        //outputs = tempRadixSource1;
+        //do the same for outputLabels
+        sorted = outputOrder.OrderByDescending(key => key.Value);
+
+        //assign tempLabels in correct order
+        foreach (var item in sorted)
+        {
+            tempLabels1.Add(outputLabels[item.Key]);
+            tempRadixSource1.Add(outputs[item.Key]);
+        }
+
+        outputLabels = tempLabels1;
+        outputs = tempRadixSource1;
 
         //create a temp saved component for preview/save screen
         tempComponentStructure = new SavedComponent(inputs, inputLabels, outputs, outputLabels);

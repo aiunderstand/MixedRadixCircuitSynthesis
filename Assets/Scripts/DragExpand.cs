@@ -66,9 +66,7 @@ public class DragExpand : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
                 go.transform.localPosition = new Vector3(go.transform.localPosition.x, go.transform.localPosition.y - (_AmountOfInputs * _btnInputSpacing), go.transform.localPosition.z);
 
                 //add to input controller
-                _AmountOfInputs++;
-                go.name = (_AmountOfInputs - 1).ToString(); //reuse name for index, refactor this is bad practise
-                go.GetComponent<BtnInput>()._portIndex = _AmountOfInputs - 1;
+                _AmountOfInputs++;                
                 go.GetComponent<BtnInput>().Connections.Clear();
                 go.GetComponent<BtnInput>().hasDownwardsLink = null;
                 go.GetComponent<BtnInput>().hasUpwardsLink = null;
@@ -100,6 +98,31 @@ public class DragExpand : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
                 }
             }
 
+
+            for (int j = 0; j < _AmountOfInputs; j++)
+            {
+                var go = InputController.Buttons[j].GetComponent<BtnInput>();
+                go.name = (_AmountOfInputs - 1 -j).ToString(); //reuse name for index, refactor this is bad practise
+                go.GetComponent<BtnInput>()._portIndex = (_AmountOfInputs - 1 - j);
+
+                //update connections
+                //id = #;Input;sourceId;sourceportId;-->;Output;targetId;targetportId;
+                //
+                foreach (var conn in go.Connections)
+                {
+                    var parts = conn.name.Split(';');
+                    if (InputController.name.Contains("Input"))
+                    {
+                        conn.name = parts[0] + ";" + parts[1] + ";" + parts[2] + ";" + (_AmountOfInputs - 1 - j).ToString() + ";" +
+                                    parts[4] + ";" + parts[5] + ";" + parts[6] + ";" + parts[7];
+                    }
+                    else
+                    {
+                        conn.name = parts[0] + ";" + parts[1] + ";" + parts[2] + ";" + parts[3] + ";" +
+                                    parts[4] + ";" + parts[5] + ";" + parts[6] + ";" + (_AmountOfInputs - 1 - j).ToString();
+                    }
+                }
+            }
         }
     }
 

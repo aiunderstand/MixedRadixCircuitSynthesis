@@ -5,7 +5,7 @@ module test;
   reg[7:0] io_in;
   wire[7:0] io_out;
   
-  c_BTM4raw c1 (.io_in(io_in), .io_out(io_out));
+  c_BTM4 c1 (.io_in(io_in), .io_out(io_out));
   
   //duration for each bit = 20 * timescale = 20 * 1 ns  = 20ns
   localparam delayNs = 20;  
@@ -31,7 +31,7 @@ module test;
       
   #delayNs;
   
-  //input (57) -> output () = -4 * -3 = 12
+  //input (57) -> output (eb) = -4 * -3 = 12
   io_in[7] = 0; //x1     
   io_in[6] = 1; 
   io_in[5] = 0; //x0
@@ -70,7 +70,7 @@ module test;
       
   #delayNs;
  
-  //input (3f) -> output (ff) = -3 * 0 = 0
+  //input (7f) -> output (ff) = -3 * 0 = 0
   io_in[7] = 0; //x1     
   io_in[6] = 1; 
   io_in[5] = 1; //x0
@@ -81,7 +81,6 @@ module test;
   io_in[1] = 1; //y0   
   io_in[0] = 1;
       
-  #delayNs;
   #delayNs;
     
   //input (79) -> output (db) = -3 * 2 = -6

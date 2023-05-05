@@ -3,10 +3,10 @@ module c_BTA4 (
      output [7:0] io_out
 );
 
-wire [1:0] tnet_0 = io_in[1:0];
-wire [1:0] tnet_1 = io_in[3:2];
-wire [1:0] tnet_2 = io_in[5:4];
-wire [1:0] tnet_3 = io_in[7:6];
+wire [1:0] tnet_0 = io_in[7:6]; //x1
+wire [1:0] tnet_1 = io_in[5:4]; //x0
+wire [1:0] tnet_2 = io_in[3:2]; //y1
+wire [1:0] tnet_3 = io_in[1:0]; //y0
 
 wire [1:0] tnet_4;
 wire [1:0] tnet_5;
@@ -17,29 +17,29 @@ wire [1:0] tnet_9;
 wire [1:0] tnet_10;
 wire [1:0] tnet_11;
 
-assign io_out[1:0] = tnet_8;
-assign io_out[3:2] = tnet_9;
-assign io_out[5:4] = tnet_10;
-assign io_out[7:6] = tnet_11;
+assign io_out[7:6] = tnet_8; //s3
+assign io_out[5:4] = tnet_9; //s2
+assign io_out[3:2] = tnet_10; //s1
+assign io_out[1:0] = tnet_11; //s0
 
 c_BTA SavedGate_0 (
-.io_in({tnet_3,tnet_1}),
-.io_out({tnet_11,tnet_4})
+.io_in({tnet_5,tnet_6}),
+.io_out({tnet_8,tnet_9})
 );
 
 c_BTA SavedGate_1 (
-.io_in({tnet_2,tnet_0}),
-.io_out({tnet_5,tnet_6})
+.io_in({tnet_0,tnet_2}),
+.io_out({tnet_5,tnet_4})
 );
 
 c_BTA SavedGate_2 (
-.io_in({tnet_4,tnet_5}),
-.io_out({tnet_10,tnet_7})
+.io_in({tnet_4,tnet_7}),
+.io_out({tnet_6,tnet_10})
 );
 
 c_BTA SavedGate_3 (
-.io_in({tnet_7,tnet_6}),
-.io_out({tnet_9,tnet_8})
+.io_in({tnet_1,tnet_3}),
+.io_out({tnet_7,tnet_11})
 );
 
 endmodule
@@ -49,66 +49,56 @@ module c_BTA (
      output [3:0] io_out
 );
 
-wire [1:0] tnet_0 = io_in[1:0];
+wire [1:0] tnet_0 = io_in[3:2]; //x
 wire [1:0] tnet_1 = tnet_0;
-wire [1:0] tnet_2 = io_in[3:2];
+wire [1:0] tnet_2 = io_in[1:0]; //y
 wire [1:0] tnet_3 = tnet_2;
 
 wire [1:0] tnet_4;
 wire [1:0] tnet_5;
 
-assign io_out[1:0] = tnet_4;
-assign io_out[3:2] = tnet_5;
+assign io_out[3:2] = tnet_4; //s1
+assign io_out[1:0] = tnet_5; //s0
 
 f_RDC_bet LogicGate_0 (
-.in_1(tnet_0),
-.in_0(tnet_3),
-.out_0(tnet_4)
+.portB(tnet_0),
+.portA(tnet_3),
+.out(tnet_4)
 );
 
 f_7PB_bet LogicGate_1 (
-.in_1(tnet_1),
-.in_0(tnet_2),
-.out_0(tnet_5)
+.portB(tnet_1),
+.portA(tnet_2),
+.out(tnet_5)
 );
 
 endmodule
 
 module f_7PB_bet (
-     input wire[1:0] in_0,
-     input wire[1:0] in_1,
-     output wire[1:0] out_0
+     input wire[1:0] portB,
+     input wire[1:0] portA,
+     output wire[1:0] out
      );
 
-     assign out_0 = 
-(in_0 == 2'b01) & (in_1 == 2'b01) ? 2'b10 :
-(in_0 == 2'b01) & (in_1 == 2'b11) ? 2'b01 :
-(in_0 == 2'b01) & (in_1 == 2'b10) ? 2'b11 :
-(in_0 == 2'b11) & (in_1 == 2'b01) ? 2'b01 :
-(in_0 == 2'b11) & (in_1 == 2'b11) ? 2'b11 :
-(in_0 == 2'b11) & (in_1 == 2'b10) ? 2'b10 :
-(in_0 == 2'b10) & (in_1 == 2'b01) ? 2'b11 :
-(in_0 == 2'b10) & (in_1 == 2'b11) ? 2'b10 :
-(in_0 == 2'b10) & (in_1 == 2'b10) ? 2'b01 :
-2'b00;
+     assign out = 
+    (portB == 2'b01) & (portA == 2'b01) ? 2'b10 :
+    (portB == 2'b11) & (portA == 2'b01) ? 2'b01 :
+    (portB == 2'b01) & (portA == 2'b11) ? 2'b01 :
+    (portB == 2'b10) & (portA == 2'b11) ? 2'b10 :
+    (portB == 2'b11) & (portA == 2'b10) ? 2'b10 :
+    (portB == 2'b10) & (portA == 2'b10) ? 2'b01 :
+     2'b11;
 endmodule
 
 module f_RDC_bet (
-     input wire[1:0] in_0,
-     input wire[1:0] in_1,
-     output wire[1:0] out_0
+     input wire[1:0] portB,
+     input wire[1:0] portA,
+     output wire[1:0] out
      );
 
-     assign out_0 = 
-(in_0 == 2'b01) & (in_1 == 2'b01) ? 2'b01 :
-(in_0 == 2'b01) & (in_1 == 2'b11) ? 2'b11 :
-(in_0 == 2'b01) & (in_1 == 2'b10) ? 2'b11 :
-(in_0 == 2'b11) & (in_1 == 2'b01) ? 2'b11 :
-(in_0 == 2'b11) & (in_1 == 2'b11) ? 2'b11 :
-(in_0 == 2'b11) & (in_1 == 2'b10) ? 2'b11 :
-(in_0 == 2'b10) & (in_1 == 2'b01) ? 2'b11 :
-(in_0 == 2'b10) & (in_1 == 2'b11) ? 2'b11 :
-(in_0 == 2'b10) & (in_1 == 2'b10) ? 2'b10 :
-2'b00;
+     assign out = 
+    (portB == 2'b01) & (portA == 2'b01) ? 2'b01 :
+    (portB == 2'b10) & (portA == 2'b10) ? 2'b10 :
+     2'b11;
 endmodule
 
