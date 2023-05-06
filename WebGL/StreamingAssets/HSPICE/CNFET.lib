@@ -1,0 +1,1991 @@
+********************************************************************
+* Carbon-nanotube Field Effect Transistors
+*             HSPICE Models
+*    		  Version 2.2.1
+*
+*   
+*   Copyright The Board Trustees of the Leland Stanford Junior University 2009
+*   Albert Lin, Gordon Wan, Jie Deng, Prof. H-S Philip Wong
+*
+*
+*   09/09/2008 Last Modified by Albert Lin.
+*
+*   Carbon-nanotube Field Effect Transistors HSPICE implementation 
+*   based on "A Circuit-Compatible SPICE model for Enhancement Mode
+*   Carbon Nanotube Field Effect Transistors" by Jie Deng and
+*   H-S Philip Wong.
+*   
+*   File    name: CNFET.lib
+*   Library name: CNFET
+********************************************************************
+
+********************************************************************
+* LICENSE AGREEMENT
+* Stanford Leland Junior University and the authors ("Stanford") 
+* provide these model files to you subject to the License Agreement, 
+* which may be updated by us from time to time without notice to you.
+* The most-up-to-date License Agreement can be found at
+* http://nano.stanford.edu/license.php 
+********************************************************************
+
+********************************************************************
+*   Top Level Models:
+*	NCNFET:          N-CNFET with Charge-Screening Effects 
+*                         from adjacent tubes.
+*	PCNFET:          P-CNFET with Charge-Screening Effects 
+*                         from adjacent tubes.
+*	NCNFET_uniform:  N-CNFET with Uniform Charge-Screening 
+*                         Effects from adjacent tubes.
+*	PCNFET_uniform:  P-CNFET with Charge-Screening Effects 
+*                         from adjacent tubes.
+********************************************************************
+
+********************************************************************
+* Standard Models:
+* The standard models account for charge-screening effects among 
+* multiple tubes within the same FET device by 
+* differentiating between tubes at the edge, which are affected by
+* one neighboring tube, and tubes in the middle, which are affected
+* by two neighboring tubes.
+*
+* No 'CNTPos' param is used.
+********************************************************************
+
+********************************************************************
+* Uniform-tubes Models (Simplified Version):
+* These models simplify charge-screening effects among multiple  
+* tubes within the same FET device by treating all tubes uniformly.
+*
+* Set CNTPos=0 to treat all tubes as middle tubes, i.e. with
+* two-sided screening effects.
+* Set CNTPos=1 to treat all tubes as edge tubes, i.e. with one-sided
+* screening effects. 
+********************************************************************
+
+********************************************************************
+* This model file ignores the coupling capacitance between two 
+* adjacent devices, e.g. nFET1, nFET2,...
+*
+* The coupling capacitance among the tubes under the same gate 
+* is in common-mode, thus zero.
+********************************************************************
+
+
+.LIB CNFET
+
+.PROTECT
+
+.OPTIONS PARHIER=LOCAL
+.OPTIONS EPSMIN=1E-99
+.OPTIONS EXPMAX=37
+
+.INC 'PARAMETERS.lib'
+
+* Last Modified: 09/09/2008 Albert Lin
+********************************************************************
+*
+* N-CNFET Level 1 Sub-circuit Definition
+*
+********************************************************************
+.SUBCKT NCNFET_L1  Drain  Gate  Source  Sub  CoupleNode  Lg=L_channel  Lgeff=Lceff  Lss=L_sd  Ldd=L_sd  Efi=Efo  Kgate=Kox  Tox=4e-9  Csub=20e-12  Ccsd=0  CoupleRatio=0  Vfbn=0  GF=0  Pitch=20e-9  n1=19  n2=0  CNTPos=1
+
+*********************************************************************
+* Parameter definition
+*********************************************************************
+
+* Csub is CNT to Substrate capacitance per unit length,approximated as 20af/um with 10um thick SiO2, 40af/um with 130nm thick SiO2
+
+*********************************************************************
+* The actual channel length used in simulation
+*********************************************************************
+* If Lg>Lgmax, Lgate=Lgmax to approximate the long channel device current
+.PARAM Lgate = 'MIN(Lg,Lgmax)'
+
+*********************************************************************
+* The Gate-CNT coupling capacitance
+*********************************************************************
+* The diameter of the CNT
+.PARAM dia='a*SQRT(POW(n1,2)+n1*n2+POW(n2,2))/pi'
+
+* The radius of the CNT.
+.PARAM rad='dia/2'
+
+* Oxide thickness
+.PARAM Hei='Tox+rad'
+
+* The inverse of the capacitance with the uniform Kgate dielectric material
+.PARAM RCo='log(2*Hei/dia + SQRT(POW(2*Hei/dia,2)-1))'
+
+* The inverese of the effects due to the image charge
+.PARAM RCimg='beta*log(2*Hei/(3*dia) + 2/3)'
+
+* The inverse of the capacitance with infinite spacing between CNTs
+.PARAM RCinf='RCo+RCimg'
+
+* The potential due to the adjacent CNT
+.PARAM Vadjc='0.5*log((POW(Pitch,2)+2*(Hei-rad)*(Hei+SQRT(POW(Hei,2)-POW(rad,2))))/(POW(Pitch,2)+2*(Hei-rad)*(Hei-SQRT(POW(Hei,2)-POW(rad,2)))))'
+
+* The potential due to the image charge of the adjacent CNT
+.PARAM Vadji='0.5*beta*log((POW(Hei+dia,2)+POW(Pitch,2)) / (9*POW(rad,2)+POW(Pitch,2)))*TANH((Hei+rad)/(Pitch-dia))'
+
+* The total potential contributed by the adjacent CNT and its image charge
+.PARAM RCadj='Vadjc+Vadji'
+
+* The ratio of image charge over real charge 
+.PARAM beta='(Kgate-Ksub)/(Kgate+Ksub)'
+
+* Capacitance pre-factor
+.PARAM Cprefactor='2*pi*Kgate*epso'
+
+* The gate to EdgeCNT coupling capacitance
+.PARAM Cedge='Cprefactor/(RCinf+RCadj)'
+
+* The gate to MidCNT coupling capacitance
+.PARAM Cmid='2*Cedge-Cprefactor/RCinf'
+
+* The gate capacitance, Cedge if CNTPos=1, Cmid if CNTPos=0 
+.PARAM Ci='Cedge*CNTPos+Cmid*(1-CNTPos)'
+
+* The coupling capacitance between the channel region of one CNT to the doped source/drain region of another CNT
+.PARAM Cc='(Cedge/Cmid-1)*Cedge*LOG(2*Pitch/dia)/LOG(Pitch/dia + SQRT(POW(Pitch/dia,2)-1))'
+
+* The total coupling capacitance between the channgel region of one CNT and the substrate, as well as source/drain islands
+.PARAM Csub_tot='Csub + Ccsd'
+
+* The ratio between actual gate capacitance and ideal gate capacitance
+.PARAM Cratio='Ci*RCinf/Cprefactor'
+
+**********************************************************************
+* The E-K disperation relationship, linear approximation around Ef point
+**********************************************************************
+* The first perpendicular wave number
+.PARAM K1='2*pi/(3*a*SQRT(POW(n1,2)+n1*n2+POW(n2,2)))'
+
+* The 2nd perpendicular wave number
+.PARAM K2='2*K1'
+
+* The parallel wave number
+.PARAM Kp1='2*pi/Lgate'
++      Kp2='2*Kp1'
++      Kp3='3*Kp1'
++      Kp4='4*Kp1'
++      Kp5='5*Kp1'
++      Kp6='6*Kp1'
++      Kp7='7*Kp1'
++      Kp8='8*Kp1'
++      Kp9='9*Kp1'
+
+* The energy of the perpendicular component of the mth sub-band, above Ei
+.PARAM E1='Vpi*pi/SQRT(3*(POW(n1,2)+n1*n2+POW(n2,2)))'
++      E2='2*E1'
+
+* The energy of the (m,n)th sub-band, above Ei
+.PARAM CoeffE='SQRT(3)/2*a*Vpi'
++      E11='CoeffE*SQRT(POW(K1,2)+POW(Kp1,2))'
++      E12='CoeffE*SQRT(POW(K1,2)+POW(Kp2,2))'
++      E13='CoeffE*SQRT(POW(K1,2)+POW(Kp3,2))'
++      E14='CoeffE*SQRT(POW(K1,2)+POW(Kp4,2))'
++      E15='CoeffE*SQRT(POW(K1,2)+POW(Kp5,2))'
++      E16='CoeffE*SQRT(POW(K1,2)+POW(Kp6,2))'
++      E17='CoeffE*SQRT(POW(K1,2)+POW(Kp7,2))'
++      E18='CoeffE*SQRT(POW(K1,2)+POW(Kp8,2))'
++      E19='CoeffE*SQRT(POW(K1,2)+POW(Kp9,2))'
+
++      E21='CoeffE*SQRT(POW(K2,2)+POW(Kp1,2))'
++      E22='CoeffE*SQRT(POW(K2,2)+POW(Kp2,2))'
++      E23='CoeffE*SQRT(POW(K2,2)+POW(Kp3,2))'
++      E24='CoeffE*SQRT(POW(K2,2)+POW(Kp4,2))'
++      E25='CoeffE*SQRT(POW(K2,2)+POW(Kp5,2))'
++      E26='CoeffE*SQRT(POW(K2,2)+POW(Kp6,2))'
++      E27='CoeffE*SQRT(POW(K2,2)+POW(Kp7,2))'
++      E28='CoeffE*SQRT(POW(K2,2)+POW(Kp8,2))'
++      E29='CoeffE*SQRT(POW(K2,2)+POW(Kp9,2))'
+
+* The kinetic energy of the mth sub-band
+.PARAM En11='E11-E1'
++      En12='E12-E1'
++      En13='E13-E1'
++      En14='E14-E1'
++      En15='E15-E1'
++      En16='E16-E1'
++      En17='E17-E1'
++      En18='E18-E1'
++      En19='E19-E1'
+
++      En21='E21-E2'
++      En22='E22-E2'
++      En23='E23-E2'
++      En24='E24-E2'
++      En25='E25-E2'
++      En26='E26-E2'
++      En27='E27-E2'
++      En28='E28-E2'
++      En29='E29-E2'
+
+* The coefficients of Jmn
+.PARAM CocoJ='SQRT(3)*a*pi*Vpi'
++      Coeff_J11 = 'Kp1/SQRT(POW(K1,2)+POW(Kp1,2))'
++      Coeff_J12 = 'Kp2/SQRT(POW(K1,2)+POW(Kp2,2))'
++      Coeff_J13 = 'Kp3/SQRT(POW(K1,2)+POW(Kp3,2))'
++      Coeff_J14 = 'Kp4/SQRT(POW(K1,2)+POW(Kp4,2))'
++      Coeff_J15 = 'Kp5/SQRT(POW(K1,2)+POW(Kp5,2))'
++      Coeff_J16 = 'Kp6/SQRT(POW(K1,2)+POW(Kp6,2))'
++      Coeff_J17 = 'Kp7/SQRT(POW(K1,2)+POW(Kp7,2))'
++      Coeff_J18 = 'Kp8/SQRT(POW(K1,2)+POW(Kp8,2))'
++      Coeff_J19 = 'Kp9/SQRT(POW(K1,2)+POW(Kp9,2))'
+
++      Coeff_J21 = 'Kp1/SQRT(POW(K2,2)+POW(Kp1,2))'
++      Coeff_J22 = 'Kp2/SQRT(POW(K2,2)+POW(Kp2,2))'
++      Coeff_J23 = 'Kp3/SQRT(POW(K2,2)+POW(Kp3,2))'
++      Coeff_J24 = 'Kp4/SQRT(POW(K2,2)+POW(Kp4,2))'
++      Coeff_J25 = 'Kp5/SQRT(POW(K2,2)+POW(Kp5,2))'
++      Coeff_J26 = 'Kp6/SQRT(POW(K2,2)+POW(Kp6,2))'
++      Coeff_J27 = 'Kp7/SQRT(POW(K2,2)+POW(Kp7,2))'
++      Coeff_J28 = 'Kp8/SQRT(POW(K2,2)+POW(Kp8,2))'
++      Coeff_J29 = 'Kp9/SQRT(POW(K2,2)+POW(Kp9,2))'
+
+**********************************************************************
+* The carrier effective mass of the 1st and the 2nd subband, for CNT
+*********************************************************************
+.PARAM meff1 = '2*h_ba*h_ba*K1/(SQRT(3)*a*q*Vpi)/1e40'
++      meff2 = '2*h_ba*h_ba*K2/(SQRT(3)*a*q*Vpi)/1e40'
+
+**********************************************************************
+* The transmission probability for BTBT
+*********************************************************************
+.PARAM Efield(Vds,phib) = '(Vds+Efi-phib)/L_relax'
+
++	   Eg_eff1 = 'E1' $ Efi/(Vds+Efi-phib)'
++	   Eg_eff2 = 'E2' $ Efi/(Vds+Efi-phib)'
+
++      Ef1(Efield,Vds,phib) = 'SQRT(2)*h_ba*Efield/(pi*SQRT(meff1*2*q*Eg_eff1))/1e20'
++      Ef2(Efield,Vds,phib) = 'SQRT(2)*h_ba*Efield/(pi*SQRT(meff2*2*q*Eg_eff2))/1e20'
+
++      Tbtbt1(Vds,phib) = 'pi*pi/9*EXP(-Eg_eff1/Ef1(Efield(Vds,phib),Vds,phib))'
++      Tbtbt2(Vds,phib) = 'pi*pi/9*EXP(-Eg_eff2/Ef2(Efield(Vds,phib),Vds,phib))'
+
+*********************************************************************
+* The current component of the mth sub-band.
+*********************************************************************
+.PARAM fermi_s11(delta_phib) = '1/(1+exp((E11-delta_phib)/kT))'
++      fermi_s12(delta_phib) = '1/(1+exp((E12-delta_phib)/kT))'
++      fermi_s13(delta_phib) = '1/(1+exp((E13-delta_phib)/kT))'
++      fermi_s14(delta_phib) = '1/(1+exp((E14-delta_phib)/kT))'
++      fermi_s15(delta_phib) = '1/(1+exp((E15-delta_phib)/kT))'
++      fermi_s16(delta_phib) = '1/(1+exp((E16-delta_phib)/kT))'
++      fermi_s17(delta_phib) = '1/(1+exp((E17-delta_phib)/kT))'
++      fermi_s18(delta_phib) = '1/(1+exp((E18-delta_phib)/kT))'
++      fermi_s19(delta_phib) = '1/(1+exp((E19-delta_phib)/kT))'
+
++      fermi_s21(delta_phib) = '1/(1+exp((E21-delta_phib)/kT))'
++      fermi_s22(delta_phib) = '1/(1+exp((E22-delta_phib)/kT))'
++      fermi_s23(delta_phib) = '1/(1+exp((E23-delta_phib)/kT))'
++      fermi_s24(delta_phib) = '1/(1+exp((E24-delta_phib)/kT))'
++      fermi_s25(delta_phib) = '1/(1+exp((E25-delta_phib)/kT))'
++      fermi_s26(delta_phib) = '1/(1+exp((E26-delta_phib)/kT))'
++      fermi_s27(delta_phib) = '1/(1+exp((E27-delta_phib)/kT))'
++      fermi_s28(delta_phib) = '1/(1+exp((E28-delta_phib)/kT))'
++      fermi_s29(delta_phib) = '1/(1+exp((E29-delta_phib)/kT))'
+
++      fermi_d11(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E11-delta_phib)/kT))'
++      fermi_d12(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E12-delta_phib)/kT))'
++      fermi_d13(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E13-delta_phib)/kT))'
++      fermi_d14(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E14-delta_phib)/kT))'
++      fermi_d15(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E15-delta_phib)/kT))'
++      fermi_d16(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E16-delta_phib)/kT))'
++      fermi_d17(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E17-delta_phib)/kT))'
++      fermi_d18(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E18-delta_phib)/kT))'
++      fermi_d19(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E19-delta_phib)/kT))'
+
++      fermi_d21(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E21-delta_phib)/kT))'
++      fermi_d22(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E22-delta_phib)/kT))'
++      fermi_d23(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E23-delta_phib)/kT))'
++      fermi_d24(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E24-delta_phib)/kT))'
++      fermi_d25(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E25-delta_phib)/kT))'
++      fermi_d26(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E26-delta_phib)/kT))'
++      fermi_d27(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E27-delta_phib)/kT))'
++      fermi_d28(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E28-delta_phib)/kT))'
++      fermi_d29(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E29-delta_phib)/kT))'
+
++      fermi_op10(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E1-delta_phib)/kT))'
++      fermi_op11(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E11-delta_phib)/kT))'
++      fermi_op12(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E12-delta_phib)/kT))'
++      fermi_op13(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E13-delta_phib)/kT))'
++      fermi_op14(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E14-delta_phib)/kT))'
++      fermi_op15(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E15-delta_phib)/kT))'
++      fermi_op16(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E16-delta_phib)/kT))'
++      fermi_op17(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E17-delta_phib)/kT))'
++      fermi_op18(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E18-delta_phib)/kT))'
++      fermi_op19(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E19-delta_phib)/kT))'
+
++      fermi_op20(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E2-delta_phib)/kT))'
++      fermi_op21(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E21-delta_phib)/kT))'
++      fermi_op22(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E22-delta_phib)/kT))'
++      fermi_op23(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E23-delta_phib)/kT))'
++      fermi_op24(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E24-delta_phib)/kT))'
++      fermi_op25(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E25-delta_phib)/kT))'
++      fermi_op26(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E26-delta_phib)/kT))'
++      fermi_op27(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E27-delta_phib)/kT))'
++      fermi_op28(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E28-delta_phib)/kT))'
++      fermi_op29(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E29-delta_phib)/kT))'
+
+* The factor DOS(m,n)/DOSo for channel region
++	   FDOS10(offset) = '(E1-offset)/SQRT(abs(POW((E1-offset),2)-POW(E1,2)))*1e-14'
++	   FDOS11(offset) = '(E11-offset)/SQRT(abs(POW((E11-offset),2)-POW(E1,2)))*max(En11-offset,1e-14)'
++	   FDOS12(offset) = '(E12-offset)/SQRT(abs(POW((E12-offset),2)-POW(E1,2)))*max(En12-offset,1e-14)'
++	   FDOS13(offset) = '(E13-offset)/SQRT(abs(POW((E13-offset),2)-POW(E1,2)))*max(En13-offset,1e-14)'
++	   FDOS14(offset) = '(E14-offset)/SQRT(abs(POW((E14-offset),2)-POW(E1,2)))*max(En14-offset,1e-14)'
++	   FDOS15(offset) = '(E15-offset)/SQRT(abs(POW((E15-offset),2)-POW(E1,2)))*max(En15-offset,1e-14)'
++	   FDOS16(offset) = '(E16-offset)/SQRT(abs(POW((E16-offset),2)-POW(E1,2)))*max(En16-offset,1e-14)'
++	   FDOS17(offset) = '(E17-offset)/SQRT(abs(POW((E17-offset),2)-POW(E1,2)))*max(En17-offset,1e-14)'
++	   FDOS18(offset) = '(E18-offset)/SQRT(abs(POW((E18-offset),2)-POW(E1,2)))*max(En18-offset,1e-14)'
++	   FDOS19(offset) = '(E19-offset)/SQRT(abs(POW((E19-offset),2)-POW(E1,2)))*max(En19-offset,1e-14)'
+
++	   FDOS20(offset) = '(E2-offset)/SQRT(abs(POW((E2-offset),2)-POW(E2,2)))*1e-14'
++	   FDOS21(offset) = '(E21-offset)/SQRT(abs(POW((E21-offset),2)-POW(E2,2)))*max(En21-offset,1e-14)'
++	   FDOS22(offset) = '(E22-offset)/SQRT(abs(POW((E22-offset),2)-POW(E2,2)))*max(En22-offset,1e-14)'
++	   FDOS23(offset) = '(E23-offset)/SQRT(abs(POW((E23-offset),2)-POW(E2,2)))*max(En23-offset,1e-14)'
++	   FDOS24(offset) = '(E24-offset)/SQRT(abs(POW((E24-offset),2)-POW(E2,2)))*max(En24-offset,1e-14)'
++	   FDOS25(offset) = '(E25-offset)/SQRT(abs(POW((E25-offset),2)-POW(E2,2)))*max(En25-offset,1e-14)'
++	   FDOS26(offset) = '(E26-offset)/SQRT(abs(POW((E26-offset),2)-POW(E2,2)))*max(En26-offset,1e-14)'
++	   FDOS27(offset) = '(E27-offset)/SQRT(abs(POW((E27-offset),2)-POW(E2,2)))*max(En27-offset,1e-14)'
++	   FDOS28(offset) = '(E28-offset)/SQRT(abs(POW((E28-offset),2)-POW(E2,2)))*max(En28-offset,1e-14)'
++	   FDOS29(offset) = '(E29-offset)/SQRT(abs(POW((E29-offset),2)-POW(E2,2)))*max(En29-offset,1e-14)'
+
+* The factor DOS(m,n)/DOSo for drain side
++	   FDOS_d10(Vds,delta_phib,offset) = '(E1+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E1+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E1+Vds-delta_phib-offset,1e-14)'       
++	   FDOS_d11(Vds,delta_phib,offset) = '(E11+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E11+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E11+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d12(Vds,delta_phib,offset) = '(E12+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E12+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E12+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d13(Vds,delta_phib,offset) = '(E13+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E13+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E13+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d14(Vds,delta_phib,offset) = '(E14+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E14+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E14+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d15(Vds,delta_phib,offset) = '(E15+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E15+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E15+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d16(Vds,delta_phib,offset) = '(E16+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E16+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E16+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d17(Vds,delta_phib,offset) = '(E17+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E17+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E17+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d18(Vds,delta_phib,offset) = '(E18+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E18+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E18+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d19(Vds,delta_phib,offset) = '(E19+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E19+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E19+Vds-delta_phib-offset,1e-14)'                          
+
++	   FDOS_d20(Vds,delta_phib,offset) = '(E2+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E2+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E2+Vds-delta_phib-offset,1e-14)'  
++	   FDOS_d21(Vds,delta_phib,offset) = '(E21+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E21+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E21+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d22(Vds,delta_phib,offset) = '(E22+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E22+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E22+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d23(Vds,delta_phib,offset) = '(E23+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E23+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E23+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d24(Vds,delta_phib,offset) = '(E24+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E24+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E24+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d25(Vds,delta_phib,offset) = '(E25+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E25+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E25+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d26(Vds,delta_phib,offset) = '(E26+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E26+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E26+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d27(Vds,delta_phib,offset) = '(E27+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E27+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E27+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d28(Vds,delta_phib,offset) = '(E28+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E28+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E28+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d29(Vds,delta_phib,offset) = '(E29+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E29+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E29+Vds-delta_phib-offset,1e-14)'                          
+                       
+* the AP MFP                            
++      l_ap11(Vds,delta_phib)='lambda_ap/(FDOS11(0)*(1-fermi_d11(Vds,delta_phib)))'
++      l_ap12(Vds,delta_phib)='lambda_ap/(FDOS12(0)*(1-fermi_d12(Vds,delta_phib)))'
++      l_ap13(Vds,delta_phib)='lambda_ap/(FDOS13(0)*(1-fermi_d13(Vds,delta_phib)))'
++      l_ap14(Vds,delta_phib)='lambda_ap/(FDOS14(0)*(1-fermi_d14(Vds,delta_phib)))'
++      l_ap15(Vds,delta_phib)='lambda_ap/(FDOS15(0)*(1-fermi_d15(Vds,delta_phib)))'
++      l_ap16(Vds,delta_phib)='lambda_ap/(FDOS16(0)*(1-fermi_d16(Vds,delta_phib)))'
++      l_ap17(Vds,delta_phib)='lambda_ap/(FDOS17(0)*(1-fermi_d17(Vds,delta_phib)))'
++      l_ap18(Vds,delta_phib)='lambda_ap/(FDOS18(0)*(1-fermi_d18(Vds,delta_phib)))'
++      l_ap19(Vds,delta_phib)='lambda_ap/(FDOS19(0)*(1-fermi_d19(Vds,delta_phib)))'
+
++      l_ap21(Vds,delta_phib)='lambda_ap/(FDOS21(0)*(1-fermi_d21(Vds,delta_phib)))'
++      l_ap22(Vds,delta_phib)='lambda_ap/(FDOS22(0)*(1-fermi_d22(Vds,delta_phib)))'
++      l_ap23(Vds,delta_phib)='lambda_ap/(FDOS23(0)*(1-fermi_d23(Vds,delta_phib)))'
++      l_ap24(Vds,delta_phib)='lambda_ap/(FDOS24(0)*(1-fermi_d24(Vds,delta_phib)))'
++      l_ap25(Vds,delta_phib)='lambda_ap/(FDOS25(0)*(1-fermi_d25(Vds,delta_phib)))'
++      l_ap26(Vds,delta_phib)='lambda_ap/(FDOS26(0)*(1-fermi_d26(Vds,delta_phib)))'
++      l_ap27(Vds,delta_phib)='lambda_ap/(FDOS27(0)*(1-fermi_d27(Vds,delta_phib)))'
++      l_ap28(Vds,delta_phib)='lambda_ap/(FDOS28(0)*(1-fermi_d28(Vds,delta_phib)))'
++      l_ap29(Vds,delta_phib)='lambda_ap/(FDOS29(0)*(1-fermi_d29(Vds,delta_phib)))'
+
+* the OP MFP
++      l_op10(Vds,photon,delta_phib)='lambda_op/(FDOS10(photon)*(1-fermi_op10(Vds,photon,delta_phib)))'
++      l_op11(Vds,photon,delta_phib)='lambda_op/(FDOS11(photon)*(1-fermi_op11(Vds,photon,delta_phib)))'
++      l_op12(Vds,photon,delta_phib)='lambda_op/(FDOS12(photon)*(1-fermi_op12(Vds,photon,delta_phib)))'
++      l_op13(Vds,photon,delta_phib)='lambda_op/(FDOS13(photon)*(1-fermi_op13(Vds,photon,delta_phib)))'
++      l_op14(Vds,photon,delta_phib)='lambda_op/(FDOS14(photon)*(1-fermi_op14(Vds,photon,delta_phib)))'
++      l_op15(Vds,photon,delta_phib)='lambda_op/(FDOS15(photon)*(1-fermi_op15(Vds,photon,delta_phib)))'
++      l_op16(Vds,photon,delta_phib)='lambda_op/(FDOS16(photon)*(1-fermi_op16(Vds,photon,delta_phib)))'
++      l_op17(Vds,photon,delta_phib)='lambda_op/(FDOS17(photon)*(1-fermi_op17(Vds,photon,delta_phib)))'
++      l_op18(Vds,photon,delta_phib)='lambda_op/(FDOS18(photon)*(1-fermi_op18(Vds,photon,delta_phib)))'
++      l_op19(Vds,photon,delta_phib)='lambda_op/(FDOS19(photon)*(1-fermi_op19(Vds,photon,delta_phib)))'
+
++      l_op20(Vds,photon,delta_phib)='lambda_op/(FDOS20(photon)*(1-fermi_op20(Vds,photon,delta_phib)))'
++      l_op21(Vds,photon,delta_phib)='lambda_op/(FDOS21(photon)*(1-fermi_op21(Vds,photon,delta_phib)))'
++      l_op22(Vds,photon,delta_phib)='lambda_op/(FDOS22(photon)*(1-fermi_op22(Vds,photon,delta_phib)))'
++      l_op23(Vds,photon,delta_phib)='lambda_op/(FDOS23(photon)*(1-fermi_op23(Vds,photon,delta_phib)))'
++      l_op24(Vds,photon,delta_phib)='lambda_op/(FDOS24(photon)*(1-fermi_op24(Vds,photon,delta_phib)))'
++      l_op25(Vds,photon,delta_phib)='lambda_op/(FDOS25(photon)*(1-fermi_op25(Vds,photon,delta_phib)))'
++      l_op26(Vds,photon,delta_phib)='lambda_op/(FDOS26(photon)*(1-fermi_op26(Vds,photon,delta_phib)))'
++      l_op27(Vds,photon,delta_phib)='lambda_op/(FDOS27(photon)*(1-fermi_op27(Vds,photon,delta_phib)))'
++      l_op28(Vds,photon,delta_phib)='lambda_op/(FDOS28(photon)*(1-fermi_op28(Vds,photon,delta_phib)))'
++      l_op29(Vds,photon,delta_phib)='lambda_op/(FDOS29(photon)*(1-fermi_op29(Vds,photon,delta_phib)))'
+
+* the OP MFP at drain side
++      ld_op10(Vds,photon,delta_phib)='lambda_op/(FDOS_d10(Vds,delta_phib,photon)*(1-fermi_op10(Vds,photon,delta_phib)))'  
++      ld_op11(Vds,photon,delta_phib)='lambda_op/(FDOS_d11(Vds,delta_phib,photon)*(1-fermi_op11(Vds,photon,delta_phib)))'  
++      ld_op12(Vds,photon,delta_phib)='lambda_op/(FDOS_d12(Vds,delta_phib,photon)*(1-fermi_op12(Vds,photon,delta_phib)))'  
++      ld_op13(Vds,photon,delta_phib)='lambda_op/(FDOS_d13(Vds,delta_phib,photon)*(1-fermi_op13(Vds,photon,delta_phib)))'  
++      ld_op14(Vds,photon,delta_phib)='lambda_op/(FDOS_d14(Vds,delta_phib,photon)*(1-fermi_op14(Vds,photon,delta_phib)))'  
++      ld_op15(Vds,photon,delta_phib)='lambda_op/(FDOS_d15(Vds,delta_phib,photon)*(1-fermi_op15(Vds,photon,delta_phib)))'  
++      ld_op16(Vds,photon,delta_phib)='lambda_op/(FDOS_d16(Vds,delta_phib,photon)*(1-fermi_op16(Vds,photon,delta_phib)))'  
++      ld_op17(Vds,photon,delta_phib)='lambda_op/(FDOS_d17(Vds,delta_phib,photon)*(1-fermi_op17(Vds,photon,delta_phib)))'  
++      ld_op18(Vds,photon,delta_phib)='lambda_op/(FDOS_d18(Vds,delta_phib,photon)*(1-fermi_op18(Vds,photon,delta_phib)))'  
++      ld_op19(Vds,photon,delta_phib)='lambda_op/(FDOS_d19(Vds,delta_phib,photon)*(1-fermi_op19(Vds,photon,delta_phib)))'  
+
++      ld_op20(Vds,photon,delta_phib)='lambda_op/(FDOS_d20(Vds,delta_phib,photon)*(1-fermi_op20(Vds,photon,delta_phib)))'  
++      ld_op21(Vds,photon,delta_phib)='lambda_op/(FDOS_d21(Vds,delta_phib,photon)*(1-fermi_op21(Vds,photon,delta_phib)))'  
++      ld_op22(Vds,photon,delta_phib)='lambda_op/(FDOS_d22(Vds,delta_phib,photon)*(1-fermi_op22(Vds,photon,delta_phib)))'  
++      ld_op23(Vds,photon,delta_phib)='lambda_op/(FDOS_d23(Vds,delta_phib,photon)*(1-fermi_op23(Vds,photon,delta_phib)))'  
++      ld_op24(Vds,photon,delta_phib)='lambda_op/(FDOS_d24(Vds,delta_phib,photon)*(1-fermi_op24(Vds,photon,delta_phib)))'  
++      ld_op25(Vds,photon,delta_phib)='lambda_op/(FDOS_d25(Vds,delta_phib,photon)*(1-fermi_op25(Vds,photon,delta_phib)))'  
++      ld_op26(Vds,photon,delta_phib)='lambda_op/(FDOS_d26(Vds,delta_phib,photon)*(1-fermi_op26(Vds,photon,delta_phib)))'  
++      ld_op27(Vds,photon,delta_phib)='lambda_op/(FDOS_d27(Vds,delta_phib,photon)*(1-fermi_op27(Vds,photon,delta_phib)))'  
++      ld_op28(Vds,photon,delta_phib)='lambda_op/(FDOS_d28(Vds,delta_phib,photon)*(1-fermi_op28(Vds,photon,delta_phib)))'  
++      ld_op29(Vds,photon,delta_phib)='lambda_op/(FDOS_d29(Vds,delta_phib,photon)*(1-fermi_op29(Vds,photon,delta_phib)))'  
+
+* the effective mean path due to both AP/OP scattering
++      l_eff11(Vds,photon,delta_phib) = '1/(1/l_ap11(Vds,delta_phib)+1/l_op11(Vds,photon,delta_phib))'
++      l_eff12(Vds,photon,delta_phib) = '1/(1/l_ap12(Vds,delta_phib)+1/l_op12(Vds,photon,delta_phib))'
++      l_eff13(Vds,photon,delta_phib) = '1/(1/l_ap13(Vds,delta_phib)+1/l_op13(Vds,photon,delta_phib))'
++      l_eff14(Vds,photon,delta_phib) = '1/(1/l_ap14(Vds,delta_phib)+1/l_op14(Vds,photon,delta_phib))'
++      l_eff15(Vds,photon,delta_phib) = '1/(1/l_ap15(Vds,delta_phib)+1/l_op15(Vds,photon,delta_phib))'
++      l_eff16(Vds,photon,delta_phib) = '1/(1/l_ap16(Vds,delta_phib)+1/l_op16(Vds,photon,delta_phib))'
++      l_eff17(Vds,photon,delta_phib) = '1/(1/l_ap17(Vds,delta_phib)+1/l_op17(Vds,photon,delta_phib))'
++      l_eff18(Vds,photon,delta_phib) = '1/(1/l_ap18(Vds,delta_phib)+1/l_op18(Vds,photon,delta_phib))'
++      l_eff19(Vds,photon,delta_phib) = '1/(1/l_ap19(Vds,delta_phib)+1/l_op19(Vds,photon,delta_phib))'
+
++      l_eff21(Vds,photon,delta_phib) = '1/(1/l_ap21(Vds,delta_phib)+1/l_op21(Vds,photon,delta_phib))'
++      l_eff22(Vds,photon,delta_phib) = '1/(1/l_ap22(Vds,delta_phib)+1/l_op22(Vds,photon,delta_phib))'
++      l_eff23(Vds,photon,delta_phib) = '1/(1/l_ap23(Vds,delta_phib)+1/l_op23(Vds,photon,delta_phib))'
++      l_eff24(Vds,photon,delta_phib) = '1/(1/l_ap24(Vds,delta_phib)+1/l_op24(Vds,photon,delta_phib))'
++      l_eff25(Vds,photon,delta_phib) = '1/(1/l_ap25(Vds,delta_phib)+1/l_op25(Vds,photon,delta_phib))'
++      l_eff26(Vds,photon,delta_phib) = '1/(1/l_ap26(Vds,delta_phib)+1/l_op26(Vds,photon,delta_phib))'
++      l_eff27(Vds,photon,delta_phib) = '1/(1/l_ap27(Vds,delta_phib)+1/l_op27(Vds,photon,delta_phib))'
++      l_eff28(Vds,photon,delta_phib) = '1/(1/l_ap28(Vds,delta_phib)+1/l_op28(Vds,photon,delta_phib))'
++      l_eff29(Vds,photon,delta_phib) = '1/(1/l_ap29(Vds,delta_phib)+1/l_op29(Vds,photon,delta_phib))'
+
+* The transmission probability, only OP scattering
++      T11(Vds,photon,delta_phib) = '1/(1+Lg/l_op11(Vds,photon,delta_phib))'              
++      T12(Vds,photon,delta_phib) = '1/(1+Lg/l_op12(Vds,photon,delta_phib))'              
++      T13(Vds,photon,delta_phib) = '1/(1+Lg/l_op13(Vds,photon,delta_phib))'              
++      T14(Vds,photon,delta_phib) = '1/(1+Lg/l_op14(Vds,photon,delta_phib))'              
++      T15(Vds,photon,delta_phib) = '1/(1+Lg/l_op15(Vds,photon,delta_phib))'              
++      T16(Vds,photon,delta_phib) = '1/(1+Lg/l_op16(Vds,photon,delta_phib))'              
++      T17(Vds,photon,delta_phib) = '1/(1+Lg/l_op17(Vds,photon,delta_phib))'              
++      T18(Vds,photon,delta_phib) = '1/(1+Lg/l_op18(Vds,photon,delta_phib))'              
++      T19(Vds,photon,delta_phib) = '1/(1+Lg/l_op19(Vds,photon,delta_phib))'              
+
++      T21(Vds,photon,delta_phib) = '1/(1+Lg/l_op21(Vds,photon,delta_phib))'              
++      T22(Vds,photon,delta_phib) = '1/(1+Lg/l_op22(Vds,photon,delta_phib))'              
++      T23(Vds,photon,delta_phib) = '1/(1+Lg/l_op23(Vds,photon,delta_phib))'              
++      T24(Vds,photon,delta_phib) = '1/(1+Lg/l_op24(Vds,photon,delta_phib))'              
++      T25(Vds,photon,delta_phib) = '1/(1+Lg/l_op25(Vds,photon,delta_phib))'              
++      T26(Vds,photon,delta_phib) = '1/(1+Lg/l_op26(Vds,photon,delta_phib))'              
++      T27(Vds,photon,delta_phib) = '1/(1+Lg/l_op27(Vds,photon,delta_phib))'              
++      T28(Vds,photon,delta_phib) = '1/(1+Lg/l_op28(Vds,photon,delta_phib))'              
++      T29(Vds,photon,delta_phib) = '1/(1+Lg/l_op29(Vds,photon,delta_phib))'              
+
+* The current of substate (m,n)
++      current_sub11(Vds,photon,delta_phib)='(T11(Vds,photon,delta_phib)*fermi_s11(delta_phib) - T11(0,photon,delta_phib)*fermi_d11(Vds,delta_phib))*Coeff_J11'
++      current_sub12(Vds,photon,delta_phib)='(T12(Vds,photon,delta_phib)*fermi_s12(delta_phib) - T12(0,photon,delta_phib)*fermi_d12(Vds,delta_phib))*Coeff_J12'
++      current_sub13(Vds,photon,delta_phib)='(T13(Vds,photon,delta_phib)*fermi_s13(delta_phib) - T13(0,photon,delta_phib)*fermi_d13(Vds,delta_phib))*Coeff_J13'
++      current_sub14(Vds,photon,delta_phib)='(T14(Vds,photon,delta_phib)*fermi_s14(delta_phib) - T14(0,photon,delta_phib)*fermi_d14(Vds,delta_phib))*Coeff_J14'
++      current_sub15(Vds,photon,delta_phib)='(T15(Vds,photon,delta_phib)*fermi_s15(delta_phib) - T15(0,photon,delta_phib)*fermi_d15(Vds,delta_phib))*Coeff_J15'
++      current_sub16(Vds,photon,delta_phib)='(T16(Vds,photon,delta_phib)*fermi_s16(delta_phib) - T16(0,photon,delta_phib)*fermi_d16(Vds,delta_phib))*Coeff_J16'
++      current_sub17(Vds,photon,delta_phib)='(T17(Vds,photon,delta_phib)*fermi_s17(delta_phib) - T17(0,photon,delta_phib)*fermi_d17(Vds,delta_phib))*Coeff_J17'
++      current_sub18(Vds,photon,delta_phib)='(T18(Vds,photon,delta_phib)*fermi_s18(delta_phib) - T18(0,photon,delta_phib)*fermi_d18(Vds,delta_phib))*Coeff_J18'
++      current_sub19(Vds,photon,delta_phib)='(T19(Vds,photon,delta_phib)*fermi_s19(delta_phib) - T19(0,photon,delta_phib)*fermi_d19(Vds,delta_phib))*Coeff_J19'
+
++      current_sub21(Vds,photon,delta_phib)='(T21(Vds,photon,delta_phib)*fermi_s21(delta_phib) - T21(0,photon,delta_phib)*fermi_d21(Vds,delta_phib))*Coeff_J21'
++      current_sub22(Vds,photon,delta_phib)='(T22(Vds,photon,delta_phib)*fermi_s22(delta_phib) - T22(0,photon,delta_phib)*fermi_d22(Vds,delta_phib))*Coeff_J22'
++      current_sub23(Vds,photon,delta_phib)='(T23(Vds,photon,delta_phib)*fermi_s23(delta_phib) - T23(0,photon,delta_phib)*fermi_d23(Vds,delta_phib))*Coeff_J23'
++      current_sub24(Vds,photon,delta_phib)='(T24(Vds,photon,delta_phib)*fermi_s24(delta_phib) - T24(0,photon,delta_phib)*fermi_d24(Vds,delta_phib))*Coeff_J24'
++      current_sub25(Vds,photon,delta_phib)='(T25(Vds,photon,delta_phib)*fermi_s25(delta_phib) - T25(0,photon,delta_phib)*fermi_d25(Vds,delta_phib))*Coeff_J25'
++      current_sub26(Vds,photon,delta_phib)='(T26(Vds,photon,delta_phib)*fermi_s26(delta_phib) - T26(0,photon,delta_phib)*fermi_d26(Vds,delta_phib))*Coeff_J26'
++      current_sub27(Vds,photon,delta_phib)='(T27(Vds,photon,delta_phib)*fermi_s27(delta_phib) - T27(0,photon,delta_phib)*fermi_d27(Vds,delta_phib))*Coeff_J27'
++      current_sub28(Vds,photon,delta_phib)='(T28(Vds,photon,delta_phib)*fermi_s28(delta_phib) - T28(0,photon,delta_phib)*fermi_d28(Vds,delta_phib))*Coeff_J28'
++      current_sub29(Vds,photon,delta_phib)='(T29(Vds,photon,delta_phib)*fermi_s29(delta_phib) - T29(0,photon,delta_phib)*fermi_d29(Vds,delta_phib))*Coeff_J29'
+
+* The subband current
++      current_sub_1(Vds,photon,delta_phib) =  'current_sub11(Vds,photon,delta_phib)  + \\
+                                                current_sub12(Vds,photon,delta_phib)  + \\
+                                                current_sub13(Vds,photon,delta_phib)  + \\
+                                                current_sub14(Vds,photon,delta_phib)  + \\
+                                                current_sub15(Vds,photon,delta_phib)  + \\
+                                                current_sub16(Vds,photon,delta_phib)  + \\
+                                                current_sub17(Vds,photon,delta_phib)  + \\
+                                                current_sub18(Vds,photon,delta_phib)  + \\
+                                                current_sub19(Vds,photon,delta_phib)'
+
++      current_sub_2(Vds,photon,delta_phib) =  'current_sub21(Vds,photon,delta_phib)  + \\
+                                                current_sub22(Vds,photon,delta_phib)  + \\
+                                                current_sub23(Vds,photon,delta_phib)  + \\
+                                                current_sub24(Vds,photon,delta_phib)  + \\
+                                                current_sub25(Vds,photon,delta_phib)  + \\
+                                                current_sub26(Vds,photon,delta_phib)  + \\
+                                                current_sub27(Vds,photon,delta_phib)  + \\
+                                                current_sub28(Vds,photon,delta_phib)  + \\
+                                                current_sub29(Vds,photon,delta_phib)'
+
+*********************************************************************
+* The total current of the first 2 sub-bands, with AP, OP backscattering
+*********************************************************************
+.PARAM JFET(Vds,photon,delta_phib)='coeffj*CocoJ/Lgate*(current_sub_1(Vds,photon,delta_phib) + current_sub_2(Vds,photon,delta_phib))'
+
+*********************************************************************
+* The total current of the first 2 sub-bands, of the n+ interconnect
+*********************************************************************
+.PARAM J1(Vds,phib) = 'coeffj*kT*(log(1+exp((E1-Efi-phib)/kT))-log(exp(-Vds/kT)+exp((E1-Efi-phib)/kT)))'
++      J2(Vds,phib) = 'coeffj*kT*(log(1+exp((E2-Efi-phib)/kT))-log(exp(-Vds/kT)+exp((E2-Efi-phib)/kT)))'
+
++      Jint(Vds,phib) = 'J1(Vds,phib)+J2(Vds,phib)'
+
+*********************************************************************
+* The BTBT current component of the mth sub-band
+*********************************************************************
+.PARAM Jbtbt_sub_1(Vds,Ids)='log((1+exp((Vds-E1+Ids*Rud-Efi)/kT))/(1+exp((E1+Ids*Rud-Efi)/kT)))*MAX(Vds-2*E1,0)/(Vds-2*E1)'
++      Jbtbt_sub_2(Vds,Ids)='log((1+exp((Vds-E2+Ids*Rud-Efi)/kT))/(1+exp((E2+Ids*Rud-Efi)/kT)))*MAX(Vds-2*E2,0)/(Vds-2*E2)'
+                                                            
+*********************************************************************
+* The total BTBT current
+*********************************************************************
+.PARAM J_btbt(Vds,Ids,phib)='0*coeffj*kT*(Jbtbt_sub_1(Vds,Ids)*Tbtbt1(Vds,phib) + \\
+                                        0*Jbtbt_sub_2(Vds,Ids)*Tbtbt2(Vds,phib))'
+
+*********************************************************************
+* The parameters for charge induced in the channel
+*********************************************************************
+.PARAM coeffc = '4*q/(3*pi*Vpi*d)'    $ mode degeneracy already considered
+
+* Number of the electrons in subband (m,n)
++      charge_sub10(Vd,Vs,delta_phib) = '1/(1+exp((E1-delta_phib)/kT))  + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E1-delta_phib)/kT))'
++      charge_sub11(Vd,Vs,delta_phib) = '1/(1+exp((E11-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E11-delta_phib)/kT))'
++      charge_sub12(Vd,Vs,delta_phib) = '1/(1+exp((E12-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E12-delta_phib)/kT))'
++      charge_sub13(Vd,Vs,delta_phib) = '1/(1+exp((E13-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E13-delta_phib)/kT))'
++      charge_sub14(Vd,Vs,delta_phib) = '1/(1+exp((E14-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E14-delta_phib)/kT))'
++      charge_sub15(Vd,Vs,delta_phib) = '1/(1+exp((E15-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E15-delta_phib)/kT))'
++      charge_sub16(Vd,Vs,delta_phib) = '1/(1+exp((E16-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E16-delta_phib)/kT))'
++      charge_sub17(Vd,Vs,delta_phib) = '1/(1+exp((E17-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E17-delta_phib)/kT))'
++      charge_sub18(Vd,Vs,delta_phib) = '1/(1+exp((E18-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E18-delta_phib)/kT))'
++      charge_sub19(Vd,Vs,delta_phib) = '1/(1+exp((E19-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E19-delta_phib)/kT))'
+
++      charge_sub20(Vd,Vs,delta_phib) = '1/(1+exp((E2-delta_phib)/kT))  + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E2-delta_phib)/kT))'
++      charge_sub21(Vd,Vs,delta_phib) = '1/(1+exp((E21-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E21-delta_phib)/kT))'
++      charge_sub22(Vd,Vs,delta_phib) = '1/(1+exp((E22-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E22-delta_phib)/kT))'
++      charge_sub23(Vd,Vs,delta_phib) = '1/(1+exp((E23-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E23-delta_phib)/kT))'
++      charge_sub24(Vd,Vs,delta_phib) = '1/(1+exp((E24-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E24-delta_phib)/kT))'
++      charge_sub25(Vd,Vs,delta_phib) = '1/(1+exp((E25-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E25-delta_phib)/kT))'
++      charge_sub26(Vd,Vs,delta_phib) = '1/(1+exp((E26-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E26-delta_phib)/kT))'
++      charge_sub27(Vd,Vs,delta_phib) = '1/(1+exp((E27-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E27-delta_phib)/kT))'
++      charge_sub28(Vd,Vs,delta_phib) = '1/(1+exp((E28-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E28-delta_phib)/kT))'
++      charge_sub29(Vd,Vs,delta_phib) = '1/(1+exp((E29-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E29-delta_phib)/kT))'
+
+* Charge coming from the source. 
++      Qs_sub10(delta_phib) = '1/(1+exp((E1-delta_phib)/kT))'
++      Qs_sub11(delta_phib) = '1/(1+exp((E11-delta_phib)/kT))'
++      Qs_sub12(delta_phib) = '1/(1+exp((E12-delta_phib)/kT))'
++      Qs_sub13(delta_phib) = '1/(1+exp((E13-delta_phib)/kT))'
++      Qs_sub14(delta_phib) = '1/(1+exp((E14-delta_phib)/kT))'
++      Qs_sub15(delta_phib) = '1/(1+exp((E15-delta_phib)/kT))'
++      Qs_sub16(delta_phib) = '1/(1+exp((E16-delta_phib)/kT))'
++      Qs_sub17(delta_phib) = '1/(1+exp((E17-delta_phib)/kT))'
++      Qs_sub18(delta_phib) = '1/(1+exp((E18-delta_phib)/kT))'
++      Qs_sub19(delta_phib) = '1/(1+exp((E19-delta_phib)/kT))'
+
++      Qs_sub20(delta_phib) = '1/(1+exp((E2-delta_phib)/kT))'
++      Qs_sub21(delta_phib) = '1/(1+exp((E21-delta_phib)/kT))'
++      Qs_sub22(delta_phib) = '1/(1+exp((E22-delta_phib)/kT))'
++      Qs_sub23(delta_phib) = '1/(1+exp((E23-delta_phib)/kT))'
++      Qs_sub24(delta_phib) = '1/(1+exp((E24-delta_phib)/kT))'
++      Qs_sub25(delta_phib) = '1/(1+exp((E25-delta_phib)/kT))'
++      Qs_sub26(delta_phib) = '1/(1+exp((E26-delta_phib)/kT))'
++      Qs_sub27(delta_phib) = '1/(1+exp((E27-delta_phib)/kT))'
++      Qs_sub28(delta_phib) = '1/(1+exp((E28-delta_phib)/kT))'
++      Qs_sub29(delta_phib) = '1/(1+exp((E29-delta_phib)/kT))'
+
+*********************************************************************
+* The mth subband charge of the first 10 parallel bands 
+* valid for channel length Lgate from 10nm to 100nm
+*********************************************************************
+* The total charge in the channel, consider the first two sub-bands
+*********************************************************************
+.PARAM charge_sub_1(Vd,Vs,delta_phib) = 'charge_sub10(Vd,Vs,delta_phib) + charge_sub11(Vd,Vs,delta_phib) + \\
+                                         charge_sub12(Vd,Vs,delta_phib) + charge_sub13(Vd,Vs,delta_phib) + \\
+                                         charge_sub14(Vd,Vs,delta_phib) + charge_sub15(Vd,Vs,delta_phib) + \\
+                                         charge_sub16(Vd,Vs,delta_phib) + charge_sub17(Vd,Vs,delta_phib) + \\
+                                         charge_sub18(Vd,Vs,delta_phib) + charge_sub19(Vd,Vs,delta_phib)'
+
++      charge_sub_2(Vd,Vs,delta_phib) = 'charge_sub20(Vd,Vs,delta_phib) + charge_sub21(Vd,Vs,delta_phib) + \\
+                                         charge_sub22(Vd,Vs,delta_phib) + charge_sub23(Vd,Vs,delta_phib) + \\
+                                         charge_sub24(Vd,Vs,delta_phib) + charge_sub25(Vd,Vs,delta_phib) + \\
+                                         charge_sub26(Vd,Vs,delta_phib) + charge_sub27(Vd,Vs,delta_phib) + \\
+                                         charge_sub28(Vd,Vs,delta_phib) + charge_sub29(Vd,Vs,delta_phib)'
+
++      charge_total(Vd,Vs,delta_phib) = 'de_fac*q*(charge_sub_1(Vd,Vs,delta_phib) + charge_sub_2(Vd,Vs,delta_phib))/Lgate'
+                                   
+*********************************************************************
+* The adjacent CNTs are tied to GND in one extreme case
+********************************************************************* 
+*+      charge_channel(Vd,Vg,Vs,Vb,delta_phib) = 'Ci*(Vg-Vs-Vfbn)+Csub_tot*(Vb-Vs)-(Ci+Csub_tot)*delta_phib'
+
++      charge_channel(Vd,Vg,Vs,Vb,delta_phib) = 'Ci*(Vg-Vs-Vfbn)+Csub*(Vb-Vs)-(Ci+Csub)*delta_phib+CoupleRatio*Ccsd*(V(CoupleNode)-Vs-delta_phib)+(1-CoupleRatio)*Ccsd*(-delta_phib)'
+
+*********************************************************************
+* Charge accumulated at drain side due to optical scattering
+*********************************************************************
+* The reflection probability due to OP scattering
+.PARAM Rd_op10(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op10(Vds,photon,delta_phib))'    
++      Rd_op11(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op11(Vds,photon,delta_phib))'    
++      Rd_op12(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op12(Vds,photon,delta_phib))'    
++      Rd_op13(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op13(Vds,photon,delta_phib))'    
++      Rd_op14(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op14(Vds,photon,delta_phib))'    
++      Rd_op15(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op15(Vds,photon,delta_phib))'    
+
++      Rd_op20(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op20(Vds,photon,delta_phib))'    
++      Rd_op21(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op21(Vds,photon,delta_phib))'    
++      Rd_op22(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op22(Vds,photon,delta_phib))'    
++      Rd_op23(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op23(Vds,photon,delta_phib))'    
++      Rd_op24(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op24(Vds,photon,delta_phib))'    
++      Rd_op25(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op25(Vds,photon,delta_phib))'    
+
++      Qop_10(Vds,photon,delta_phib) = 'Qs_sub10(delta_phib)*Rd_op10(Vds,photon,delta_phib)'
++      Qop_11(Vds,photon,delta_phib) = 'Qs_sub11(delta_phib)*Rd_op11(Vds,photon,delta_phib)'
++      Qop_12(Vds,photon,delta_phib) = 'Qs_sub12(delta_phib)*Rd_op12(Vds,photon,delta_phib)'
++      Qop_13(Vds,photon,delta_phib) = 'Qs_sub13(delta_phib)*Rd_op13(Vds,photon,delta_phib)'
++      Qop_14(Vds,photon,delta_phib) = 'Qs_sub14(delta_phib)*Rd_op14(Vds,photon,delta_phib)'
++      Qop_15(Vds,photon,delta_phib) = 'Qs_sub15(delta_phib)*Rd_op15(Vds,photon,delta_phib)'
+
++      Qop_20(Vds,photon,delta_phib) = 'Qs_sub20(delta_phib)*Rd_op20(Vds,photon,delta_phib)'
++      Qop_21(Vds,photon,delta_phib) = 'Qs_sub21(delta_phib)*Rd_op21(Vds,photon,delta_phib)'
++      Qop_22(Vds,photon,delta_phib) = 'Qs_sub22(delta_phib)*Rd_op22(Vds,photon,delta_phib)'
++      Qop_23(Vds,photon,delta_phib) = 'Qs_sub23(delta_phib)*Rd_op23(Vds,photon,delta_phib)'
++      Qop_24(Vds,photon,delta_phib) = 'Qs_sub24(delta_phib)*Rd_op24(Vds,photon,delta_phib)'
++      Qop_25(Vds,photon,delta_phib) = 'Qs_sub25(delta_phib)*Rd_op25(Vds,photon,delta_phib)'
+
++      Qop_sub_1(Vds,photon,delta_phib) = 'q*(Qop_10(Vds,photon,delta_phib) + Qop_11(Vds,photon,delta_phib)  + \\ 
+                                              Qop_12(Vds,photon,delta_phib) + Qop_13(Vds,photon,delta_phib)  + \\
+                                              Qop_14(Vds,photon,delta_phib) + Qop_15(Vds,photon,delta_phib))'
+
++      Qop_sub_2(Vds,photon,delta_phib) = 'q*(Qop_20(Vds,photon,delta_phib) + Qop_21(Vds,photon,delta_phib)  + \\ 
+                                              Qop_22(Vds,photon,delta_phib) + Qop_23(Vds,photon,delta_phib)  + \\
+                                              Qop_24(Vds,photon,delta_phib) + Qop_25(Vds,photon,delta_phib))'
+                                                                                            
++      Qop(Vds,photon,delta_phib) = 'Qop_sub_1(Vds,photon,delta_phib) + Qop_sub_2(Vds,photon,delta_phib)'
+
+*********************************************************************
+* Charge induced on the gate.
+*********************************************************************
++      Qg(Vg,Vs,delta_phib) = 'Ci*(Vg-Vs-Vfbn-delta_phib)'
+
+*********************************************************************
+* Charge induced on the substrate and source/drain island
+*********************************************************************
++      Qb(Vb,Vs,delta_phib) = 'Csub_tot*(Vb-Vs-delta_phib)'
+
+*********************************************************************
+* The parameters to calculate trans-capacitance
+*********************************************************************
+* Number of the electrons in subband (m,n)
+.PARAM trans_c_sub10(Vd,Vs,delta_phib) = 'exp((E1-delta_phib)/kT)/POW(1+exp((E1-delta_phib)/kT),2)   + exp((E1-delta_phib+Vd-Vs)/kT)/POW(1+exp((E1-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub11(Vd,Vs,delta_phib) = 'exp((E11-delta_phib)/kT)/POW(1+exp((E11-delta_phib)/kT),2) + exp((E11-delta_phib+Vd-Vs)/kT)/POW(1+exp((E11-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub12(Vd,Vs,delta_phib) = 'exp((E12-delta_phib)/kT)/POW(1+exp((E12-delta_phib)/kT),2) + exp((E12-delta_phib+Vd-Vs)/kT)/POW(1+exp((E12-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub13(Vd,Vs,delta_phib) = 'exp((E13-delta_phib)/kT)/POW(1+exp((E13-delta_phib)/kT),2) + exp((E13-delta_phib+Vd-Vs)/kT)/POW(1+exp((E13-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub14(Vd,Vs,delta_phib) = 'exp((E14-delta_phib)/kT)/POW(1+exp((E14-delta_phib)/kT),2) + exp((E14-delta_phib+Vd-Vs)/kT)/POW(1+exp((E14-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub15(Vd,Vs,delta_phib) = 'exp((E15-delta_phib)/kT)/POW(1+exp((E15-delta_phib)/kT),2) + exp((E15-delta_phib+Vd-Vs)/kT)/POW(1+exp((E15-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub16(Vd,Vs,delta_phib) = 'exp((E16-delta_phib)/kT)/POW(1+exp((E16-delta_phib)/kT),2) + exp((E16-delta_phib+Vd-Vs)/kT)/POW(1+exp((E16-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub17(Vd,Vs,delta_phib) = 'exp((E17-delta_phib)/kT)/POW(1+exp((E17-delta_phib)/kT),2) + exp((E17-delta_phib+Vd-Vs)/kT)/POW(1+exp((E17-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub18(Vd,Vs,delta_phib) = 'exp((E18-delta_phib)/kT)/POW(1+exp((E18-delta_phib)/kT),2) + exp((E18-delta_phib+Vd-Vs)/kT)/POW(1+exp((E18-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub19(Vd,Vs,delta_phib) = 'exp((E19-delta_phib)/kT)/POW(1+exp((E19-delta_phib)/kT),2) + exp((E19-delta_phib+Vd-Vs)/kT)/POW(1+exp((E19-delta_phib+Vd-Vs)/kT),2)'
+
++      trans_c_sub20(Vd,Vs,delta_phib) = 'exp((E2-delta_phib)/kT)/POW(1+exp((E2-delta_phib)/kT),2)   + exp((E2-delta_phib+Vd-Vs)/kT)/POW(1+exp((E2-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub21(Vd,Vs,delta_phib) = 'exp((E21-delta_phib)/kT)/POW(1+exp((E21-delta_phib)/kT),2) + exp((E21-delta_phib+Vd-Vs)/kT)/POW(1+exp((E21-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub22(Vd,Vs,delta_phib) = 'exp((E22-delta_phib)/kT)/POW(1+exp((E22-delta_phib)/kT),2) + exp((E22-delta_phib+Vd-Vs)/kT)/POW(1+exp((E22-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub23(Vd,Vs,delta_phib) = 'exp((E23-delta_phib)/kT)/POW(1+exp((E23-delta_phib)/kT),2) + exp((E23-delta_phib+Vd-Vs)/kT)/POW(1+exp((E23-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub24(Vd,Vs,delta_phib) = 'exp((E24-delta_phib)/kT)/POW(1+exp((E24-delta_phib)/kT),2) + exp((E24-delta_phib+Vd-Vs)/kT)/POW(1+exp((E24-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub25(Vd,Vs,delta_phib) = 'exp((E25-delta_phib)/kT)/POW(1+exp((E25-delta_phib)/kT),2) + exp((E25-delta_phib+Vd-Vs)/kT)/POW(1+exp((E25-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub26(Vd,Vs,delta_phib) = 'exp((E26-delta_phib)/kT)/POW(1+exp((E26-delta_phib)/kT),2) + exp((E26-delta_phib+Vd-Vs)/kT)/POW(1+exp((E26-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub27(Vd,Vs,delta_phib) = 'exp((E27-delta_phib)/kT)/POW(1+exp((E27-delta_phib)/kT),2) + exp((E27-delta_phib+Vd-Vs)/kT)/POW(1+exp((E27-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub28(Vd,Vs,delta_phib) = 'exp((E28-delta_phib)/kT)/POW(1+exp((E28-delta_phib)/kT),2) + exp((E28-delta_phib+Vd-Vs)/kT)/POW(1+exp((E28-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub29(Vd,Vs,delta_phib) = 'exp((E29-delta_phib)/kT)/POW(1+exp((E29-delta_phib)/kT),2) + exp((E29-delta_phib+Vd-Vs)/kT)/POW(1+exp((E29-delta_phib+Vd-Vs)/kT),2)'
+
++      c_vds_sub10(Vd,Vs,delta_phib) = 'exp((E1-delta_phib+Vd-Vs)/kT)/POW(1+exp((E1-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub11(Vd,Vs,delta_phib) = 'exp((E11-delta_phib+Vd-Vs)/kT)/POW(1+exp((E11-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub12(Vd,Vs,delta_phib) = 'exp((E12-delta_phib+Vd-Vs)/kT)/POW(1+exp((E12-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub13(Vd,Vs,delta_phib) = 'exp((E13-delta_phib+Vd-Vs)/kT)/POW(1+exp((E13-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub14(Vd,Vs,delta_phib) = 'exp((E14-delta_phib+Vd-Vs)/kT)/POW(1+exp((E14-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub15(Vd,Vs,delta_phib) = 'exp((E15-delta_phib+Vd-Vs)/kT)/POW(1+exp((E15-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub16(Vd,Vs,delta_phib) = 'exp((E16-delta_phib+Vd-Vs)/kT)/POW(1+exp((E16-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub17(Vd,Vs,delta_phib) = 'exp((E17-delta_phib+Vd-Vs)/kT)/POW(1+exp((E17-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub18(Vd,Vs,delta_phib) = 'exp((E18-delta_phib+Vd-Vs)/kT)/POW(1+exp((E18-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub19(Vd,Vs,delta_phib) = 'exp((E19-delta_phib+Vd-Vs)/kT)/POW(1+exp((E19-delta_phib+Vd-Vs)/kT),2)'
+
++      c_vds_sub20(Vd,Vs,delta_phib) = 'exp((E2-delta_phib+Vd-Vs)/kT)/POW(1+exp((E2-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub21(Vd,Vs,delta_phib) = 'exp((E21-delta_phib+Vd-Vs)/kT)/POW(1+exp((E21-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub22(Vd,Vs,delta_phib) = 'exp((E22-delta_phib+Vd-Vs)/kT)/POW(1+exp((E22-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub23(Vd,Vs,delta_phib) = 'exp((E23-delta_phib+Vd-Vs)/kT)/POW(1+exp((E23-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub24(Vd,Vs,delta_phib) = 'exp((E24-delta_phib+Vd-Vs)/kT)/POW(1+exp((E24-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub25(Vd,Vs,delta_phib) = 'exp((E25-delta_phib+Vd-Vs)/kT)/POW(1+exp((E25-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub26(Vd,Vs,delta_phib) = 'exp((E26-delta_phib+Vd-Vs)/kT)/POW(1+exp((E26-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub27(Vd,Vs,delta_phib) = 'exp((E27-delta_phib+Vd-Vs)/kT)/POW(1+exp((E27-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub28(Vd,Vs,delta_phib) = 'exp((E28-delta_phib+Vd-Vs)/kT)/POW(1+exp((E28-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub29(Vd,Vs,delta_phib) = 'exp((E29-delta_phib+Vd-Vs)/kT)/POW(1+exp((E29-delta_phib+Vd-Vs)/kT),2)'
+
+*********************************************************************
+* The mth subband charge of the first 10 parallel bands 
+* valid for channel length Lgate from 10nm to 100nm
+*********************************************************************
+* The total charge in the channel, consider the first two sub-bands
+*********************************************************************
+.PARAM trans_charge_1(Vd,Vs,delta_phib) = 'trans_c_sub10(Vd,Vs,delta_phib) + trans_c_sub11(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub12(Vd,Vs,delta_phib) + trans_c_sub13(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub14(Vd,Vs,delta_phib) + trans_c_sub15(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub16(Vd,Vs,delta_phib) + trans_c_sub17(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub18(Vd,Vs,delta_phib) + trans_c_sub19(Vd,Vs,delta_phib)'
+                                           
++      trans_charge_2(Vd,Vs,delta_phib) = 'trans_c_sub20(Vd,Vs,delta_phib) + trans_c_sub21(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub22(Vd,Vs,delta_phib) + trans_c_sub23(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub24(Vd,Vs,delta_phib) + trans_c_sub25(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub26(Vd,Vs,delta_phib) + trans_c_sub27(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub28(Vd,Vs,delta_phib) + trans_c_sub29(Vd,Vs,delta_phib)'
+
++      trans_charge(Vd,Vs,delta_phib) = 'de_fac*q/(Lgate*kT)*(trans_charge_1(Vd,Vs,delta_phib) + trans_charge_2(Vd,Vs,delta_phib))'
+
++      Vg_to_phib(Vd,Vs,delta_phib) = '(Ci + Csub_tot + trans_charge(Vd,Vs,delta_phib)) / Ci'
+
+****************************************************************
+.PARAM charge_vds_1(Vd,Vs,delta_phib) = 'c_vds_sub10(Vd,Vs,delta_phib) + c_vds_sub11(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub12(Vd,Vs,delta_phib) + c_vds_sub13(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub14(Vd,Vs,delta_phib) + c_vds_sub15(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub16(Vd,Vs,delta_phib) + c_vds_sub17(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub18(Vd,Vs,delta_phib) + c_vds_sub19(Vd,Vs,delta_phib)'
+
++      charge_vds_2(Vd,Vs,delta_phib) = 'c_vds_sub20(Vd,Vs,delta_phib) + c_vds_sub21(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub22(Vd,Vs,delta_phib) + c_vds_sub23(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub24(Vd,Vs,delta_phib) + c_vds_sub25(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub26(Vd,Vs,delta_phib) + c_vds_sub27(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub28(Vd,Vs,delta_phib) + c_vds_sub29(Vd,Vs,delta_phib)'
+
++      charge_vds(Vd,Vs,delta_phib) = ' de_fac*q/(Lgate*kT)*(charge_vds_1(Vd,Vs,delta_phib) + charge_vds_2(Vd,Vs,delta_phib))'
+                                   
++      Vs_to_vg(Vd,Vs,delta_phib) = '(Ci + Csub_tot + charge_vds(Vd,Vs,delta_phib)) / Ci'
+
+*********************************************************************
+* The parasitic drain junction capacitance due to electron accumation with OP backscattering
+*********************************************************************
+.PARAM Cdj(Vds,photon,delta_phib)='Qop(Vds,photon,delta_phib)/(Vds+0.001)*max((1-exp(-100*(Vds+0.001))),1e-18)'
+
+*********************************************************************
+* End of parameter definition
+*********************************************************************
+
+
+*********************************************************************
+*                       START OF DEVICE MODEL                       *
+*********************************************************************   
+
+*********************************************************************
+* The voltage controlled current source
+*********************************************************************
+GCNT       Drain        Source          CUR='JFET(V(Drain,Source),photon,V(phib,Gnd))'
+GBTBT      Drain        Source          CUR='J_btbt(V(Drain,Source),I(GCNT),V(phib,Gnd))'
+
+*********************************************************************
+* Gate to Source/Drain/Sub capacitance
+*********************************************************************
+Csg        Source       Gate           'abs((Ci-(Ci+Csub_tot)/Vg_to_phib(V(Vdrain),V(Vsource),V(phib,Gnd)))*Lg/2)'
+Cdg        Drain        Gate           'abs((Ci-(Ci+Csub_tot)/Vg_to_phib(V(Vdrain),V(Vsource),V(phib,Gnd)))*Lg/2)'
+Cbg        Gate         mid2            'abs(Csub_tot/Vg_to_phib(V(Vdrain),V(Vsource),V(phib,Gnd))*Lg)'
+
+Cgs        Gate         Source         'abs(Ci*(1-Vs_to_vg(V(Vdrain),V(Vsource),V(phib,Gnd))/Vg_to_phib(V(Vdrain),V(Vsource),V(phib,Gnd)))*Lg)'
+Cgd        Gate         Drain          'abs(charge_vds(V(Vdrain),V(Vsource),V(phib,Gnd))/Vg_to_phib(V(Vdrain),V(Vsource),V(phib,Gnd))*Lg)'
+
+Csb        Source       Sub           'abs((Csub_tot-(Ci+Csub_tot)/Vg_to_phib(V(Vdrain),V(Vsource),V(phib,Gnd))*Csub_tot/Ci)*Lg/2)'
+Cdb        Drain        Sub           'abs((Csub_tot-(Ci+Csub_tot)/Vg_to_phib(V(Vdrain),V(Vsource),V(phib,Gnd))*Csub_tot/Ci)*Lg/2)'
+  
+Cdj        Drain        Gnd             'abs(Cdj(V(Drain,Source),photon,V(phib,Gnd))*Ld_par)'
+
+* The coupling capacitance between metal Gate stack and doped S/D carbon nanotube
+Cgss       Gate         Source          '(Coeff1_Cgsd*Lss+Coeff2_Cgsd)*GF*Cratio'     
+Cgdd       Gate         Drain           '(Coeff1_Cgsd*Ldd+Coeff2_Cgsd)*GF*Cratio'     
+
+*********************************************************************
+* Substrate resistance
+*********************************************************************
+Rsub       mid2         Sub             'Rsub'
+
+*********************************************************************
+*                       END OF DEVICE MODEL                         *
+*********************************************************************
+* delta_phib: a circuit for solving the equations
+*********************************************************************
+G_Qtotal         Vdrain     phib        CUR='charge_channel(V(Vdrain),V(Vgate),V(Vsource),V(VsubM),V(phib,Gnd))'
+G_Qchannel       phib       Gnd         CUR='charge_total(V(Vdrain),V(Vsource),V(phib,Gnd))'
+Rdummy1          phib       Gnd         1e20    $ Dummy resistance.
+
+*********************************************************************
+* The dummy controlled voltage source to get Vds and delta_phib:
+* a circuit for solving the equations
+*********************************************************************
+Edrain   Vdrain     Gnd    VCVS   Drain       Gnd   1
+Egate    Vgate      Gnd    VCVS   Gate        Gnd   1
+Esource  Vsource    Gnd    VCVS   Source      Gnd   1 
+Esub     VsubM      Gnd    VCVS   Sub         Gnd   1
+
+.ENDS NCNFET_L1
+********************************************************************
+*
+* End of N-CNFET Level 1 Sub-circuit Definition
+*
+********************************************************************
+
+* Last Modified: 09/09/2008 Albert Lin
+********************************************************************
+*
+* P-CNFET Level 1 Sub-circuit Definition
+*
+********************************************************************
+.SUBCKT PCNFET_L1  Drain  Gate  Source  Sub  CoupleNode  Lg=L_channel  Lgeff=Lceff  Lss=L_sd  Ldd=L_sd  Efi=Efo  Kgate=Kox  Tox=4e-9  Csub=20e-12  Ccsd=0  CoupleRatio=0  Vfbp=0  GF=0  Pitch=20e-9  n1=19  n2=0  CNTPos=1
+
+*********************************************************************
+* Parameter definition
+*********************************************************************
+
+* Csub is CNT to Substrate capacitance per unit length,approximated as 20af/um with 10um thick SiO2, 40af/um with 130nm thick SiO2
+
+*********************************************************************
+* The actual channel length used in simulation
+*********************************************************************
+* If Lg>Lgmax, Lgate=Lgmax to approximate the long channel device current
+.PARAM Lgate = 'MIN(Lg,Lgmax)'
+
+*********************************************************************
+* The Gate-CNT coupling capacitance
+*********************************************************************
+* The diameter of the CNT
+.PARAM dia='a*SQRT(POW(n1,2)+n1*n2+POW(n2,2))/pi'
+
+* The radius of the CNT.
+.PARAM rad='dia/2'
+
+* Oxide thickness
+.PARAM Hei='Tox+rad'
+
+* The inverse of the capacitance with the uniform Kgate dielectric material
+.PARAM RCo='log(2*Hei/dia + SQRT(POW(2*Hei/dia,2)-1))'
+
+* The inverese of the effects due to the image charge
+.PARAM RCimg='beta*log(2*Hei/(3*dia) + 2/3)'
+
+* The inverse of the capacitance with infinite spacing between CNTs
+.PARAM RCinf='RCo+RCimg'
+
+* The potential due to the adjacent CNT
+.PARAM Vadjc='0.5*log((POW(Pitch,2)+2*(Hei-rad)*(Hei+SQRT(POW(Hei,2)-POW(rad,2))))/(POW(Pitch,2)+2*(Hei-rad)*(Hei-SQRT(POW(Hei,2)-POW(rad,2)))))'
+
+* The potential due to the image charge of the adjacent CNT
+.PARAM Vadji='0.5*beta*log((POW(Hei+dia,2)+POW(Pitch,2)) / (9*POW(rad,2)+POW(Pitch,2)))*TANH((Hei+rad)/(Pitch-dia))'
+
+* The total potential contributed by the adjacent CNT and its image charge
+.PARAM RCadj='Vadjc+Vadji'
+
+* The ratio of image charge over real charge 
+.PARAM beta='(Kgate-Ksub)/(Kgate+Ksub)'
+
+* Capacitance pre-factor
+.PARAM Cprefactor='2*pi*Kgate*epso'
+
+* The gate to EdgeCNT coupling capacitance
+.PARAM Cedge='Cprefactor/(RCinf+RCadj)'
+
+* The gate to MidCNT coupling capacitance
+.PARAM Cmid='2*Cedge-Cprefactor/RCinf'
+
+* The gate capacitance, Cedge if CNTPos=1, Cmid if CNTPos=0 
+.PARAM Ci='Cedge*CNTPos+Cmid*(1-CNTPos)'
+
+* The coupling capacitance between the channel region of one CNT to the doped source/drain region of another CNT
+.PARAM Cc='(Cedge/Cmid-1)*Cedge*LOG(2*Pitch/dia)/LOG(Pitch/dia + SQRT(POW(Pitch/dia,2)-1))'
+
+* The total coupling capacitance between the channgel region of one CNT and the substrate, as well as source/drain islands
+.PARAM Csub_tot='Csub + Ccsd'
+
+* The ratio between actual gate capacitance and ideal gate capacitance
+.PARAM Cratio='Ci*RCinf/Cprefactor'
+
+**********************************************************************
+* The E-K disperation relationship, linear approximation around Ef point
+**********************************************************************
+* The first perpendicular wave number
+.PARAM K1='2*pi/(3*a*SQRT(POW(n1,2)+n1*n2+POW(n2,2)))'
+
+* The 2nd perpendicular wave number
+.PARAM K2='2*K1'
+
+* The parallel wave number
+.PARAM Kp1='2*pi/Lgate'
++      Kp2='2*Kp1'
++      Kp3='3*Kp1'
++      Kp4='4*Kp1'
++      Kp5='5*Kp1'
++      Kp6='6*Kp1'
++      Kp7='7*Kp1'
++      Kp8='8*Kp1'
++      Kp9='9*Kp1'
+
+* The energy of the perpendicular component of the mth sub-band, above Ei
+.PARAM E1='Vpi*pi/SQRT(3*(POW(n1,2)+n1*n2+POW(n2,2)))'
++      E2='2*E1'
+
+* The energy of the (m,n)th sub-band, above Ei
+.PARAM CoeffE='SQRT(3)/2*a*Vpi'
++      E11='CoeffE*SQRT(POW(K1,2)+POW(Kp1,2))'
++      E12='CoeffE*SQRT(POW(K1,2)+POW(Kp2,2))'
++      E13='CoeffE*SQRT(POW(K1,2)+POW(Kp3,2))'
++      E14='CoeffE*SQRT(POW(K1,2)+POW(Kp4,2))'
++      E15='CoeffE*SQRT(POW(K1,2)+POW(Kp5,2))'
++      E16='CoeffE*SQRT(POW(K1,2)+POW(Kp6,2))'
++      E17='CoeffE*SQRT(POW(K1,2)+POW(Kp7,2))'
++      E18='CoeffE*SQRT(POW(K1,2)+POW(Kp8,2))'
++      E19='CoeffE*SQRT(POW(K1,2)+POW(Kp9,2))'
+
++      E21='CoeffE*SQRT(POW(K2,2)+POW(Kp1,2))'
++      E22='CoeffE*SQRT(POW(K2,2)+POW(Kp2,2))'
++      E23='CoeffE*SQRT(POW(K2,2)+POW(Kp3,2))'
++      E24='CoeffE*SQRT(POW(K2,2)+POW(Kp4,2))'
++      E25='CoeffE*SQRT(POW(K2,2)+POW(Kp5,2))'
++      E26='CoeffE*SQRT(POW(K2,2)+POW(Kp6,2))'
++      E27='CoeffE*SQRT(POW(K2,2)+POW(Kp7,2))'
++      E28='CoeffE*SQRT(POW(K2,2)+POW(Kp8,2))'
++      E29='CoeffE*SQRT(POW(K2,2)+POW(Kp9,2))'
+
+* The kinetic energy of the mth sub-band
+.PARAM En11='E11-E1'
++      En12='E12-E1'
++      En13='E13-E1'
++      En14='E14-E1'
++      En15='E15-E1'
++      En16='E16-E1'
++      En17='E17-E1'
++      En18='E18-E1'
++      En19='E19-E1'
+
++      En21='E21-E2'
++      En22='E22-E2'
++      En23='E23-E2'
++      En24='E24-E2'
++      En25='E25-E2'
++      En26='E26-E2'
++      En27='E27-E2'
++      En28='E28-E2'
++      En29='E29-E2'
+
+* The coefficients of Jmn
+.PARAM CocoJ='SQRT(3)*a*pi*Vpi'
++      Coeff_J11 = 'Kp1/SQRT(POW(K1,2)+POW(Kp1,2))'
++      Coeff_J12 = 'Kp2/SQRT(POW(K1,2)+POW(Kp2,2))'
++      Coeff_J13 = 'Kp3/SQRT(POW(K1,2)+POW(Kp3,2))'
++      Coeff_J14 = 'Kp4/SQRT(POW(K1,2)+POW(Kp4,2))'
++      Coeff_J15 = 'Kp5/SQRT(POW(K1,2)+POW(Kp5,2))'
++      Coeff_J16 = 'Kp6/SQRT(POW(K1,2)+POW(Kp6,2))'
++      Coeff_J17 = 'Kp7/SQRT(POW(K1,2)+POW(Kp7,2))'
++      Coeff_J18 = 'Kp8/SQRT(POW(K1,2)+POW(Kp8,2))'
++      Coeff_J19 = 'Kp9/SQRT(POW(K1,2)+POW(Kp9,2))'
+
++      Coeff_J21 = 'Kp1/SQRT(POW(K2,2)+POW(Kp1,2))'
++      Coeff_J22 = 'Kp2/SQRT(POW(K2,2)+POW(Kp2,2))'
++      Coeff_J23 = 'Kp3/SQRT(POW(K2,2)+POW(Kp3,2))'
++      Coeff_J24 = 'Kp4/SQRT(POW(K2,2)+POW(Kp4,2))'
++      Coeff_J25 = 'Kp5/SQRT(POW(K2,2)+POW(Kp5,2))'
++      Coeff_J26 = 'Kp6/SQRT(POW(K2,2)+POW(Kp6,2))'
++      Coeff_J27 = 'Kp7/SQRT(POW(K2,2)+POW(Kp7,2))'
++      Coeff_J28 = 'Kp8/SQRT(POW(K2,2)+POW(Kp8,2))'
++      Coeff_J29 = 'Kp9/SQRT(POW(K2,2)+POW(Kp9,2))'
+
+**********************************************************************
+* The carrier effective mass of the 1st and the 2nd subband, for CNT
+*********************************************************************
+.PARAM meff1 = '2*h_ba*h_ba*K1/(SQRT(3)*a*q*Vpi)/1e40'
++      meff2 = '2*h_ba*h_ba*K2/(SQRT(3)*a*q*Vpi)/1e40'
+
+**********************************************************************
+* The transmission probability for BTBT
+*********************************************************************
+.PARAM Efield(Vds,phib) = '(Vds+Efi-phib)/L_relax'
+
++	   Eg_eff1 = 'E1' $ Efi/(Vds+Efi-phib)'
++	   Eg_eff2 = 'E2' $ Efi/(Vds+Efi-phib)'
+
++      Ef1(Efield,Vds,phib) = 'SQRT(2)*h_ba*Efield/(pi*SQRT(meff1*2*q*Eg_eff1))/1e20'
++      Ef2(Efield,Vds,phib) = 'SQRT(2)*h_ba*Efield/(pi*SQRT(meff2*2*q*Eg_eff2))/1e20'
+
++      Tbtbt1(Vds,phib) = 'pi*pi/9*EXP(-Eg_eff1/Ef1(Efield(Vds,phib),Vds,phib))'
++      Tbtbt2(Vds,phib) = 'pi*pi/9*EXP(-Eg_eff2/Ef2(Efield(Vds,phib),Vds,phib))'
+
+*********************************************************************
+* The current component of the mth sub-band.
+*********************************************************************
+.PARAM fermi_s11(delta_phib) = '1/(1+exp((E11-delta_phib)/kT))'
++      fermi_s12(delta_phib) = '1/(1+exp((E12-delta_phib)/kT))'
++      fermi_s13(delta_phib) = '1/(1+exp((E13-delta_phib)/kT))'
++      fermi_s14(delta_phib) = '1/(1+exp((E14-delta_phib)/kT))'
++      fermi_s15(delta_phib) = '1/(1+exp((E15-delta_phib)/kT))'
++      fermi_s16(delta_phib) = '1/(1+exp((E16-delta_phib)/kT))'
++      fermi_s17(delta_phib) = '1/(1+exp((E17-delta_phib)/kT))'
++      fermi_s18(delta_phib) = '1/(1+exp((E18-delta_phib)/kT))'
++      fermi_s19(delta_phib) = '1/(1+exp((E19-delta_phib)/kT))'
+
++      fermi_s21(delta_phib) = '1/(1+exp((E21-delta_phib)/kT))'
++      fermi_s22(delta_phib) = '1/(1+exp((E22-delta_phib)/kT))'
++      fermi_s23(delta_phib) = '1/(1+exp((E23-delta_phib)/kT))'
++      fermi_s24(delta_phib) = '1/(1+exp((E24-delta_phib)/kT))'
++      fermi_s25(delta_phib) = '1/(1+exp((E25-delta_phib)/kT))'
++      fermi_s26(delta_phib) = '1/(1+exp((E26-delta_phib)/kT))'
++      fermi_s27(delta_phib) = '1/(1+exp((E27-delta_phib)/kT))'
++      fermi_s28(delta_phib) = '1/(1+exp((E28-delta_phib)/kT))'
++      fermi_s29(delta_phib) = '1/(1+exp((E29-delta_phib)/kT))'
+
++      fermi_d11(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E11-delta_phib)/kT))'
++      fermi_d12(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E12-delta_phib)/kT))'
++      fermi_d13(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E13-delta_phib)/kT))'
++      fermi_d14(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E14-delta_phib)/kT))'
++      fermi_d15(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E15-delta_phib)/kT))'
++      fermi_d16(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E16-delta_phib)/kT))'
++      fermi_d17(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E17-delta_phib)/kT))'
++      fermi_d18(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E18-delta_phib)/kT))'
++      fermi_d19(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E19-delta_phib)/kT))'
+
++      fermi_d21(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E21-delta_phib)/kT))'
++      fermi_d22(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E22-delta_phib)/kT))'
++      fermi_d23(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E23-delta_phib)/kT))'
++      fermi_d24(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E24-delta_phib)/kT))'
++      fermi_d25(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E25-delta_phib)/kT))'
++      fermi_d26(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E26-delta_phib)/kT))'
++      fermi_d27(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E27-delta_phib)/kT))'
++      fermi_d28(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E28-delta_phib)/kT))'
++      fermi_d29(Vds,delta_phib) = 'exp(-Vds/kT)/(exp(-Vds/kT)+exp((E29-delta_phib)/kT))'
+
++      fermi_op10(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E1-delta_phib)/kT))'
++      fermi_op11(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E11-delta_phib)/kT))'
++      fermi_op12(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E12-delta_phib)/kT))'
++      fermi_op13(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E13-delta_phib)/kT))'
++      fermi_op14(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E14-delta_phib)/kT))'
++      fermi_op15(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E15-delta_phib)/kT))'
++      fermi_op16(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E16-delta_phib)/kT))'
++      fermi_op17(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E17-delta_phib)/kT))'
++      fermi_op18(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E18-delta_phib)/kT))'
++      fermi_op19(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E19-delta_phib)/kT))'
+
++      fermi_op20(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E2-delta_phib)/kT))'
++      fermi_op21(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E21-delta_phib)/kT))'
++      fermi_op22(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E22-delta_phib)/kT))'
++      fermi_op23(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E23-delta_phib)/kT))'
++      fermi_op24(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E24-delta_phib)/kT))'
++      fermi_op25(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E25-delta_phib)/kT))'
++      fermi_op26(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E26-delta_phib)/kT))'
++      fermi_op27(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E27-delta_phib)/kT))'
++      fermi_op28(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E28-delta_phib)/kT))'
++      fermi_op29(Vds,offset,delta_phib) = 'exp((offset-Vds)/kT)/(exp((offset-Vds)/kT)+exp((E29-delta_phib)/kT))'
+
+* The factor DOS(m,n)/DOSo for channel region
++	   FDOS10(offset) = '(E1-offset)/SQRT(abs(POW((E1-offset),2)-POW(E1,2)))*1e-14'
++	   FDOS11(offset) = '(E11-offset)/SQRT(abs(POW((E11-offset),2)-POW(E1,2)))*max(En11-offset,1e-14)'
++	   FDOS12(offset) = '(E12-offset)/SQRT(abs(POW((E12-offset),2)-POW(E1,2)))*max(En12-offset,1e-14)'
++	   FDOS13(offset) = '(E13-offset)/SQRT(abs(POW((E13-offset),2)-POW(E1,2)))*max(En13-offset,1e-14)'
++	   FDOS14(offset) = '(E14-offset)/SQRT(abs(POW((E14-offset),2)-POW(E1,2)))*max(En14-offset,1e-14)'
++	   FDOS15(offset) = '(E15-offset)/SQRT(abs(POW((E15-offset),2)-POW(E1,2)))*max(En15-offset,1e-14)'
++	   FDOS16(offset) = '(E16-offset)/SQRT(abs(POW((E16-offset),2)-POW(E1,2)))*max(En16-offset,1e-14)'
++	   FDOS17(offset) = '(E17-offset)/SQRT(abs(POW((E17-offset),2)-POW(E1,2)))*max(En17-offset,1e-14)'
++	   FDOS18(offset) = '(E18-offset)/SQRT(abs(POW((E18-offset),2)-POW(E1,2)))*max(En18-offset,1e-14)'
++	   FDOS19(offset) = '(E19-offset)/SQRT(abs(POW((E19-offset),2)-POW(E1,2)))*max(En19-offset,1e-14)'
+
++	   FDOS20(offset) = '(E2-offset)/SQRT(abs(POW((E2-offset),2)-POW(E2,2)))*1e-14'
++	   FDOS21(offset) = '(E21-offset)/SQRT(abs(POW((E21-offset),2)-POW(E2,2)))*max(En21-offset,1e-14)'
++	   FDOS22(offset) = '(E22-offset)/SQRT(abs(POW((E22-offset),2)-POW(E2,2)))*max(En22-offset,1e-14)'
++	   FDOS23(offset) = '(E23-offset)/SQRT(abs(POW((E23-offset),2)-POW(E2,2)))*max(En23-offset,1e-14)'
++	   FDOS24(offset) = '(E24-offset)/SQRT(abs(POW((E24-offset),2)-POW(E2,2)))*max(En24-offset,1e-14)'
++	   FDOS25(offset) = '(E25-offset)/SQRT(abs(POW((E25-offset),2)-POW(E2,2)))*max(En25-offset,1e-14)'
++	   FDOS26(offset) = '(E26-offset)/SQRT(abs(POW((E26-offset),2)-POW(E2,2)))*max(En26-offset,1e-14)'
++	   FDOS27(offset) = '(E27-offset)/SQRT(abs(POW((E27-offset),2)-POW(E2,2)))*max(En27-offset,1e-14)'
++	   FDOS28(offset) = '(E28-offset)/SQRT(abs(POW((E28-offset),2)-POW(E2,2)))*max(En28-offset,1e-14)'
++	   FDOS29(offset) = '(E29-offset)/SQRT(abs(POW((E29-offset),2)-POW(E2,2)))*max(En29-offset,1e-14)'
+
+* The factor DOS(m,n)/DOSo for drain side
++	   FDOS_d10(Vds,delta_phib,offset) = '(E1+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E1+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E1+Vds-delta_phib-offset,1e-14)'       
++	   FDOS_d11(Vds,delta_phib,offset) = '(E11+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E11+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E11+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d12(Vds,delta_phib,offset) = '(E12+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E12+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E12+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d13(Vds,delta_phib,offset) = '(E13+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E13+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E13+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d14(Vds,delta_phib,offset) = '(E14+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E14+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E14+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d15(Vds,delta_phib,offset) = '(E15+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E15+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E15+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d16(Vds,delta_phib,offset) = '(E16+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E16+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E16+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d17(Vds,delta_phib,offset) = '(E17+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E17+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E17+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d18(Vds,delta_phib,offset) = '(E18+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E18+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E18+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d19(Vds,delta_phib,offset) = '(E19+E1+Vds-delta_phib-offset)/SQRT(abs(POW((E19+E1+Vds-delta_phib-offset),2)-POW(E1,2)))*max(E19+Vds-delta_phib-offset,1e-14)'                          
+
++	   FDOS_d20(Vds,delta_phib,offset) = '(E2+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E2+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E2+Vds-delta_phib-offset,1e-14)'  
++	   FDOS_d21(Vds,delta_phib,offset) = '(E21+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E21+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E21+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d22(Vds,delta_phib,offset) = '(E22+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E22+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E22+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d23(Vds,delta_phib,offset) = '(E23+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E23+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E23+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d24(Vds,delta_phib,offset) = '(E24+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E24+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E24+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d25(Vds,delta_phib,offset) = '(E25+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E25+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E25+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d26(Vds,delta_phib,offset) = '(E26+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E26+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E26+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d27(Vds,delta_phib,offset) = '(E27+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E27+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E27+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d28(Vds,delta_phib,offset) = '(E28+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E28+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E28+Vds-delta_phib-offset,1e-14)'                          
++	   FDOS_d29(Vds,delta_phib,offset) = '(E29+E2+Vds-delta_phib-offset)/SQRT(abs(POW((E29+E2+Vds-delta_phib-offset),2)-POW(E2,2)))*max(E29+Vds-delta_phib-offset,1e-14)'                          
+                       
+* the AP MFP                            
++      l_ap11(Vds,delta_phib)='lambda_ap/(FDOS11(0)*(1-fermi_d11(Vds,delta_phib)))'
++      l_ap12(Vds,delta_phib)='lambda_ap/(FDOS12(0)*(1-fermi_d12(Vds,delta_phib)))'
++      l_ap13(Vds,delta_phib)='lambda_ap/(FDOS13(0)*(1-fermi_d13(Vds,delta_phib)))'
++      l_ap14(Vds,delta_phib)='lambda_ap/(FDOS14(0)*(1-fermi_d14(Vds,delta_phib)))'
++      l_ap15(Vds,delta_phib)='lambda_ap/(FDOS15(0)*(1-fermi_d15(Vds,delta_phib)))'
++      l_ap16(Vds,delta_phib)='lambda_ap/(FDOS16(0)*(1-fermi_d16(Vds,delta_phib)))'
++      l_ap17(Vds,delta_phib)='lambda_ap/(FDOS17(0)*(1-fermi_d17(Vds,delta_phib)))'
++      l_ap18(Vds,delta_phib)='lambda_ap/(FDOS18(0)*(1-fermi_d18(Vds,delta_phib)))'
++      l_ap19(Vds,delta_phib)='lambda_ap/(FDOS19(0)*(1-fermi_d19(Vds,delta_phib)))'
+
++      l_ap21(Vds,delta_phib)='lambda_ap/(FDOS21(0)*(1-fermi_d21(Vds,delta_phib)))'
++      l_ap22(Vds,delta_phib)='lambda_ap/(FDOS22(0)*(1-fermi_d22(Vds,delta_phib)))'
++      l_ap23(Vds,delta_phib)='lambda_ap/(FDOS23(0)*(1-fermi_d23(Vds,delta_phib)))'
++      l_ap24(Vds,delta_phib)='lambda_ap/(FDOS24(0)*(1-fermi_d24(Vds,delta_phib)))'
++      l_ap25(Vds,delta_phib)='lambda_ap/(FDOS25(0)*(1-fermi_d25(Vds,delta_phib)))'
++      l_ap26(Vds,delta_phib)='lambda_ap/(FDOS26(0)*(1-fermi_d26(Vds,delta_phib)))'
++      l_ap27(Vds,delta_phib)='lambda_ap/(FDOS27(0)*(1-fermi_d27(Vds,delta_phib)))'
++      l_ap28(Vds,delta_phib)='lambda_ap/(FDOS28(0)*(1-fermi_d28(Vds,delta_phib)))'
++      l_ap29(Vds,delta_phib)='lambda_ap/(FDOS29(0)*(1-fermi_d29(Vds,delta_phib)))'
+
+* the OP MFP
++      l_op10(Vds,photon,delta_phib)='lambda_op/(FDOS10(photon)*(1-fermi_op10(Vds,photon,delta_phib)))'
++      l_op11(Vds,photon,delta_phib)='lambda_op/(FDOS11(photon)*(1-fermi_op11(Vds,photon,delta_phib)))'
++      l_op12(Vds,photon,delta_phib)='lambda_op/(FDOS12(photon)*(1-fermi_op12(Vds,photon,delta_phib)))'
++      l_op13(Vds,photon,delta_phib)='lambda_op/(FDOS13(photon)*(1-fermi_op13(Vds,photon,delta_phib)))'
++      l_op14(Vds,photon,delta_phib)='lambda_op/(FDOS14(photon)*(1-fermi_op14(Vds,photon,delta_phib)))'
++      l_op15(Vds,photon,delta_phib)='lambda_op/(FDOS15(photon)*(1-fermi_op15(Vds,photon,delta_phib)))'
++      l_op16(Vds,photon,delta_phib)='lambda_op/(FDOS16(photon)*(1-fermi_op16(Vds,photon,delta_phib)))'
++      l_op17(Vds,photon,delta_phib)='lambda_op/(FDOS17(photon)*(1-fermi_op17(Vds,photon,delta_phib)))'
++      l_op18(Vds,photon,delta_phib)='lambda_op/(FDOS18(photon)*(1-fermi_op18(Vds,photon,delta_phib)))'
++      l_op19(Vds,photon,delta_phib)='lambda_op/(FDOS19(photon)*(1-fermi_op19(Vds,photon,delta_phib)))'
+
++      l_op20(Vds,photon,delta_phib)='lambda_op/(FDOS20(photon)*(1-fermi_op20(Vds,photon,delta_phib)))'
++      l_op21(Vds,photon,delta_phib)='lambda_op/(FDOS21(photon)*(1-fermi_op21(Vds,photon,delta_phib)))'
++      l_op22(Vds,photon,delta_phib)='lambda_op/(FDOS22(photon)*(1-fermi_op22(Vds,photon,delta_phib)))'
++      l_op23(Vds,photon,delta_phib)='lambda_op/(FDOS23(photon)*(1-fermi_op23(Vds,photon,delta_phib)))'
++      l_op24(Vds,photon,delta_phib)='lambda_op/(FDOS24(photon)*(1-fermi_op24(Vds,photon,delta_phib)))'
++      l_op25(Vds,photon,delta_phib)='lambda_op/(FDOS25(photon)*(1-fermi_op25(Vds,photon,delta_phib)))'
++      l_op26(Vds,photon,delta_phib)='lambda_op/(FDOS26(photon)*(1-fermi_op26(Vds,photon,delta_phib)))'
++      l_op27(Vds,photon,delta_phib)='lambda_op/(FDOS27(photon)*(1-fermi_op27(Vds,photon,delta_phib)))'
++      l_op28(Vds,photon,delta_phib)='lambda_op/(FDOS28(photon)*(1-fermi_op28(Vds,photon,delta_phib)))'
++      l_op29(Vds,photon,delta_phib)='lambda_op/(FDOS29(photon)*(1-fermi_op29(Vds,photon,delta_phib)))'
+
+* the OP MFP at drain side
++      ld_op10(Vds,photon,delta_phib)='lambda_op/(FDOS_d10(Vds,delta_phib,photon)*(1-fermi_op10(Vds,photon,delta_phib)))'  
++      ld_op11(Vds,photon,delta_phib)='lambda_op/(FDOS_d11(Vds,delta_phib,photon)*(1-fermi_op11(Vds,photon,delta_phib)))'  
++      ld_op12(Vds,photon,delta_phib)='lambda_op/(FDOS_d12(Vds,delta_phib,photon)*(1-fermi_op12(Vds,photon,delta_phib)))'  
++      ld_op13(Vds,photon,delta_phib)='lambda_op/(FDOS_d13(Vds,delta_phib,photon)*(1-fermi_op13(Vds,photon,delta_phib)))'  
++      ld_op14(Vds,photon,delta_phib)='lambda_op/(FDOS_d14(Vds,delta_phib,photon)*(1-fermi_op14(Vds,photon,delta_phib)))'  
++      ld_op15(Vds,photon,delta_phib)='lambda_op/(FDOS_d15(Vds,delta_phib,photon)*(1-fermi_op15(Vds,photon,delta_phib)))'  
++      ld_op16(Vds,photon,delta_phib)='lambda_op/(FDOS_d16(Vds,delta_phib,photon)*(1-fermi_op16(Vds,photon,delta_phib)))'  
++      ld_op17(Vds,photon,delta_phib)='lambda_op/(FDOS_d17(Vds,delta_phib,photon)*(1-fermi_op17(Vds,photon,delta_phib)))'  
++      ld_op18(Vds,photon,delta_phib)='lambda_op/(FDOS_d18(Vds,delta_phib,photon)*(1-fermi_op18(Vds,photon,delta_phib)))'  
++      ld_op19(Vds,photon,delta_phib)='lambda_op/(FDOS_d19(Vds,delta_phib,photon)*(1-fermi_op19(Vds,photon,delta_phib)))'  
+
++      ld_op20(Vds,photon,delta_phib)='lambda_op/(FDOS_d20(Vds,delta_phib,photon)*(1-fermi_op20(Vds,photon,delta_phib)))'  
++      ld_op21(Vds,photon,delta_phib)='lambda_op/(FDOS_d21(Vds,delta_phib,photon)*(1-fermi_op21(Vds,photon,delta_phib)))'  
++      ld_op22(Vds,photon,delta_phib)='lambda_op/(FDOS_d22(Vds,delta_phib,photon)*(1-fermi_op22(Vds,photon,delta_phib)))'  
++      ld_op23(Vds,photon,delta_phib)='lambda_op/(FDOS_d23(Vds,delta_phib,photon)*(1-fermi_op23(Vds,photon,delta_phib)))'  
++      ld_op24(Vds,photon,delta_phib)='lambda_op/(FDOS_d24(Vds,delta_phib,photon)*(1-fermi_op24(Vds,photon,delta_phib)))'  
++      ld_op25(Vds,photon,delta_phib)='lambda_op/(FDOS_d25(Vds,delta_phib,photon)*(1-fermi_op25(Vds,photon,delta_phib)))'  
++      ld_op26(Vds,photon,delta_phib)='lambda_op/(FDOS_d26(Vds,delta_phib,photon)*(1-fermi_op26(Vds,photon,delta_phib)))'  
++      ld_op27(Vds,photon,delta_phib)='lambda_op/(FDOS_d27(Vds,delta_phib,photon)*(1-fermi_op27(Vds,photon,delta_phib)))'  
++      ld_op28(Vds,photon,delta_phib)='lambda_op/(FDOS_d28(Vds,delta_phib,photon)*(1-fermi_op28(Vds,photon,delta_phib)))'  
++      ld_op29(Vds,photon,delta_phib)='lambda_op/(FDOS_d29(Vds,delta_phib,photon)*(1-fermi_op29(Vds,photon,delta_phib)))'  
+
+* the effective mean path due to both AP/OP scattering
++      l_eff11(Vds,photon,delta_phib) = '1/(1/l_ap11(Vds,delta_phib)+1/l_op11(Vds,photon,delta_phib))'
++      l_eff12(Vds,photon,delta_phib) = '1/(1/l_ap12(Vds,delta_phib)+1/l_op12(Vds,photon,delta_phib))'
++      l_eff13(Vds,photon,delta_phib) = '1/(1/l_ap13(Vds,delta_phib)+1/l_op13(Vds,photon,delta_phib))'
++      l_eff14(Vds,photon,delta_phib) = '1/(1/l_ap14(Vds,delta_phib)+1/l_op14(Vds,photon,delta_phib))'
++      l_eff15(Vds,photon,delta_phib) = '1/(1/l_ap15(Vds,delta_phib)+1/l_op15(Vds,photon,delta_phib))'
++      l_eff16(Vds,photon,delta_phib) = '1/(1/l_ap16(Vds,delta_phib)+1/l_op16(Vds,photon,delta_phib))'
++      l_eff17(Vds,photon,delta_phib) = '1/(1/l_ap17(Vds,delta_phib)+1/l_op17(Vds,photon,delta_phib))'
++      l_eff18(Vds,photon,delta_phib) = '1/(1/l_ap18(Vds,delta_phib)+1/l_op18(Vds,photon,delta_phib))'
++      l_eff19(Vds,photon,delta_phib) = '1/(1/l_ap19(Vds,delta_phib)+1/l_op19(Vds,photon,delta_phib))'
+
++      l_eff21(Vds,photon,delta_phib) = '1/(1/l_ap21(Vds,delta_phib)+1/l_op21(Vds,photon,delta_phib))'
++      l_eff22(Vds,photon,delta_phib) = '1/(1/l_ap22(Vds,delta_phib)+1/l_op22(Vds,photon,delta_phib))'
++      l_eff23(Vds,photon,delta_phib) = '1/(1/l_ap23(Vds,delta_phib)+1/l_op23(Vds,photon,delta_phib))'
++      l_eff24(Vds,photon,delta_phib) = '1/(1/l_ap24(Vds,delta_phib)+1/l_op24(Vds,photon,delta_phib))'
++      l_eff25(Vds,photon,delta_phib) = '1/(1/l_ap25(Vds,delta_phib)+1/l_op25(Vds,photon,delta_phib))'
++      l_eff26(Vds,photon,delta_phib) = '1/(1/l_ap26(Vds,delta_phib)+1/l_op26(Vds,photon,delta_phib))'
++      l_eff27(Vds,photon,delta_phib) = '1/(1/l_ap27(Vds,delta_phib)+1/l_op27(Vds,photon,delta_phib))'
++      l_eff28(Vds,photon,delta_phib) = '1/(1/l_ap28(Vds,delta_phib)+1/l_op28(Vds,photon,delta_phib))'
++      l_eff29(Vds,photon,delta_phib) = '1/(1/l_ap29(Vds,delta_phib)+1/l_op29(Vds,photon,delta_phib))'
+
+* The transmission probability, only OP scattering
++      T11(Vds,photon,delta_phib) = '1/(1+Lg/l_op11(Vds,photon,delta_phib))'              
++      T12(Vds,photon,delta_phib) = '1/(1+Lg/l_op12(Vds,photon,delta_phib))'              
++      T13(Vds,photon,delta_phib) = '1/(1+Lg/l_op13(Vds,photon,delta_phib))'              
++      T14(Vds,photon,delta_phib) = '1/(1+Lg/l_op14(Vds,photon,delta_phib))'              
++      T15(Vds,photon,delta_phib) = '1/(1+Lg/l_op15(Vds,photon,delta_phib))'              
++      T16(Vds,photon,delta_phib) = '1/(1+Lg/l_op16(Vds,photon,delta_phib))'              
++      T17(Vds,photon,delta_phib) = '1/(1+Lg/l_op17(Vds,photon,delta_phib))'              
++      T18(Vds,photon,delta_phib) = '1/(1+Lg/l_op18(Vds,photon,delta_phib))'              
++      T19(Vds,photon,delta_phib) = '1/(1+Lg/l_op19(Vds,photon,delta_phib))'              
+
++      T21(Vds,photon,delta_phib) = '1/(1+Lg/l_op21(Vds,photon,delta_phib))'              
++      T22(Vds,photon,delta_phib) = '1/(1+Lg/l_op22(Vds,photon,delta_phib))'              
++      T23(Vds,photon,delta_phib) = '1/(1+Lg/l_op23(Vds,photon,delta_phib))'              
++      T24(Vds,photon,delta_phib) = '1/(1+Lg/l_op24(Vds,photon,delta_phib))'              
++      T25(Vds,photon,delta_phib) = '1/(1+Lg/l_op25(Vds,photon,delta_phib))'              
++      T26(Vds,photon,delta_phib) = '1/(1+Lg/l_op26(Vds,photon,delta_phib))'              
++      T27(Vds,photon,delta_phib) = '1/(1+Lg/l_op27(Vds,photon,delta_phib))'              
++      T28(Vds,photon,delta_phib) = '1/(1+Lg/l_op28(Vds,photon,delta_phib))'              
++      T29(Vds,photon,delta_phib) = '1/(1+Lg/l_op29(Vds,photon,delta_phib))'              
+
+* The current of substate (m,n)
++      current_sub11(Vds,photon,delta_phib)='(T11(Vds,photon,delta_phib)*fermi_s11(delta_phib) - T11(0,photon,delta_phib)*fermi_d11(Vds,delta_phib))*Coeff_J11'
++      current_sub12(Vds,photon,delta_phib)='(T12(Vds,photon,delta_phib)*fermi_s12(delta_phib) - T12(0,photon,delta_phib)*fermi_d12(Vds,delta_phib))*Coeff_J12'
++      current_sub13(Vds,photon,delta_phib)='(T13(Vds,photon,delta_phib)*fermi_s13(delta_phib) - T13(0,photon,delta_phib)*fermi_d13(Vds,delta_phib))*Coeff_J13'
++      current_sub14(Vds,photon,delta_phib)='(T14(Vds,photon,delta_phib)*fermi_s14(delta_phib) - T14(0,photon,delta_phib)*fermi_d14(Vds,delta_phib))*Coeff_J14'
++      current_sub15(Vds,photon,delta_phib)='(T15(Vds,photon,delta_phib)*fermi_s15(delta_phib) - T15(0,photon,delta_phib)*fermi_d15(Vds,delta_phib))*Coeff_J15'
++      current_sub16(Vds,photon,delta_phib)='(T16(Vds,photon,delta_phib)*fermi_s16(delta_phib) - T16(0,photon,delta_phib)*fermi_d16(Vds,delta_phib))*Coeff_J16'
++      current_sub17(Vds,photon,delta_phib)='(T17(Vds,photon,delta_phib)*fermi_s17(delta_phib) - T17(0,photon,delta_phib)*fermi_d17(Vds,delta_phib))*Coeff_J17'
++      current_sub18(Vds,photon,delta_phib)='(T18(Vds,photon,delta_phib)*fermi_s18(delta_phib) - T18(0,photon,delta_phib)*fermi_d18(Vds,delta_phib))*Coeff_J18'
++      current_sub19(Vds,photon,delta_phib)='(T19(Vds,photon,delta_phib)*fermi_s19(delta_phib) - T19(0,photon,delta_phib)*fermi_d19(Vds,delta_phib))*Coeff_J19'
+
++      current_sub21(Vds,photon,delta_phib)='(T21(Vds,photon,delta_phib)*fermi_s21(delta_phib) - T21(0,photon,delta_phib)*fermi_d21(Vds,delta_phib))*Coeff_J21'
++      current_sub22(Vds,photon,delta_phib)='(T22(Vds,photon,delta_phib)*fermi_s22(delta_phib) - T22(0,photon,delta_phib)*fermi_d22(Vds,delta_phib))*Coeff_J22'
++      current_sub23(Vds,photon,delta_phib)='(T23(Vds,photon,delta_phib)*fermi_s23(delta_phib) - T23(0,photon,delta_phib)*fermi_d23(Vds,delta_phib))*Coeff_J23'
++      current_sub24(Vds,photon,delta_phib)='(T24(Vds,photon,delta_phib)*fermi_s24(delta_phib) - T24(0,photon,delta_phib)*fermi_d24(Vds,delta_phib))*Coeff_J24'
++      current_sub25(Vds,photon,delta_phib)='(T25(Vds,photon,delta_phib)*fermi_s25(delta_phib) - T25(0,photon,delta_phib)*fermi_d25(Vds,delta_phib))*Coeff_J25'
++      current_sub26(Vds,photon,delta_phib)='(T26(Vds,photon,delta_phib)*fermi_s26(delta_phib) - T26(0,photon,delta_phib)*fermi_d26(Vds,delta_phib))*Coeff_J26'
++      current_sub27(Vds,photon,delta_phib)='(T27(Vds,photon,delta_phib)*fermi_s27(delta_phib) - T27(0,photon,delta_phib)*fermi_d27(Vds,delta_phib))*Coeff_J27'
++      current_sub28(Vds,photon,delta_phib)='(T28(Vds,photon,delta_phib)*fermi_s28(delta_phib) - T28(0,photon,delta_phib)*fermi_d28(Vds,delta_phib))*Coeff_J28'
++      current_sub29(Vds,photon,delta_phib)='(T29(Vds,photon,delta_phib)*fermi_s29(delta_phib) - T29(0,photon,delta_phib)*fermi_d29(Vds,delta_phib))*Coeff_J29'
+
+* The subband current
++      current_sub_1(Vds,photon,delta_phib) =  'current_sub11(Vds,photon,delta_phib)  + \\
+                                                current_sub12(Vds,photon,delta_phib)  + \\
+                                                current_sub13(Vds,photon,delta_phib)  + \\
+                                                current_sub14(Vds,photon,delta_phib)  + \\
+                                                current_sub15(Vds,photon,delta_phib)  + \\
+                                                current_sub16(Vds,photon,delta_phib)  + \\
+                                                current_sub17(Vds,photon,delta_phib)  + \\
+                                                current_sub18(Vds,photon,delta_phib)  + \\
+                                                current_sub19(Vds,photon,delta_phib)'
+
++      current_sub_2(Vds,photon,delta_phib) =  'current_sub21(Vds,photon,delta_phib)  + \\
+                                                current_sub22(Vds,photon,delta_phib)  + \\
+                                                current_sub23(Vds,photon,delta_phib)  + \\
+                                                current_sub24(Vds,photon,delta_phib)  + \\
+                                                current_sub25(Vds,photon,delta_phib)  + \\
+                                                current_sub26(Vds,photon,delta_phib)  + \\
+                                                current_sub27(Vds,photon,delta_phib)  + \\
+                                                current_sub28(Vds,photon,delta_phib)  + \\
+                                                current_sub29(Vds,photon,delta_phib)'
+
+*********************************************************************
+* The total current of the first 2 sub-bands, with AP, OP backscattering
+*********************************************************************
+.PARAM JFET(Vds,photon,delta_phib)='coeffj*CocoJ/Lgate*(current_sub_1(Vds,photon,delta_phib) + current_sub_2(Vds,photon,delta_phib))'
+
+*********************************************************************
+* The total current of the first 2 sub-bands, of the n+ interconnect
+*********************************************************************
+.PARAM J1(Vds,phib) = 'coeffj*kT*(log(1+exp((E1-Efi-phib)/kT))-log(exp(-Vds/kT)+exp((E1-Efi-phib)/kT)))'
++      J2(Vds,phib) = 'coeffj*kT*(log(1+exp((E2-Efi-phib)/kT))-log(exp(-Vds/kT)+exp((E2-Efi-phib)/kT)))'
+
++      Jint(Vds,phib) = 'J1(Vds,phib)+J2(Vds,phib)'
+
+*********************************************************************
+* The BTBT current component of the mth sub-band
+*********************************************************************
+.PARAM Jbtbt_sub_1(Vds,Ids)='log((1+exp((Vds-E1+Ids*Rud-Efi)/kT))/(1+exp((E1+Ids*Rud-Efi)/kT)))*MAX(Vds-2*E1,0)/(Vds-2*E1)'
++      Jbtbt_sub_2(Vds,Ids)='log((1+exp((Vds-E2+Ids*Rud-Efi)/kT))/(1+exp((E2+Ids*Rud-Efi)/kT)))*MAX(Vds-2*E2,0)/(Vds-2*E2)'
+                                                            
+*********************************************************************
+* The total BTBT current
+*********************************************************************
+.PARAM J_btbt(Vds,Ids,phib)='0*coeffj*kT*(Jbtbt_sub_1(Vds,Ids)*Tbtbt1(Vds,phib) + \\
+                                        0*Jbtbt_sub_2(Vds,Ids)*Tbtbt2(Vds,phib))'
+
+*********************************************************************
+* The parameters for charge induced in the channel
+*********************************************************************
+.PARAM coeffc = '4*q/(3*pi*Vpi*d)'    $ mode degeneracy already considered
+
+* Number of the electrons in subband (m,n)
++      charge_sub10(Vd,Vs,delta_phib) = '1/(1+exp((E1-delta_phib)/kT))  + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E1-delta_phib)/kT))'
++      charge_sub11(Vd,Vs,delta_phib) = '1/(1+exp((E11-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E11-delta_phib)/kT))'
++      charge_sub12(Vd,Vs,delta_phib) = '1/(1+exp((E12-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E12-delta_phib)/kT))'
++      charge_sub13(Vd,Vs,delta_phib) = '1/(1+exp((E13-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E13-delta_phib)/kT))'
++      charge_sub14(Vd,Vs,delta_phib) = '1/(1+exp((E14-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E14-delta_phib)/kT))'
++      charge_sub15(Vd,Vs,delta_phib) = '1/(1+exp((E15-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E15-delta_phib)/kT))'
++      charge_sub16(Vd,Vs,delta_phib) = '1/(1+exp((E16-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E16-delta_phib)/kT))'
++      charge_sub17(Vd,Vs,delta_phib) = '1/(1+exp((E17-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E17-delta_phib)/kT))'
++      charge_sub18(Vd,Vs,delta_phib) = '1/(1+exp((E18-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E18-delta_phib)/kT))'
++      charge_sub19(Vd,Vs,delta_phib) = '1/(1+exp((E19-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E19-delta_phib)/kT))'
+
++      charge_sub20(Vd,Vs,delta_phib) = '1/(1+exp((E2-delta_phib)/kT))  + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E2-delta_phib)/kT))'
++      charge_sub21(Vd,Vs,delta_phib) = '1/(1+exp((E21-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E21-delta_phib)/kT))'
++      charge_sub22(Vd,Vs,delta_phib) = '1/(1+exp((E22-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E22-delta_phib)/kT))'
++      charge_sub23(Vd,Vs,delta_phib) = '1/(1+exp((E23-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E23-delta_phib)/kT))'
++      charge_sub24(Vd,Vs,delta_phib) = '1/(1+exp((E24-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E24-delta_phib)/kT))'
++      charge_sub25(Vd,Vs,delta_phib) = '1/(1+exp((E25-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E25-delta_phib)/kT))'
++      charge_sub26(Vd,Vs,delta_phib) = '1/(1+exp((E26-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E26-delta_phib)/kT))'
++      charge_sub27(Vd,Vs,delta_phib) = '1/(1+exp((E27-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E27-delta_phib)/kT))'
++      charge_sub28(Vd,Vs,delta_phib) = '1/(1+exp((E28-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E28-delta_phib)/kT))'
++      charge_sub29(Vd,Vs,delta_phib) = '1/(1+exp((E29-delta_phib)/kT)) + exp(-(Vd-Vs)/kT)/(exp(-(Vd-Vs)/kT)+exp((E29-delta_phib)/kT))'
+
+* Charge coming from the source. 
++      Qs_sub10(delta_phib) = '1/(1+exp((E1-delta_phib)/kT))'
++      Qs_sub11(delta_phib) = '1/(1+exp((E11-delta_phib)/kT))'
++      Qs_sub12(delta_phib) = '1/(1+exp((E12-delta_phib)/kT))'
++      Qs_sub13(delta_phib) = '1/(1+exp((E13-delta_phib)/kT))'
++      Qs_sub14(delta_phib) = '1/(1+exp((E14-delta_phib)/kT))'
++      Qs_sub15(delta_phib) = '1/(1+exp((E15-delta_phib)/kT))'
++      Qs_sub16(delta_phib) = '1/(1+exp((E16-delta_phib)/kT))'
++      Qs_sub17(delta_phib) = '1/(1+exp((E17-delta_phib)/kT))'
++      Qs_sub18(delta_phib) = '1/(1+exp((E18-delta_phib)/kT))'
++      Qs_sub19(delta_phib) = '1/(1+exp((E19-delta_phib)/kT))'
+
++      Qs_sub20(delta_phib) = '1/(1+exp((E2-delta_phib)/kT))'
++      Qs_sub21(delta_phib) = '1/(1+exp((E21-delta_phib)/kT))'
++      Qs_sub22(delta_phib) = '1/(1+exp((E22-delta_phib)/kT))'
++      Qs_sub23(delta_phib) = '1/(1+exp((E23-delta_phib)/kT))'
++      Qs_sub24(delta_phib) = '1/(1+exp((E24-delta_phib)/kT))'
++      Qs_sub25(delta_phib) = '1/(1+exp((E25-delta_phib)/kT))'
++      Qs_sub26(delta_phib) = '1/(1+exp((E26-delta_phib)/kT))'
++      Qs_sub27(delta_phib) = '1/(1+exp((E27-delta_phib)/kT))'
++      Qs_sub28(delta_phib) = '1/(1+exp((E28-delta_phib)/kT))'
++      Qs_sub29(delta_phib) = '1/(1+exp((E29-delta_phib)/kT))'
+
+*********************************************************************
+* The mth subband charge of the first 10 parallel bands 
+* valid for channel length Lgate from 10nm to 100nm
+*********************************************************************
+* The total charge in the channel, consider the first two sub-bands
+*********************************************************************
+.PARAM charge_sub_1(Vd,Vs,delta_phib) = 'charge_sub10(Vd,Vs,delta_phib) + charge_sub11(Vd,Vs,delta_phib) + \\
+                                         charge_sub12(Vd,Vs,delta_phib) + charge_sub13(Vd,Vs,delta_phib) + \\
+                                         charge_sub14(Vd,Vs,delta_phib) + charge_sub15(Vd,Vs,delta_phib) + \\
+                                         charge_sub16(Vd,Vs,delta_phib) + charge_sub17(Vd,Vs,delta_phib) + \\
+                                         charge_sub18(Vd,Vs,delta_phib) + charge_sub19(Vd,Vs,delta_phib)'
+
++      charge_sub_2(Vd,Vs,delta_phib) = 'charge_sub20(Vd,Vs,delta_phib) + charge_sub21(Vd,Vs,delta_phib) + \\
+                                         charge_sub22(Vd,Vs,delta_phib) + charge_sub23(Vd,Vs,delta_phib) + \\
+                                         charge_sub24(Vd,Vs,delta_phib) + charge_sub25(Vd,Vs,delta_phib) + \\
+                                         charge_sub26(Vd,Vs,delta_phib) + charge_sub27(Vd,Vs,delta_phib) + \\
+                                         charge_sub28(Vd,Vs,delta_phib) + charge_sub29(Vd,Vs,delta_phib)'
+
++      charge_total(Vd,Vs,delta_phib) = 'de_fac*q*(charge_sub_1(Vd,Vs,delta_phib) + charge_sub_2(Vd,Vs,delta_phib))/Lgate'
+                                   
+*********************************************************************
+* The adjacent CNTs are tied to GND in one extreme case
+********************************************************************* 
+*+      charge_channel(Vd,Vg,Vs,Vb,delta_phib) = 'Ci*(Vg-Vs-Vfbp)+Csub_tot*(Vb-Vs)-(Ci+Csub_tot)*delta_phib'
+
++      charge_channel(Vd,Vg,Vs,Vb,delta_phib) = 'Ci*(Vg-Vs-Vfbp)+Csub*(Vb-Vs)-(Ci+Csub)*delta_phib+CoupleRatio*Ccsd*(-V(CoupleNode)-Vs-delta_phib)+(1-CoupleRatio)*Ccsd*(-delta_phib)'
+
+*********************************************************************
+* Charge accumulated at drain side due to optical scattering
+*********************************************************************
+* The reflection probability due to OP scattering
+.PARAM Rd_op10(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op10(Vds,photon,delta_phib))'    
++      Rd_op11(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op11(Vds,photon,delta_phib))'    
++      Rd_op12(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op12(Vds,photon,delta_phib))'    
++      Rd_op13(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op13(Vds,photon,delta_phib))'    
++      Rd_op14(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op14(Vds,photon,delta_phib))'    
++      Rd_op15(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op15(Vds,photon,delta_phib))'    
+
++      Rd_op20(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op20(Vds,photon,delta_phib))'    
++      Rd_op21(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op21(Vds,photon,delta_phib))'    
++      Rd_op22(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op22(Vds,photon,delta_phib))'    
++      Rd_op23(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op23(Vds,photon,delta_phib))'    
++      Rd_op24(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op24(Vds,photon,delta_phib))'    
++      Rd_op25(Vds,photon,delta_phib) = 'Ld_par/(Ld_par+ld_op25(Vds,photon,delta_phib))'    
+
++      Qop_10(Vds,photon,delta_phib) = 'Qs_sub10(delta_phib)*Rd_op10(Vds,photon,delta_phib)'
++      Qop_11(Vds,photon,delta_phib) = 'Qs_sub11(delta_phib)*Rd_op11(Vds,photon,delta_phib)'
++      Qop_12(Vds,photon,delta_phib) = 'Qs_sub12(delta_phib)*Rd_op12(Vds,photon,delta_phib)'
++      Qop_13(Vds,photon,delta_phib) = 'Qs_sub13(delta_phib)*Rd_op13(Vds,photon,delta_phib)'
++      Qop_14(Vds,photon,delta_phib) = 'Qs_sub14(delta_phib)*Rd_op14(Vds,photon,delta_phib)'
++      Qop_15(Vds,photon,delta_phib) = 'Qs_sub15(delta_phib)*Rd_op15(Vds,photon,delta_phib)'
+
++      Qop_20(Vds,photon,delta_phib) = 'Qs_sub20(delta_phib)*Rd_op20(Vds,photon,delta_phib)'
++      Qop_21(Vds,photon,delta_phib) = 'Qs_sub21(delta_phib)*Rd_op21(Vds,photon,delta_phib)'
++      Qop_22(Vds,photon,delta_phib) = 'Qs_sub22(delta_phib)*Rd_op22(Vds,photon,delta_phib)'
++      Qop_23(Vds,photon,delta_phib) = 'Qs_sub23(delta_phib)*Rd_op23(Vds,photon,delta_phib)'
++      Qop_24(Vds,photon,delta_phib) = 'Qs_sub24(delta_phib)*Rd_op24(Vds,photon,delta_phib)'
++      Qop_25(Vds,photon,delta_phib) = 'Qs_sub25(delta_phib)*Rd_op25(Vds,photon,delta_phib)'
+
++      Qop_sub_1(Vds,photon,delta_phib) = 'q*(Qop_10(Vds,photon,delta_phib) + Qop_11(Vds,photon,delta_phib)  + \\ 
+                                              Qop_12(Vds,photon,delta_phib) + Qop_13(Vds,photon,delta_phib)  + \\
+                                              Qop_14(Vds,photon,delta_phib) + Qop_15(Vds,photon,delta_phib))'
+
++      Qop_sub_2(Vds,photon,delta_phib) = 'q*(Qop_20(Vds,photon,delta_phib) + Qop_21(Vds,photon,delta_phib)  + \\ 
+                                              Qop_22(Vds,photon,delta_phib) + Qop_23(Vds,photon,delta_phib)  + \\
+                                              Qop_24(Vds,photon,delta_phib) + Qop_25(Vds,photon,delta_phib))'
+                                                                                            
++      Qop(Vds,photon,delta_phib) = 'Qop_sub_1(Vds,photon,delta_phib) + Qop_sub_2(Vds,photon,delta_phib)'
+
+*********************************************************************
+* Charge induced on the gate.
+*********************************************************************
++      Qg(Vg,Vs,delta_phib) = 'Ci*(Vg-Vs-Vfbp-delta_phib)'
+
+*********************************************************************
+* Charge induced on the substrate and source/drain island
+*********************************************************************
++      Qb(Vb,Vs,delta_phib) = 'Csub_tot*(Vb-Vs-delta_phib)'
+
+*********************************************************************
+* The parameters to calculate trans-capacitance
+*********************************************************************
+* Number of the electrons in subband (m,n)
+.PARAM trans_c_sub10(Vd,Vs,delta_phib) = 'exp((E1-delta_phib)/kT)/POW(1+exp((E1-delta_phib)/kT),2)   + exp((E1-delta_phib+Vd-Vs)/kT)/POW(1+exp((E1-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub11(Vd,Vs,delta_phib) = 'exp((E11-delta_phib)/kT)/POW(1+exp((E11-delta_phib)/kT),2) + exp((E11-delta_phib+Vd-Vs)/kT)/POW(1+exp((E11-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub12(Vd,Vs,delta_phib) = 'exp((E12-delta_phib)/kT)/POW(1+exp((E12-delta_phib)/kT),2) + exp((E12-delta_phib+Vd-Vs)/kT)/POW(1+exp((E12-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub13(Vd,Vs,delta_phib) = 'exp((E13-delta_phib)/kT)/POW(1+exp((E13-delta_phib)/kT),2) + exp((E13-delta_phib+Vd-Vs)/kT)/POW(1+exp((E13-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub14(Vd,Vs,delta_phib) = 'exp((E14-delta_phib)/kT)/POW(1+exp((E14-delta_phib)/kT),2) + exp((E14-delta_phib+Vd-Vs)/kT)/POW(1+exp((E14-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub15(Vd,Vs,delta_phib) = 'exp((E15-delta_phib)/kT)/POW(1+exp((E15-delta_phib)/kT),2) + exp((E15-delta_phib+Vd-Vs)/kT)/POW(1+exp((E15-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub16(Vd,Vs,delta_phib) = 'exp((E16-delta_phib)/kT)/POW(1+exp((E16-delta_phib)/kT),2) + exp((E16-delta_phib+Vd-Vs)/kT)/POW(1+exp((E16-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub17(Vd,Vs,delta_phib) = 'exp((E17-delta_phib)/kT)/POW(1+exp((E17-delta_phib)/kT),2) + exp((E17-delta_phib+Vd-Vs)/kT)/POW(1+exp((E17-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub18(Vd,Vs,delta_phib) = 'exp((E18-delta_phib)/kT)/POW(1+exp((E18-delta_phib)/kT),2) + exp((E18-delta_phib+Vd-Vs)/kT)/POW(1+exp((E18-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub19(Vd,Vs,delta_phib) = 'exp((E19-delta_phib)/kT)/POW(1+exp((E19-delta_phib)/kT),2) + exp((E19-delta_phib+Vd-Vs)/kT)/POW(1+exp((E19-delta_phib+Vd-Vs)/kT),2)'
+
++      trans_c_sub20(Vd,Vs,delta_phib) = 'exp((E2-delta_phib)/kT)/POW(1+exp((E2-delta_phib)/kT),2)   + exp((E2-delta_phib+Vd-Vs)/kT)/POW(1+exp((E2-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub21(Vd,Vs,delta_phib) = 'exp((E21-delta_phib)/kT)/POW(1+exp((E21-delta_phib)/kT),2) + exp((E21-delta_phib+Vd-Vs)/kT)/POW(1+exp((E21-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub22(Vd,Vs,delta_phib) = 'exp((E22-delta_phib)/kT)/POW(1+exp((E22-delta_phib)/kT),2) + exp((E22-delta_phib+Vd-Vs)/kT)/POW(1+exp((E22-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub23(Vd,Vs,delta_phib) = 'exp((E23-delta_phib)/kT)/POW(1+exp((E23-delta_phib)/kT),2) + exp((E23-delta_phib+Vd-Vs)/kT)/POW(1+exp((E23-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub24(Vd,Vs,delta_phib) = 'exp((E24-delta_phib)/kT)/POW(1+exp((E24-delta_phib)/kT),2) + exp((E24-delta_phib+Vd-Vs)/kT)/POW(1+exp((E24-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub25(Vd,Vs,delta_phib) = 'exp((E25-delta_phib)/kT)/POW(1+exp((E25-delta_phib)/kT),2) + exp((E25-delta_phib+Vd-Vs)/kT)/POW(1+exp((E25-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub26(Vd,Vs,delta_phib) = 'exp((E26-delta_phib)/kT)/POW(1+exp((E26-delta_phib)/kT),2) + exp((E26-delta_phib+Vd-Vs)/kT)/POW(1+exp((E26-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub27(Vd,Vs,delta_phib) = 'exp((E27-delta_phib)/kT)/POW(1+exp((E27-delta_phib)/kT),2) + exp((E27-delta_phib+Vd-Vs)/kT)/POW(1+exp((E27-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub28(Vd,Vs,delta_phib) = 'exp((E28-delta_phib)/kT)/POW(1+exp((E28-delta_phib)/kT),2) + exp((E28-delta_phib+Vd-Vs)/kT)/POW(1+exp((E28-delta_phib+Vd-Vs)/kT),2)'
++      trans_c_sub29(Vd,Vs,delta_phib) = 'exp((E29-delta_phib)/kT)/POW(1+exp((E29-delta_phib)/kT),2) + exp((E29-delta_phib+Vd-Vs)/kT)/POW(1+exp((E29-delta_phib+Vd-Vs)/kT),2)'
+
++      c_vds_sub10(Vd,Vs,delta_phib) = 'exp((E1-delta_phib+Vd-Vs)/kT)/POW(1+exp((E1-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub11(Vd,Vs,delta_phib) = 'exp((E11-delta_phib+Vd-Vs)/kT)/POW(1+exp((E11-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub12(Vd,Vs,delta_phib) = 'exp((E12-delta_phib+Vd-Vs)/kT)/POW(1+exp((E12-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub13(Vd,Vs,delta_phib) = 'exp((E13-delta_phib+Vd-Vs)/kT)/POW(1+exp((E13-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub14(Vd,Vs,delta_phib) = 'exp((E14-delta_phib+Vd-Vs)/kT)/POW(1+exp((E14-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub15(Vd,Vs,delta_phib) = 'exp((E15-delta_phib+Vd-Vs)/kT)/POW(1+exp((E15-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub16(Vd,Vs,delta_phib) = 'exp((E16-delta_phib+Vd-Vs)/kT)/POW(1+exp((E16-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub17(Vd,Vs,delta_phib) = 'exp((E17-delta_phib+Vd-Vs)/kT)/POW(1+exp((E17-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub18(Vd,Vs,delta_phib) = 'exp((E18-delta_phib+Vd-Vs)/kT)/POW(1+exp((E18-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub19(Vd,Vs,delta_phib) = 'exp((E19-delta_phib+Vd-Vs)/kT)/POW(1+exp((E19-delta_phib+Vd-Vs)/kT),2)'
+
++      c_vds_sub20(Vd,Vs,delta_phib) = 'exp((E2-delta_phib+Vd-Vs)/kT)/POW(1+exp((E2-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub21(Vd,Vs,delta_phib) = 'exp((E21-delta_phib+Vd-Vs)/kT)/POW(1+exp((E21-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub22(Vd,Vs,delta_phib) = 'exp((E22-delta_phib+Vd-Vs)/kT)/POW(1+exp((E22-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub23(Vd,Vs,delta_phib) = 'exp((E23-delta_phib+Vd-Vs)/kT)/POW(1+exp((E23-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub24(Vd,Vs,delta_phib) = 'exp((E24-delta_phib+Vd-Vs)/kT)/POW(1+exp((E24-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub25(Vd,Vs,delta_phib) = 'exp((E25-delta_phib+Vd-Vs)/kT)/POW(1+exp((E25-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub26(Vd,Vs,delta_phib) = 'exp((E26-delta_phib+Vd-Vs)/kT)/POW(1+exp((E26-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub27(Vd,Vs,delta_phib) = 'exp((E27-delta_phib+Vd-Vs)/kT)/POW(1+exp((E27-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub28(Vd,Vs,delta_phib) = 'exp((E28-delta_phib+Vd-Vs)/kT)/POW(1+exp((E28-delta_phib+Vd-Vs)/kT),2)'
++      c_vds_sub29(Vd,Vs,delta_phib) = 'exp((E29-delta_phib+Vd-Vs)/kT)/POW(1+exp((E29-delta_phib+Vd-Vs)/kT),2)'
+
+*********************************************************************
+* The mth subband charge of the first 10 parallel bands 
+* valid for channel length Lgate from 10nm to 100nm
+*********************************************************************
+* The total charge in the channel, consider the first two sub-bands
+*********************************************************************
+.PARAM trans_charge_1(Vd,Vs,delta_phib) = 'trans_c_sub10(Vd,Vs,delta_phib) + trans_c_sub11(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub12(Vd,Vs,delta_phib) + trans_c_sub13(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub14(Vd,Vs,delta_phib) + trans_c_sub15(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub16(Vd,Vs,delta_phib) + trans_c_sub17(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub18(Vd,Vs,delta_phib) + trans_c_sub19(Vd,Vs,delta_phib)'
+                                           
++      trans_charge_2(Vd,Vs,delta_phib) = 'trans_c_sub20(Vd,Vs,delta_phib) + trans_c_sub21(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub22(Vd,Vs,delta_phib) + trans_c_sub23(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub24(Vd,Vs,delta_phib) + trans_c_sub25(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub26(Vd,Vs,delta_phib) + trans_c_sub27(Vd,Vs,delta_phib) + \\
+                                           trans_c_sub28(Vd,Vs,delta_phib) + trans_c_sub29(Vd,Vs,delta_phib)'
+
++      trans_charge(Vd,Vs,delta_phib) = 'de_fac*q/(Lgate*kT)*(trans_charge_1(Vd,Vs,delta_phib) + trans_charge_2(Vd,Vs,delta_phib))'
+
++      Vg_to_phib(Vd,Vs,delta_phib) = '(Ci + Csub_tot + trans_charge(Vd,Vs,delta_phib)) / Ci'
+
+****************************************************************
+.PARAM charge_vds_1(Vd,Vs,delta_phib) = 'c_vds_sub10(Vd,Vs,delta_phib) + c_vds_sub11(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub12(Vd,Vs,delta_phib) + c_vds_sub13(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub14(Vd,Vs,delta_phib) + c_vds_sub15(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub16(Vd,Vs,delta_phib) + c_vds_sub17(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub18(Vd,Vs,delta_phib) + c_vds_sub19(Vd,Vs,delta_phib)'
+
++      charge_vds_2(Vd,Vs,delta_phib) = 'c_vds_sub20(Vd,Vs,delta_phib) + c_vds_sub21(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub22(Vd,Vs,delta_phib) + c_vds_sub23(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub24(Vd,Vs,delta_phib) + c_vds_sub25(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub26(Vd,Vs,delta_phib) + c_vds_sub27(Vd,Vs,delta_phib) + \\
+                                         c_vds_sub28(Vd,Vs,delta_phib) + c_vds_sub29(Vd,Vs,delta_phib)'
+
++      charge_vds(Vd,Vs,delta_phib) = ' de_fac*q/(Lgate*kT)*(charge_vds_1(Vd,Vs,delta_phib) + charge_vds_2(Vd,Vs,delta_phib))'
+                                   
++      Vs_to_vg(Vd,Vs,delta_phib) = '(Ci + Csub_tot + charge_vds(Vd,Vs,delta_phib)) / Ci'
+
+*********************************************************************
+* The parasitic drain junction capacitance due to electron accumation with OP backscattering
+*********************************************************************
+.PARAM Cdj(Vds,photon,delta_phib)='Qop(Vds,photon,delta_phib)/(Vds+0.001)*max((1-exp(-100*(Vds+0.001))),1e-18)'
+
+*********************************************************************
+* End of parameter definition
+*********************************************************************
+
+
+*********************************************************************
+*                       START OF DEVICE MODEL                       *
+*********************************************************************   
+
+*********************************************************************
+* The voltage controlled current source
+*********************************************************************
+GCNT       Source       Drain           CUR='JFET(V(Vdrain,Vsource),photon,V(phib,Gnd))'
+GBTBT      Source       Drain           CUR='J_btbt(V(Vdrain,Vsource),I(GCNT),V(phib,Gnd))'
+
+*********************************************************************
+* Gate to Source/Drain/Sub capacitance
+*********************************************************************
+Csg        Source       VggM            'abs((Ci-(Ci+Csub_tot)/Vg_to_phib(V(Vdrain),V(Vsource),V(phib,Gnd)))*Lg/2)'
+Cdg        Drain        VggM            'abs((Ci-(Ci+Csub_tot)/Vg_to_phib(V(Vdrain),V(Vsource),V(phib,Gnd)))*Lg/2)'
+Cbg        Gate         mid2            'abs(Csub_tot/Vg_to_phib(V(Vdrain),V(Vsource),V(phib,Gnd))*Lg)'
+
+Cgs        Gate         VssM            'abs(Ci*(1-Vs_to_vg(V(Vdrain),V(Vsource),V(phib,Gnd))/Vg_to_phib(V(Vdrain),V(Vsource),V(phib,Gnd)))*Lg)'
+Cgd        Gate         VddM            'abs(charge_vds(V(Vdrain),V(Vsource),V(phib,Gnd))/Vg_to_phib(V(Vdrain),V(Vsource),V(phib,Gnd))*Lg)'
+
+Csb        Source       VbbM            'abs((Csub_tot-(Ci+Csub_tot)/Vg_to_phib(V(Vdrain),V(Vsource),V(phib,Gnd))*Csub_tot/Ci)*Lg/2)'
+Cdb        Drain        VbbM            'abs((Csub_tot-(Ci+Csub_tot)/Vg_to_phib(V(Vdrain),V(Vsource),V(phib,Gnd))*Csub_tot/Ci)*Lg/2)'
+  
+Cdj        Drain        Gnd             'abs(Cdj(V(Drain,Source),photon,V(phib,Gnd))*Ld_par)'
+
+* The coupling capacitance between metal Gate stack and doped S/D carbon nanotube
+Cgss       Gate         Source          '(Coeff1_Cgsd*Lss+Coeff2_Cgsd)*GF*Cratio'     
+Cgdd       Gate         Drain           '(Coeff1_Cgsd*Ldd+Coeff2_Cgsd)*GF*Cratio'     
+
+*********************************************************************
+* Substrate resistance
+*********************************************************************
+Rsub       mid2         Sub             'Rsub'
+
+*********************************************************************
+*                       END OF DEVICE MODEL                         *
+*********************************************************************
+* delta_phib: a circuit for solving the equations
+*********************************************************************
+G_Qtotal         Vdrain     phib        CUR='charge_channel(V(Vdrain),V(Vgate),V(Vsource),V(VsubM),V(phib,Gnd))'
+G_Qchannel       phib       Gnd         CUR='charge_total(V(Vdrain),V(Vsource),V(phib,Gnd))'
+Rdummy1          phib       Gnd         1e20    $ Dummy resistance.
+
+*********************************************************************
+* The dummy controlled voltage source to get Vds and delta_phib:
+* a circuit for solving the equations
+*********************************************************************
+Edrain   Vdrain     Gnd    VCVS   Drain       Gnd   -1
+Egate    Vgate      Gnd    VCVS   Gate        Gnd   -1
+Esource  Vsource    Gnd    VCVS   Source      Gnd   -1
+Esub     VsubM      Gnd    VCVS   Sub         Gnd   -1
+Evdd     VddM       Gnd    VCVS   Drain       Gnd    1
+EVgg     VggM       Gnd    VCVS   Gate        Gnd    1
+EVss     VssM       Gnd    VCVS   Source      Gnd    1
+EVbb     VbbM       Gnd    VCVS   Sub         Gnd    1
+
+.ENDS PCNFET_L1
+********************************************************************
+*
+* End of P-CNFET Level 1 Sub-circuit Definition
+*
+********************************************************************
+
+* Last Modified: 09/09/2008 Albert Lin
+********************************************************************
+*
+* N-CNFET Level 2 Sub-circuit Definition
+*
+********************************************************************
+.SUBCKT NCNFET_L2  Drain  Gate  Source  Sub  CoupleNode Lch=L_channel Lgeff=Lceff Lss=L_sd Ldd=L_sd Efi=0.6 Kgate=16 Tox=4e-9 Csub=0 Ccsd=0 CoupleRatio=0 Vfbn=0 GF=0 Pitch=20e-9 n1=19 n2=0 CNTPos=1 Dout=1 Sout=1
+ 
+***********************************
+* The energy of the perpendicular component of the mth sub-band, above Ei
+***********************************
+.PARAM E1='Vpi*pi/SQRT(3*(POW(n1,2)+n1*n2+POW(n2,2)))'
++      E2='2*E1'
+
+***********************************
+* The quantum contact resistance
+***********************************
+*.PARAM Efi='V(XNCNFET_L1.phib)'
+.PARAM Ef0='MAX(Efi,E1+0.01)'
++      flag1='MAX(SGN(Ef0-E1),0)'
++      flag2='MAX(SGN(Ef0-E2),0)'       
++      Qo='2*(SQRT(POW(Ef0,2)-POW(E1,2))*flag1+SQRT(POW(Ef0,2)-POW(E2,2))*flag2)'
++      phib_max1='SQRT(POW(POW(E1,2)-POW(E2,2),2)+2*(POW(E1,2)+POW(E2,2))*POW(Qo,2)+POW(Qo,4))/(2*Qo)-Ef0'
++      phib_max2='SQRT(POW(Qo,2)+POW(E1,2))-Ef0'
++      diff_phib='phib_max2-phib_max1'
++      phib_max='phib_max1*MAX(SGN(diff_phib),0)+phib_max2*MAX(SGN(-diff_phib),0)'
++      Vd_max='phib_max+Ef0-E1'
++      phib_ratio='phib_max/Vd_max'
+
+* Vds/Vd is the voltage difference between source/drain Fermi level
+.PARAM Vbias(Vd)='MAX(MIN(Vd,Vd_max),1e-9)'
++      delta_phib(Vd)='phib_ratio*Vbias(Vd)'
++      c_delta_phib(Vd)='(1-phib_ratio)*Vbias(Vd)'
++      Coexp1(Vd)='exp((E1-Ef0-delta_phib(Vd))/kT)'
++      Coexp2(Vd)='exp((E2-Ef0-delta_phib(Vd))/kT)'
++      Rc(Vds)='1/((2+kT/Vds*(log((1+Coexp1(Vds))/(1+Coexp1(Vds)*exp(Vds/kT))) + log((1+Coexp2(Vds))/(1+Coexp2(Vds)*exp(Vds/kT)))))*Coeffj)'
+
+***********************************
+* The total resistance at drain side
+***********************************
+* Dout=1: drain is connected to another CNFET
+* Dout=0: drain is connected to ideal metal
+.PARAM CoeffRd='Dout*(Ldd-Leff+1e-12)/Leff + (1-Dout)*Ldd/Leff'
++      CoeffRs='Lss/Leff'
+
+***********************************
+* The Schottky Barrier resistance
+***********************************
+* The radius of the CNT
+.PARAM radius='a*SQRT(POW(n1,2)+n1*n2+POW(n2,2))/(2*pi)'
+
+* The dopant concentration
+.PARAM Ndopant='0.2702/(POW(radius,2)*Vpi*d)*SQRT(POW(Ef0,2)-POW(E1,2))'
++      Dcoeff='SQRT(2*Ksub*epso/(q*Ndopant))'
+
+* The potential barrier increasing at CNT side, due to applied bias
+* Vsba: the bias accross SB
+* Vres: the bias accross doped CNT
+* s_phi_barrier: us-Efi > 0
+* d_phi_barrier: ud-Efi < 0
+* barrier == 1: source side barrier
+* barrier == 0: drain side barrier
++      phi_barrier(Vsba,Vres,barrier)='Vsba + barrier*delta_phib(Vres/CoeffRs) - (1-barrier)*c_delta_phib(Vres/CoeffRd)'
+
+* The build in voltage
+.PARAM Vbi(Vsba,Vres,barrier)='MAX(phi_M-phi_S+Ef0+phi_barrier(Vsba,Vres,barrier),0)'
+
+* The minimum width of the tunneling barrier 
+.PARAM Wbarrier1(Vsba,Vres,barrier)='Dcoeff*(SQRT(Vbi(Vsba,Vres,barrier))-SQRT(Ef0-E1+phi_barrier(Vsba,Vres,barrier)))'
+
+* The minimum height of the tunneling barrier 
+.PARAM Vbarrier1='MAX(phi_M-phi_S+E1,0)'
+
+* The maximum width of the tunneling barrier 
+.PARAM Wbarrier2(Vsba,Vres,barrier)='Dcoeff*(SQRT(Vbi(Vsba,Vres,barrier))-SQRT(Ef0-E1))'
+
+* The maximum height of the tunneling barrier 
+.PARAM Vbarrier2(Vsba,Vres,barrier)='Vbarrier1+phi_barrier(Vsba,Vres,barrier)'
+
+* The average tunneling probability through the ideal triangle tunneling region
+.PARAM Tuncoeff='-0.6285/(radius*SQRT(E1))'
++      Tavg(Vsba,Vres,barrier) = '(EXP(Tuncoeff*Wbarrier1(Vsba,Vres,barrier)*SQRT(Vbarrier1)) + EXP(Tuncoeff*Wbarrier2(Vsba,Vres,barrier)*SQRT(Vbarrier2(Vsba,Vres,barrier))))/2'
+
+***********************************************
+* Coupling capacitance between adjacent CNTs
+***********************************************
+.PARAM dia='a*SQRT(POW(n1,2)+n1*n2+POW(n2,2))/pi'
++      Cc_cnt='Coeff_Cc/LOG(Pitch/dia + SQRT(POW(Pitch/dia,2)-1))'
++      Cint='0.5*(Csub+Ccabove)'    $ total coupling capacitance for source/drain region CNT
+
+***********************************************
+* Connections of Components
+***********************************************
+* The Schottky Barrier at drain side
+Rsbd      Drain        Drain_b               'MAX((1/Tavg(V(Drain_b,Drain),V(Drain_b,Drain_ch),0)-1)*Rc(MAX(ABS(V(Drain_b,Drain_ch))/CoeffRd,1e-9))*(1-Dout),1e-4)'
+
+* The resistance at drain side
+Rd	  Drain_b      Drain_ch	             'MAX(CoeffRd*Rc(MAX(ABS(V(Drain_b,Drain_ch))/CoeffRd,1e-9)),1e-4)'      
+
+* The coupling capacitance between CNTs, CNT and below/above plane, at drain side 
+Cd1       Drain_b      Sub                   'Ldd*Cint'                                   
+Cd2       Drain_ch     Sub                   'Ldd*Cint'                                  
+
+* the potential drop over the resistive channel region
+EDDin     Drain_ch     Drain_L1              VOL='V(Drain_ch,Source_L1)*Lch/(Lch+Lgeff)'
+
+* the potential drop due to the quantum resistance
+XNCNFET_L1    Drain_L1  Gate  Source_L1  Sub  CoupleNode  NCNFET_L1  Lg='Lch' Lgeff='Lgeff' Lss='Lss' Ldd='Ldd' Efi='Efi' Kgate='Kgate' Tox='Tox' Csub='Csub' Ccsd='Ccsd' CoupleRatio='CoupleRatio' Vfbn='Vfbn' GF='GF' Pitch='Pitch' n1='n1' n2='n2' CNTPos='CNTPos'
+
+* The resistance at source side
+Rs        Source_b     Source_L1             'MAX(Lss/Leff*Rc(MAX(ABS(V(Drain_b,Drain_ch))/CoeffRd,1e-9)),1e-4)'     
+
+* The Schottky Barrier at source side
+Rsbs      Source       Source_b              'MAX((1/Tavg(V(Source_b,Source),V(Source_L1,Source_b),1)-1)*Rc(MAX(ABS(V(Drain_b,Drain_ch))/CoeffRd,1e-9))*(1-Sout),1e-4)'
+
+* The coupling capacitance between CNTs, CNT and below/above plane, at source side
+Cs1       Source_b     Sub                   'Lss*Cint'                                   
+Cs2       Source_L1    Sub                   'Lss*Cint'                                   
+
+.ENDS NCNFET_L2
+********************************************************************
+*
+* End of N-CNFET Level 2 Sub-circuit Definition
+*
+********************************************************************
+
+* Last Modified: 09/09/2008 Albert Lin
+********************************************************************
+*
+* P-CNFET Level 2 Sub-circuit Definition
+*
+********************************************************************
+.SUBCKT PCNFET_L2  Drain  Gate  Source  Sub  CoupleNode Lch=L_channel Lgeff=Lceff Lss=L_sd Ldd=L_sd Efi=0.6 Kgate=16 Tox=4e-9 Csub=0 Ccsd=0 CoupleRatio=0 Vfbp=0 GF=0 Pitch=20e-9 n1=19 n2=0 CNTPos=1 Dout=1 Sout=1
+
+***********************************
+* The energy of the perpendicular component of the mth sub-band, above Ei
+***********************************
+.PARAM E1='Vpi*pi/SQRT(3*(POW(n1,2)+n1*n2+POW(n2,2)))'
++      E2='2*E1'
+
+***********************************
+* The quantum contact resistance
+***********************************
+*.PARAM Efi='V(XPCNFET_L1.phib)'
+.PARAM Ef0='MAX(Efi,E1+0.01)'
++      flag1='MAX(SGN(Ef0-E1),0)'
++      flag2='MAX(SGN(Ef0-E2),0)'       
++      Qo='2*(SQRT(POW(Ef0,2)-POW(E1,2))*flag1+SQRT(POW(Ef0,2)-POW(E2,2))*flag2)'
++      phib_max1='SQRT(POW(POW(E1,2)-POW(E2,2),2)+2*(POW(E1,2)+POW(E2,2))*POW(Qo,2)+POW(Qo,4))/(2*Qo)-Ef0'
++      phib_max2='SQRT(POW(Qo,2)+POW(E1,2))-Ef0'
++      diff_phib='phib_max2-phib_max1'
++      phib_max='phib_max1*MAX(SGN(diff_phib),0)+phib_max2*MAX(SGN(-diff_phib),0)'
++      Vd_max='phib_max+Ef0-E1'
++      phib_ratio='phib_max/Vd_max'
+
+* Vds/Vd is the voltage difference between source/drain Fermi level
+.PARAM Vbias(Vd)='MAX(MIN(Vd,Vd_max),1e-9)'
++      delta_phib(Vd)='phib_ratio*Vbias(Vd)'
++      c_delta_phib(Vd)='(1-phib_ratio)*Vbias(Vd)'
++      Coexp1(Vd)='exp((E1-Ef0-delta_phib(Vd))/kT)'
++      Coexp2(Vd)='exp((E2-Ef0-delta_phib(Vd))/kT)'
++      Rc(Vds)='1/((2+kT/Vds*(log((1+Coexp1(Vds))/(1+Coexp1(Vds)*exp(Vds/kT))) + log((1+Coexp2(Vds))/(1+Coexp2(Vds)*exp(Vds/kT)))))*Coeffj)'
+
+***********************************
+* The total resistance at drain side
+***********************************
+* Dout=1: drain is connected to another CNFET
+* Dout=0: drain is connected to ideal metal
+.PARAM CoeffRd='Dout*(Ldd-Leff+1e-12)/Leff + (1-Dout)*Ldd/Leff'
++      CoeffRs='Lss/Leff'
+
+***********************************
+* The Schottky Barrier resistance
+***********************************
+* The radius of the CNT
+.PARAM radius='a*SQRT(POW(n1,2)+n1*n2+POW(n2,2))/(2*pi)'
+
+* The dopant concentration
+.PARAM Ndopant='0.2702/(POW(radius,2)*Vpi*d)*SQRT(POW(Ef0,2)-POW(E1,2))'
++      Dcoeff='SQRT(2*Ksub*epso/(q*Ndopant))'
+
+* The potential barrier increasing at CNT side, due to applied bias
+* Vsba: the bias accross SB
+* Vres: the bias accross doped CNT
+* s_phi_barrier: us-Efi > 0
+* d_phi_barrier: ud-Efi < 0
+* barrier == 1: source side barrier
+* barrier == 0: drain side barrier
++      phi_barrier(Vsba,Vres,barrier)='Vsba + barrier*delta_phib(Vres/CoeffRs) - (1-barrier)*c_delta_phib(Vres/CoeffRd)'
+
+* The build in voltage
+.PARAM Vbi(Vsba,Vres,barrier)='MAX(phi_M-phi_S+Ef0+phi_barrier(Vsba,Vres,barrier),0)'
+
+* The minimum width of the tunneling barrier 
+.PARAM Wbarrier1(Vsba,Vres,barrier)='Dcoeff*(SQRT(Vbi(Vsba,Vres,barrier))-SQRT(Ef0-E1+phi_barrier(Vsba,Vres,barrier)))'
+
+* The minimum height of the tunneling barrier 
+.PARAM Vbarrier1='MAX(phi_M-phi_S+E1,0)'
+
+* The maximum width of the tunneling barrier 
+.PARAM Wbarrier2(Vsba,Vres,barrier)='Dcoeff*(SQRT(Vbi(Vsba,Vres,barrier))-SQRT(Ef0-E1))'
+
+* The maximum height of the tunneling barrier 
+.PARAM Vbarrier2(Vsba,Vres,barrier)='Vbarrier1+phi_barrier(Vsba,Vres,barrier)'
+
+* The average tunneling probability through the ideal triangle tunneling region
+.PARAM Tuncoeff='-0.6285/(radius*SQRT(E1))'
++      Tavg(Vsba,Vres,barrier) = '(EXP(Tuncoeff*Wbarrier1(Vsba,Vres,barrier)*SQRT(Vbarrier1)) + EXP(Tuncoeff*Wbarrier2(Vsba,Vres,barrier)*SQRT(Vbarrier2(Vsba,Vres,barrier))))/2'
+
+***********************************************
+* Coupling capacitance between adjacent CNTs
+***********************************************
+.PARAM dia='a*SQRT(POW(n1,2)+n1*n2+POW(n2,2))/pi'
++      Cc_cnt='Coeff_Cc/LOG(Pitch/dia + SQRT(POW(Pitch/dia,2)-1))'
++      Cint='0.5*(Csub+Ccabove)'    $ total coupling capacitance for source/drain region CNT
+
+***********************************************
+* Connections of Components
+***********************************************
+* The Schottky Barrier at drain side
+Rsbd      Drain        Drain_b               'MAX((1/Tavg(V(Drain,Drain_b),V(Drain_ch,Drain_b),0)-1)*Rc(MAX(ABS(V(Drain_ch,Drain_b))/CoeffRd,1e-9))*(1-Dout),1e-4)'
+
+* The resistance at drain side
+Rd	  Drain_b      Drain_ch	             'MAX(CoeffRd*Rc(MAX(ABS(V(Drain_b,Drain_ch))/CoeffRd,1e-9)),1e-4)'      
+
+* The coupling capacitance between CNTs, CNT and below/above plane, at drain side 
+Cd1       Drain_b      Sub                   'Ldd*Cint'                                   
+Cd2       Drain_ch     Sub                   'Ldd*Cint'                                  
+
+* the potential drop over the resistive channel region
+EDDin     Drain_ch     Drain_L1              VOL='V(Drain_ch,Source_L1)*Lch/(Lch+Lgeff)'
+
+* the potential drop due to the quantum resistance
+XPCNFET_L1    Drain_L1  Gate  Source_L1  Sub  CoupleNode  PCNFET_L1  Lg='Lch' Lgeff='Lgeff' Lss='Lss' Ldd='Ldd' Efi='Efi' Kgate='Kgate' Tox='Tox' Csub='Csub' Ccsd='Ccsd' CoupleRatio='CoupleRatio' Vfbp='Vfbp' GF='GF' Pitch='Pitch' n1='n1' n2='n2' CNTPos='CNTPos'
+
+* The resistance at source side
+Rs        Source_b     Source_L1             'MAX(Lss/Leff*Rc(MAX(ABS(V(Drain_b,Drain_ch))/CoeffRd,1e-9)),1e-4)'     
+
+* The Schottky Barrier at source side
+Rsbs      Source       Source_b              'MAX((1/Tavg(V(Source,Source_b),V(Source_b,Source_L1),1)-1)*Rc(MAX(ABS(V(Drain_ch,Drain_b))/CoeffRd,1e-9))*(1-Sout),1e-4)'
+
+* The coupling capacitance between CNTs, CNT and below/above plane, at source side
+Cs1       Source_b     Sub                   'Lss*Cint'                                   
+Cs2       Source_L1    Sub                   'Lss*Cint'                                   
+
+.ENDS PCNFET_L2
+********************************************************************
+*
+* End of P-CNFET Level 2 Sub-circuit Definition
+*
+********************************************************************
+
+* Last Modified: 09/09/2008 Albert Lin
+********************************************************************
+*
+* N-CNFET Level 3 Sub-circuit Definition
+*
+********************************************************************
+* Level 3 = top level = includes parasitic capacitance
+********************************************************************
+********************************************************************
+* Standard Models:
+* This model accounts for charge-screening effects among 
+* multiple tubes within the same FET device by 
+* differentiating between tubes at the edge, which are affected by
+* one neighboring tube, and tubes in the middle, which are affected
+* by two neighboring tubes.
+*
+* No 'CNTPos' param is used when instantiating.
+*
+* 'tubes' = number of tubes = 2 (default)
+* For one tube, NCNFET_uniform and PCNFET_uniform are recommended.
+********************************************************************
+.SUBCKT NCNFET  Drain  Gate  Source  Sub  Lch=L_channel Lgeff=Lceff Lss=L_sd Ldd=L_sd Efi=Efo Kgate=Kox Tox=4e-9 Csub=20e-12 Ccsd=Ccsd CoupleRatio=CoupleRatio Vfbn=0 Pitch=20e-9 n1=19 n2=0 Dout=0 Sout=0 Wgate=sub_pitch tubes=2
+
+XNCNFET_L2_edge   Drain  Gate  Source  Sub  Drain  NCNFET_L2  Lch='Lch' Lgeff='Lgeff' Lss='Lss' Ldd='Ldd' Efi='Efi' Kgate='Kgate' Tox='Tox' Csub='Csub' Ccsd='Ccsd' CoupleRatio='CoupleRatio' Vfbn='Vfbn' GF='MIN(Wgate/1e-12,1)' Pitch='Pitch' n1='n1' n2='n2' CNTPos=1 Dout='Dout' Sout='Sout' M='MIN(tubes,2)'
+XNCNFET_L2_midd   Drain  Gate  Source  Sub  Drain  NCNFET_L2  Lch='Lch' Lgeff='Lgeff' Lss='Lss' Ldd='Ldd' Efi='Efi' Kgate='Kgate' Tox='Tox' Csub='Csub' Ccsd='Ccsd' CoupleRatio='CoupleRatio' Vfbn='Vfbn' GF='MIN(Wgate/1e-12,1)' Pitch='Pitch' n1='n1' n2='n2' CNTPos=0 Dout='Dout' Sout='Sout' M='MAX(tubes-2,0.0001)'
+
+* The interconnect parasitic capacitance
+Cgpar   Gate       Sub      'Ctot*Wgate'
+
+.ENDS NCNFET
+********************************************************************
+*
+* End of N-CNFET Level 3 Sub-circuit Definition
+*
+********************************************************************
+
+* Last Modified: 09/09/2008 Albert Lin
+********************************************************************
+*
+* P-CNFET Level 3 Sub-circuit Definition
+*
+********************************************************************
+* Level 3 = top level = includes parasitic capacitance
+********************************************************************
+********************************************************************
+* Standard Models:
+* This model accounts for charge-screening effects among 
+* multiple tubes within the same FET device by 
+* differentiating between tubes at the edge, which are affected by
+* one neighboring tube, and tubes in the middle, which are affected
+* by two neighboring tubes.
+*
+* No 'CNTPos' param is used when instantiating.
+*
+* 'tubes' = number of tubes = 2 (default)
+* For one tube, NCNFET_uniform and PCNFET_uniform are recommended.
+********************************************************************
+.SUBCKT PCNFET  Drain  Gate  Source  Sub  Lch=L_channel Lgeff=Lceff Lss=L_sd Ldd=L_sd Efi=Efo Kgate=Kox Tox=4e-9 Csub=20e-12 Ccsd=Ccsd CoupleRatio=CoupleRatio Vfbp=0 Pitch=20e-9 n1=19 n2=0 Dout=0 Sout=0 Wgate=sub_pitch tubes=2 
+
+XPCNFET_L2_edge   Drain  Gate  Source  Sub  Drain  PCNFET_L2  Lch='Lch' Lgeff='Lgeff' Lss='Lss' Ldd='Ldd' Efi='Efi' Kgate='Kgate' Tox='Tox' Csub='Csub' Ccsd='Ccsd' CoupleRatio='CoupleRatio' Vfbp='Vfbp' GF='MIN(Wgate/1e-12,1)' Pitch='Pitch' n1='n1' n2='n2' CNTPos=1 Dout='Dout' Sout='Sout' M='MIN(tubes,2)'
+XPCNFET_L2_midd   Drain  Gate  Source  Sub  Drain  PCNFET_L2  Lch='Lch' Lgeff='Lgeff' Lss='Lss' Ldd='Ldd' Efi='Efi' Kgate='Kgate' Tox='Tox' Csub='Csub' Ccsd='Ccsd' CoupleRatio='CoupleRatio' Vfbp='Vfbp' GF='MIN(Wgate/1e-12,1)' Pitch='Pitch' n1='n1' n2='n2' CNTPos=0 Dout='Dout' Sout='Sout' M='MAX(tubes-2,0.0001)'
+
+* The interconnect parasitic capacitance
+Cgpar   Gate       Sub      'Ctot*Wgate'
+
+.ENDS PCNFET
+********************************************************************
+*
+* End of P-CNFET Level 3 Sub-circuit Definition
+*
+********************************************************************
+
+* Last Modified: 09/09/2008 Albert Lin
+********************************************************************
+*
+* N-CNFET Level 3 Sub-circuit Definition
+* Uniform-tubes version
+********************************************************************
+* Level 3 = top level = includes parasitic capacitance/resistance.
+********************************************************************
+********************************************************************
+* Uniform-tubes: This model file simplifies charge screening effects
+* among multiple tubes within the same FET device by treating all 
+* tubes uniformly.
+*
+* Set CNTPos=0 to treat all tubes as middle tubes, i.e. with
+* two-sided screening effects.
+* Set CNTPos=1 to treat all tubes as edge tubes, i.e. with one-sided
+* screening effects. 
+********************************************************************
+.SUBCKT NCNFET_uniform  Drain  Gate  Source  Sub  Lch=L_channel Lgeff=Lceff Lss=L_sd Ldd=L_sd Efi=Efo Kgate=Kox Tox=4e-9 Csub=20e-12 Ccsd=Ccsd CoupleRatio=CoupleRatio Vfbn=0 Pitch=20e-9 n1=19 n2=0 CNTPos=1 Dout=0 Sout=0 Wgate=sub_pitch tubes=1
+
+XNCNFET_L2   Drain  Gate  Source  Sub  Drain  NCNFET_L2  Lch='Lch' Lgeff='Lgeff' Lss='Lss' Ldd='Ldd' Efi='Efi' Kgate='Kgate' Tox='Tox' Csub='Csub' Ccsd='Ccsd' CoupleRatio='CoupleRatio' Vfbn='Vfbn' GF='MIN(Wgate/1e-12,1)' Pitch='Pitch' n1='n1' n2='n2' CNTPos='CNTPos' Dout='Dout' Sout='Sout' M='tubes'
+
+* The interconnect capacitance
+Cgpar   Gate       Sub      'Ctot*Wgate'
+
+.ENDS NCNFET_uniform
+********************************************************************
+*
+* End of N-CNFET Level 3 Sub-circuit Definition
+* Uniform-tubes version
+********************************************************************
+
+* Last Modified: 09/09/2008 Albert Lin
+********************************************************************
+*
+* P-CNFET Level 3 Sub-circuit Definition
+* Uniform-tubes version
+********************************************************************
+* Level 3 = top level = includes parasitic capacitance/resistance.
+********************************************************************
+********************************************************************
+* Uniform-tubes: This model file simplifies charge screening effects
+* among multiple tubes within the same FET device by treating all 
+* tubes uniformly.
+*
+* Set CNTPos=0 to treat all tubes as middle tubes, i.e. with
+* two-sided screening effects.
+* Set CNTPos=1 to treat all tubes as edge tubes, i.e. with one-sided
+* screening effects. 
+********************************************************************
+.SUBCKT PCNFET_uniform  Drain  Gate  Source  Sub  Lch=L_channel Lgeff=Lceff Lss=L_sd Ldd=L_sd Efi=Efo Kgate=Kox Tox=4e-9 Csub=20e-12 Ccsd=Ccsd CoupleRatio=CoupleRatio Vfbp=0 Pitch=20e-9 n1=19 n2=0 CNTPos=1 Dout=0 Sout=0 Wgate=sub_pitch tubes=1
+
+XPCNFET_L2   Drain  Gate  Source  Sub  Drain  PCNFET_L2  Lch='Lch' Lgeff='Lgeff' Lss='Lss' Ldd='Ldd' Efi='Efi' Kgate='Kgate' Tox='Tox' Csub='Csub' Ccsd='Ccsd' CoupleRatio='CoupleRatio' Vfbp='Vfbp' GF='MIN(Wgate/1e-12,1)' Pitch='Pitch' n1='n1' n2='n2' CNTPos='CNTPos' Dout='Dout' Sout='Sout' M='tubes'
+
+* The interconnect capacitance
+Cgpar   Gate       Sub      'Ctot*Wgate'
+
+.ENDS PCNFET_uniform
+********************************************************************
+*
+* End of P-CNFET Level 3 Sub-circuit Definition
+* Uniform-tubes version
+********************************************************************
+
+
+.UNPROTECT
+.ENDL CNFET
+

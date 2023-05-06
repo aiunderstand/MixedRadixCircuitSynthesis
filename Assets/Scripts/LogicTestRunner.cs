@@ -9,6 +9,7 @@ public class LogicTestRunner : MonoBehaviour
 {
     public string csvFile;
     public int start = 0; //start symbol for output comparison, eg. if we have 4 trits as output, we might want to check only the bottom 2 by doing start =2
+    public VerifyScreen VerificationScreen;
 
     public void OnClickRun()
     {
@@ -57,13 +58,25 @@ public class LogicTestRunner : MonoBehaviour
 
 
         int totalFailed = 0;
+        string failedIds = "";
         foreach (var t in Tests)
         {
             //input testvector, we assume input amount equals input test vector symbols, we also assume radix is balanced ternary and order of inputs is order of order of test inputs 
             for (int i = 0; i < inputs.Count; i++)
             {
                 inputs[i].SetValue(RadixOptions.BalancedTernary, convertInputToInt(t.Input[i]), true);
+               
+                
+                //This is pretty ugly. We wait a fixed amount of delays to allow travel of signals through the circuit.
+                //If there are long chains, the verification step cuts off resulting in failed tests while the circuit might be good
+                //We should wait until all signals have propagated (assuming a stable circuit) or have user definable stop
+                //We could also analyze a circuit and detect the longest chain of components as a rough approx. 
+                //This will not always work as some feedback components like D-latches and flip flops need longer chains. This is part of the issue mentioned in github to assign delays to components to help the simulator. 
                 await Task.Yield(); //WAIT 1 FRAME AS EVERY COMPNENT IS 1 UNIT DELAY
+                await Task.Yield();
+                await Task.Yield();
+                await Task.Yield();
+                await Task.Yield();
                 await Task.Yield();
                 await Task.Yield();
                 await Task.Yield();
@@ -99,10 +112,12 @@ public class LogicTestRunner : MonoBehaviour
                 Debug.Log("[Error] input: " + t.Input + " result in output: " + output + " but should be:" + t.Output);
                 t.TestResult = "fail";
                 totalFailed++;
+                failedIds += t.Id.ToString() + " ";
             }
         }
 
         Debug.Log("Done. Total failed: " + totalFailed);
+        VerificationScreen.Show(Tests.Count.ToString(), totalFailed.ToString(), failedIds);
     }
 
     //write to file

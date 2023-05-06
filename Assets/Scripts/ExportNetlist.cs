@@ -40,18 +40,33 @@ public class ExportNetlist : MonoBehaviour
     public void ExportSelected()
     {
         string folderName = selectedNetlist.options[selectedNetlist.value].text;
-        string netlistPath = Application.persistentDataPath + "/User/Generated/" + folderName;
+        string circuitPath = Application.persistentDataPath + "/User/Generated/" + folderName;
+        string hspicePath = circuitPath + "/HSPICE/";
+        string verilogPath = circuitPath + "/Verilog/";
 
         //create temp dir
         string tempFolder = Application.persistentDataPath + "/Temp/" + folderName;
-        string tempPath = Application.persistentDataPath + "/Temp/";
+        string tempHspiceFolder = tempFolder + "/HSPICE/";
+        string tempVerilogFolder = tempFolder + "/Verilog/";
         Directory.CreateDirectory(tempFolder);
+        Directory.CreateDirectory(tempHspiceFolder);
+        Directory.CreateDirectory(tempVerilogFolder);
 
-        //copy selected folder
-        var dir = new DirectoryInfo(netlistPath);
+        string tempPath = Application.persistentDataPath + "/Temp/";
+
+        //copy selected folder to HSPICE
+        var dir = new DirectoryInfo(hspicePath);
         foreach (FileInfo file in dir.GetFiles())
         {
-            string targetFilePath = Path.Combine(tempFolder, file.Name);
+            string targetFilePath = Path.Combine(tempHspiceFolder, file.Name);
+            file.CopyTo(targetFilePath);
+        }
+
+        //copy selected folder to Verilog
+        dir = new DirectoryInfo(verilogPath);
+        foreach (FileInfo file in dir.GetFiles())
+        {
+            string targetFilePath = Path.Combine(tempVerilogFolder, file.Name);
             file.CopyTo(targetFilePath);
         }
 

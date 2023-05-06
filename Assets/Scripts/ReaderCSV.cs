@@ -49,7 +49,7 @@ public static class ReaderCSV
                         //data format is thus: -0+0;0-00; (optional) comments
 
                         //split into input output comments
-                        var attr = line.Split(';');
+                        var attr = line.Split(',');
 
                         if (attr.Length >= 2) // skip empty lines or incomplete lines
                         {

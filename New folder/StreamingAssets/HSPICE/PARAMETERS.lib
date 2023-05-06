@@ -1,0 +1,111 @@
+********************************************************************
+* Carbon-nanotube Field Effect Transistors
+*             HSPICE Models (Parameters File)
+*    		  Version 2.2.1
+*
+*   
+*   Copyright The Board Trustees of the Leland Stanford Junior University 2009
+*   Albert Lin, Gordon Wan, Jie Deng, Prof. H-S Philip Wong
+*
+*
+*   09/09/2008 Last Modified by Albert Lin.
+*
+*   Carbon-nanotube Field Effect Transistors HSPICE implementation 
+*   based on "A Circuit-Compatible SPICE model for Enhancement Mode
+*   Carbon Nanotube Field Effect Transistors" by Jie Deng and
+*   H-S Philip Wong.
+*   
+*   Library name: PARAMETER.lib
+********************************************************************
+
+********************************************************************
+* LICENSE AGREEMENT
+* Stanford Leland Junior University and the authors ("Stanford") 
+* provide these model files to you subject to the License Agreement, 
+* which may be updated by us from time to time without notice to you. 
+* The most-up-to-date License Agreement can be found at
+* http://nano.stanford.edu/license.php
+********************************************************************
+
+********************************************************************
+* Global parameters
+********************************************************************
+.PROTECT
+
+.PARAM q=1.60e-19                $ Electronic charge
++      Vpi=3.033                 $ The carbon PI-PI bond energy
++      d=0.144e-9                $ The carbon PI-PI bond distance
++      a=0.2495e-9               $ The carbon atom distance
++      pi=3.1416                 $ PI, constant
++      h=6.63e-14                $ Planck constant,X1e20
++      h_ba=1.0552e-14           $ h_bar, X1e20
++      k=8.617e-5                $ Boltzmann constant
++      epso=8.85e-12             $ Dielectric constant in vacuum
+
+****Csub not here, in instantiations
+.PARAM Cgsub=30e-12              $ Metal gate (W) to Substrate fringe capacitance per unit length,approximated as 30af/um, 
+				 $ with 10um thick SiO2 default 30e-12
++      Cgabove=27e-12            $ W local interconnect to M1 coupling capacitance, 500nm apart, infinite large plane 
+				 $ default 27e-12
++      Cc_cnt=26e-12             $ The coupling capacitance between CNTs with 2Fs=6.4nm, about 26pF/m
++      Ccabove=15e-12            $ Coupling capacitance between CNT and the above M1 layer, 500nm apart, default 15e-12
++      Cc_gate=78e-12            $ The coupling capacitance between gates with 2F=64nm, about 78pF/m, W=32nm, H=64nm, 
+				$ contact spacing 32nm default 78e-12
++      Ctot='Cgsub+Cgabove+Cc_gate+Cc_gate'   $ total coupling capacitance for gate region
+
+***changed to use Csub=20e-12
++      Cint='0*Cc_cnt+0.5*(20e-12+Ccabove)'    $ total coupling capacitance for source/drain region CNT, redefined within models
+
+
+***following two are extra, should set both to zero to be like isscc
++      Coeff1_Cgsd=0e-12     $ The slope for Cg_sd vs. Lsd, H=64nm, Klowk=2, contact spacing 32nm, valid for 10nm<Lsd<100nm 
++      Coeff2_Cgsd=0e-18      $ The intersection of Cg_sd vs. Lsd, H=64nm, Klowk=2, contact spacing 32nm, valid for 10nm<Lsd<100nm 
+                          
++      Rsub=1                    $ Substrate resistance, set to zero for the ideal case
++      Klowk=2                   $ The dielectric constant of low-k material
++      Ksub=4                    $ The dielectric constant of SiO2
+***Kox is Kgate
++      Kox=16                    $ The dielectric constant of high-K gate oxide
+***Hox is not here, in instantiations. Hox is Tox.
+***beta is defined within model
+ 
++      Ld_par=15e-9              $ Length of the drain CNT, 1 MFP of OP scattering, to calculate parasitic diffusion capacitance
++      Rcnt=3.3e3                $ n+ CNT resistance due to finite modes, 3.3K for 0.7eV doped n+CNT
++      FacR=0.4                  $ The factor of Rus/Rcnt
+***Vfbs are not here, but in instantiations
+
+***changed to 0.66, value used in isscc
++      Efo=0.66                   $ The n+/p+ doped CNT fermi level (eV), 0.66eV for 1% doping level, 0.6eV for 0.8% doping level
++      lambda_op=15e-9           $ The Optical Phonon backscattering mean-free-path in Matallic CNT,15nm
++      lambda_ap=500e-9          $ The Acoustic Phonon backscattering mean-free-path in Matallic CNT, 500nm
++      photon=0.16               $ The photon energy, typical value 0.16eV
++      L_channel=32e-9           $ CNFET printed/physical channel length, assume 32nm for 32nm node technology
+***changed to value used in isscc
++      L_sd=16e-9                $ n+CNT source/drain full length, 32nm, from gate edge to S/D metal contact edge
++      L_relax=40e-9             $ delta_Vds relaxation range at drain side, fitting parameter
+***Leff is below
++      sub_pitch=6.4e-9          $ Sublithography full pitch, 6.4nm
++      de_fac=4                  $ the factor to calculate the number of electrons in CNT
+
+***extra, should set to large to be like isscc.
++      Lgmax=100e-9              $ The maximum channel length to calculate current for short channel device
+
++      coeffj='4*q*q/h/1e-20'    $ The coefficient of current component, 4 is due to both spin degeneracy and mode degeneracy
++      Coeff_Cc='pi*Klowk*epso'  $ The coefficient of the coupling capacitance between adjacent CNTs
++      kT='k*(TEMP+273)'         $ The KT constant
++      Rus='Rcnt*FacR'           $ Source side contact resistance
++      Rud='Rcnt*(1-FacR)'       $ Drain side contact resistance
+
+***extra 2, should set Ccsd to zero to be like isscc
++      Ccsd=0             $ The coupling capacitance between channel region and source/drain islands
++      CoupleRatio=0.0           $ The percentage of coupling capacitance between channel and drain out of the total fringe capacitance Ccsd
+
++      Leff=15e-9                $ The mean free path in p+/n+ doped CNT, estimated as 15nm
+
+***extra, should set to very large to be like isscc
++      Lceff=200e-9              $ The mean free path in intrinsic CNT, estimated as 200nm
+
++      phi_M=4.5                 $ Metal work function default=4.6
++      phi_S=4.5                 $ CNT work function 
+
+.UNPROTECT

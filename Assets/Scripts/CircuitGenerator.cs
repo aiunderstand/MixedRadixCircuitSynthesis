@@ -954,17 +954,34 @@ public class CircuitGenerator : MonoBehaviour
             }
 
             //ADD common HSPICE files like the CNTFET model and empty simulation files. 
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+    //
+    // WebGL
+    //
+    StartCoroutine(WebGLRoutine(hspiceAssetsPath, hspicePath));
+#else
+            //
+            // Standalone platforms & editor
+            //
+
             var dir = new DirectoryInfo(hspiceAssetsPath);
+
             foreach (FileInfo file in dir.GetFiles())
             {
-                if (!file.Extension.Contains("meta"))
+
+                if (file.Extension.Equals("meta") || file.Name.Equals("manifest"))
+                {
+                    //ignore these files
+                }
+                else
                 {
                     string targetFilePath = Path.Combine(hspicePath, file.Name);
                     if (!File.Exists(targetFilePath))
                         file.CopyTo(targetFilePath);
                 }
             }
-
+#endif
 
 
             //CREATE VERILOG OUTPUT
@@ -1620,9 +1637,31 @@ public class CircuitGenerator : MonoBehaviour
         Stats stats = GenerateCircuit(name + "/", "c_" + name);
         return stats;
     }
+
+    private IEnumerator WebGLRoutine(string hspiceAssetsPath, string targetDir)
+    {
+        //download manifest
+        var loader = new WWW(new System.Uri(hspiceAssetsPath + "manifest.txt").AbsoluteUri);
+        yield return loader;
+
+        //parse files from manifest        
+        string[] files = loader.text.Split(';');
+
+        //download files to hspicepath
+        foreach (string file in files)
+        {
+            //download file
+            var fileloader = new WWW(new System.Uri(hspiceAssetsPath + file).AbsoluteUri);
+            yield return fileloader;
+
+            //save file to hpsice dir
+            System.IO.File.WriteAllBytes(targetDir + file, loader.bytes);
+           
+        }
+    }
 }
 
-public class MRCS_Component
+    public class MRCS_Component
 {
     public string Type;
     public string Id;

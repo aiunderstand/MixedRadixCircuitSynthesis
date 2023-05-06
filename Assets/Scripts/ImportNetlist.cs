@@ -82,7 +82,7 @@ public class ImportNetlist : MonoBehaviour, IPointerDownHandler
             var circuitName = new DirectoryInfo(System.IO.Path.GetDirectoryName(directories[i]+"/")).Name;
             
             //move folder to generated
-            string generatedPath = Application.persistentDataPath + "/User/Generated" + circuitName;
+            string generatedPath = Application.persistentDataPath + "/User/Generated/" + circuitName;
             string generatedFilePath = generatedPath + "/HSPICE/c_" + circuitName + ".sp";
             Debug.Log("Saved at: " + generatedFilePath);
 

@@ -1,0 +1,1 @@
+main.sp;nti.sp;pti.sp;CNFET.lib;PARAMETERS.lib
