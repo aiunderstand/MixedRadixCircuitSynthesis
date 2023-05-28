@@ -1215,6 +1215,9 @@ public class CircuitGenerator : MonoBehaviour
                 if (radixSource == radixTarget)
                     netName = netType + "net_" + i.ToString();
 
+                if (radixSource.Contains("binary") == radixTarget.Contains("binary"))
+                    netName = netType + "net_" + i.ToString();
+
                 //binary to ternary net conversion
                 if (radixSource.Contains("Binary") && radixTarget.Contains("Ternary"))
                     netName = "{" + "bnet_" + i.ToString()+ ",!" + "bnet_" + i.ToString() + "}";
@@ -1259,7 +1262,7 @@ public class CircuitGenerator : MonoBehaviour
             
             // START CONSTRUCTING VERILOG CIRCUIT FILE
             List<string> verilines = new List<string>();
-            verilines.Add("module " + fileName + " (");
+            verilines.Add("module " + fileName.Replace('-','_') + " (");
 
             //process inputs
             int inputPorts = 0;
@@ -1304,7 +1307,7 @@ public class CircuitGenerator : MonoBehaviour
                         {
                             n.isFanout = true;
 
-                            if (n.Radix == "Binary")
+                            if (n.Radix.Contains("Binary"))
                                 verilines.Add("wire " + n.Net + " = " + fanoutLOT[n.Label_uid].Net + ";");
                             else
                                 verilines.Add("wire [1:0] " + n.Net + " = " + fanoutLOT[n.Label_uid].Net + ";");
@@ -1318,7 +1321,7 @@ public class CircuitGenerator : MonoBehaviour
                             var nameParts = namePartsRaw.Split("_");
                             string comment = nameParts[1];
 
-                            if (n.Radix == "Binary")
+                            if (n.Radix.Contains("Binary"))
                                 verilines.Add("wire " + n.Net + " = io_in[" + (int) portLookup[(string)(n.Port + "_" + n.ComponentId)] + "]; //" + comment); 
                             else
                                 verilines.Add("wire [1:0] " + n.Net + " = io_in[" +((int)portLookup[n.Port + "_" + n.ComponentId] +1) + ":" + (int)portLookup[n.Port + "_" + n.ComponentId] + "]; //" + comment);
@@ -1348,7 +1351,7 @@ public class CircuitGenerator : MonoBehaviour
                         {
                             n.isFanout = true;
 
-                            if (n.Radix == "Binary")
+                            if (n.Radix.Contains("Binary"))
                                 tempLines.Add(int.Parse(n.Net.Substring(5)), "wire " + n.Net + " = " + fanoutLOT[n.Label_uid].Net + ";");
                             else
                                 tempLines.Add(int.Parse(n.Net.Substring(5)), "wire [1:0] " + n.Net + " = " + fanoutLOT[n.Label_uid].Net + ";");
@@ -1357,7 +1360,7 @@ public class CircuitGenerator : MonoBehaviour
                         {
                             fanoutLOT.Add(n.Label_uid, n);
 
-                            if (n.Radix == "Binary")
+                            if (n.Radix.Contains("Binary"))
                                 tempLines.Add(int.Parse(n.Net.Substring(5)), "wire " + n.Net + ";");
                             else
                                 tempLines.Add(int.Parse(n.Net.Substring(5)), "wire [1:0] " + n.Net + ";");
@@ -1386,7 +1389,7 @@ public class CircuitGenerator : MonoBehaviour
                         var nameParts = namePartsRaw.Split("_");
                         string comment = nameParts[1];
 
-                        if (n.Radix == "Binary")
+                        if (n.Radix.Contains("Binary"))
                             verilines.Add("assign io_out[" + (int)portLookup[(string)(n.Port + "_" + n.ComponentId)] + "] = " + n.Net + "; //" + comment);
                         else
                             verilines.Add("assign io_out[" + ((int)portLookup[(string)(n.Port + "_" + n.ComponentId)] + 1) + ":" + (int)portLookup[(string)(n.Port + "_" + n.ComponentId)] + "] = " + n.Net + "; //" + comment);
@@ -1405,7 +1408,7 @@ public class CircuitGenerator : MonoBehaviour
                     verilines.Add("");
                     var labelParts = c.Name.Split('_');
 
-                    if (c.Radix == "Binary")
+                    if (c.Radix.Contains("Binary"))
                         verilines.Add(labelParts[0] + "_" + labelParts[1] + " LogicGate_" + labelParts[2] + " (");
                     else
                         verilines.Add(labelParts[0] + "_" + labelParts[1] + "_bet"  + " LogicGate_" + labelParts[2] + " (");
@@ -1468,7 +1471,7 @@ public class CircuitGenerator : MonoBehaviour
                     verilines.Add("");
                     var labelParts = c.Name.Split('_');
 
-                    verilines.Add(labelParts[0] + "_" + labelParts[1] + " SavedGate_" + labelParts[2] + " (");
+                    verilines.Add(labelParts[0] + "_" + labelParts[1].Replace('-','_') + " SavedGate_" + labelParts[2] + " (");
 
                     //instead of ordering the logic gates we use the named ports for both input and output)
 

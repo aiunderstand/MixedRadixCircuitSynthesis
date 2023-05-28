@@ -323,11 +323,13 @@ public class BtnInputTruthTable : MonoBehaviour
                 {
                     if (label.text == "x")
                         outputValue = 3;
-                  
-                    if (int.Parse(label.text) == 1)
-                        outputValue = 2; //this is the high value;
                     else
-                        outputValue = 0;
+                    {
+                        if (int.Parse(label.text) == 1)
+                            outputValue = 2; //this is the high value;
+                        else
+                            outputValue = 0;
+                    }
                 }
                 break;
         }

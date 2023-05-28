@@ -1162,7 +1162,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
 
         //convert TT to SumOfProduct form
         lines.Add("     assign out = ");
-        var sop = Convert_TT_to_TernaryEncodedBinarySumOfProduct(radix, arity, optimizedTT);
+        var sop = Convert_TT_to_BinaryEncodedTernarySumOfProduct(radix, arity, optimizedTT);
         for (int i = 0; i < sop.Length; i++)
             lines.Add(sop[i]);
 
@@ -1172,7 +1172,7 @@ public class TruthtableFunctionHelper : MonoBehaviour
         return lines.ToArray();
     }
 
-    private static string[] Convert_TT_to_TernaryEncodedBinarySumOfProduct(RadixOptions radix, int arity, int[] optimizedTT)
+    private static string[] Convert_TT_to_BinaryEncodedTernarySumOfProduct(RadixOptions radix, int arity, int[] optimizedTT)
     {
         //Sum of Product are the conditions for when inputs are equal to 1
         List<string> SumOfProduct = new List<string>(); 
