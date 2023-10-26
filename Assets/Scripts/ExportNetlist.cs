@@ -18,6 +18,7 @@ public class ExportNetlist : MonoBehaviour
 
     public TMP_Dropdown selectedNetlist;
     public TMP_Dropdown selectedFormat;
+    Dictionary<string, string> FoundCircuits = new Dictionary<string, string>();
 
     public void OnEnable()
     {
@@ -41,41 +42,55 @@ public class ExportNetlist : MonoBehaviour
     {
         string folderName = selectedNetlist.options[selectedNetlist.value].text;
         string circuitPath = Application.persistentDataPath + "/User/Generated/" + folderName;
-        string hspicePath = circuitPath + "/HSPICE/";
-        string verilogPath = circuitPath + "/Verilog/";
+        string hspicePath = circuitPath + "/HSPICE/";        
+        FoundCircuits.Clear();
+        FoundCircuits.Add(folderName, folderName); //add the root circuit
 
         //create temp dir
-        string tempFolder = Application.persistentDataPath + "/Temp/" + folderName;
-        string tempHspiceFolder = tempFolder + "/HSPICE/";
-        string tempVerilogFolder = tempFolder + "/Verilog/";
-        Directory.CreateDirectory(tempFolder);
-        Directory.CreateDirectory(tempHspiceFolder);
-        Directory.CreateDirectory(tempVerilogFolder);
-
         string tempPath = Application.persistentDataPath + "/Temp/";
+        Directory.CreateDirectory(tempPath);
 
-        //copy selected folder to HSPICE
+        //find the selected circuit and its dependencies using recursive search with global variable to prevent circular dependencies
         var dir = new DirectoryInfo(hspicePath);
-        foreach (FileInfo file in dir.GetFiles())
+        FindCircuitDependencies(dir);
+
+        //copy folders
+        foreach (var key in FoundCircuits)
         {
-            string targetFilePath = Path.Combine(tempHspiceFolder, file.Name);
-            file.CopyTo(targetFilePath);
+            string sourceFolder = Application.persistentDataPath + "/User/Generated/" + key.Value;
+            string targetFolder = tempPath + key.Value;
+
+            ExtensionMethods.FileHelpers.CopyDirectory(sourceFolder, targetFolder, true);
         }
 
-        //copy selected folder to Verilog
-        dir = new DirectoryInfo(verilogPath);
-        foreach (FileInfo file in dir.GetFiles())
-        {
-            string targetFilePath = Path.Combine(tempVerilogFolder, file.Name);
-            file.CopyTo(targetFilePath);
-        }
-
-        //export
-        string filePath = Application.persistentDataPath + "/User/Share/MRCS_Export_" + folderName  + ".zip";
+        ////export
+        string filePath = Application.persistentDataPath + "/User/Share/MRCS_Export_" + folderName + ".zip";
         Export(folderName, tempPath, filePath, true);
 
         //remove temp folder
         Directory.Delete(tempPath,true);
+    }
+
+    private void FindCircuitDependencies(DirectoryInfo dir)
+    {
+        List<string> circuits = new List<string>();
+        foreach (FileInfo file in dir.GetFiles())
+        {
+            //find all circuits in directory
+            if (file.Extension == ".sp" && file.Name[0] == 'c')
+            {
+                //if circuit not in list add to list and continue recursive search
+                string c_raw = Path.GetFileNameWithoutExtension(file.FullName);
+                string c = c_raw.Substring(2);
+                if (FoundCircuits.ContainsKey(c) == false)
+                {
+                    FoundCircuits.Add(c, c);
+
+                    dir = new DirectoryInfo(Application.persistentDataPath + "/User/Generated/" + c + "/HSPICE/");
+                    FindCircuitDependencies(dir);
+                }
+            }   
+        }
     }
 
     public void Export(string foldername, string sourcePath, string targetPath, bool recursive)
